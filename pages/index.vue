@@ -172,7 +172,7 @@ const handleSearch = async () => {
   searched.value = true
 
   try {
-    const res: any = await $fetch(`${config.public.apiBase}/api/search`, {
+    const res: any = await $fetch(useApiUrl('/api/search'), {
       params: {
         q: searchQuery.value,
         type: selectedType.value
@@ -240,7 +240,7 @@ const saveToWatchlist = async () => {
       notes: form.value.notes
     }
 
-    await $fetch(`${config.public.apiBase}/api/user/watchlist`, {
+    await $fetch(useApiUrl('/api/user/watchlist'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`

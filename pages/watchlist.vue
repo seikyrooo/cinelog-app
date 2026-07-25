@@ -190,7 +190,7 @@ const fetchWatchlist = async () => {
     if (activeStatus.value !== 'all') params.status = activeStatus.value
     if (favoriteOnly.value) params.favorite = 'true'
 
-    const res: any = await $fetch(`${config.public.apiBase}/api/user/watchlist`, {
+    const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
       headers: {
         Authorization: `Bearer ${authStore.token}`
       },
@@ -210,7 +210,7 @@ onMounted(() => {
 
 const getPosterUrl = (movie: any) => {
   if (movie?.local_poster_path) {
-    return `${config.public.apiBase}${movie.local_poster_path}`
+    return useApiUrl(movie.local_poster_path)
   }
   if (movie?.poster_path) {
     return `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -254,7 +254,7 @@ const openEditModal = (item: any) => {
 const updateWatchlist = async () => {
   if (!editingItem.value) return
   try {
-    await $fetch(`${config.public.apiBase}/api/user/watchlist/${editingItem.value.id}`, {
+    await $fetch(useApiUrl(`/api/user/watchlist/${editingItem.value.id}`), {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${authStore.token}`
@@ -271,7 +271,7 @@ const updateWatchlist = async () => {
 const deleteItem = async (id: number) => {
   if (!confirm('Yakin ingin menghapus item ini dari watchlist kamu?')) return
   try {
-    await $fetch(`${config.public.apiBase}/api/user/watchlist/${id}`, {
+    await $fetch(useApiUrl(`/api/user/watchlist/${id}`), {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authStore.token}`

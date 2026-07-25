@@ -69,7 +69,7 @@ const handleRegister = async () => {
   errorMessage.value = ''
 
   try {
-    await $fetch(`${config.public.apiBase}/api/auth/register`, {
+    await $fetch(useApiUrl('/api/auth/register'), {
       method: 'POST',
       body: {
         username: username.value,

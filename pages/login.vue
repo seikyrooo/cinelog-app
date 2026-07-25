@@ -59,7 +59,7 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    const res: any = await $fetch(`${config.public.apiBase}/api/auth/login`, {
+    const res: any = await $fetch(useApiUrl('/api/auth/login'), {
       method: 'POST',
       body: {
         email: email.value,
