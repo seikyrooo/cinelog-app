@@ -1,75 +1,75 @@
-# Nuxt Minimal Starter
+# Cinelog Web App (Nuxt 3)
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Web Application untuk melacak film & serial TV Cinelog, dibangun menggunakan **Nuxt 3**, **Vue 3 Composition API**, **Pinia**, dan **Vanilla Glassmorphism CSS**.
 
-## Setup
+---
 
-Make sure to install dependencies:
+## Prasyarat
+- **Node.js**: v18.x / v20.x / v24.x
+- **NPM**: v9+
 
+---
+
+## Konfigurasi Environment (`.env`)
+Salin `.env.example` menjadi `.env`:
 ```bash
-# npm
+cp .env.example .env
+```
+Isi variabel API Base URL:
+```env
+# Untuk Lokal Development:
+NUXT_PUBLIC_API_BASE=http://localhost:3000
+
+# Untuk Produksi VPS (contoh):
+# NUXT_PUBLIC_API_BASE=https://api.domainkamu.com
+```
+
+---
+
+## Jalankan di Lokal (Development)
+```bash
+# 1. Install dependensi
 npm install
 
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
+# 2. Jalankan Server Dev
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
+Buka `http://localhost:3000` di browser.
 
-## Production
+---
 
-Build the application for production:
+## Deployment Produksi (VPS)
 
+### 1. Build Production Bundle
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+NUXT_TELEMETRY_DISABLED=1 npm run build
 ```
+Hasil build akan berada di folder `.output/`.
 
-Locally preview production build:
-
+### 2. Jalankan Node Server di Produksi
+Kamu bisa menjalankan server produksi menggunakan **PM2**:
 ```bash
-# npm
-npm run preview
+# Install PM2 jika belum ada
+npm install -g pm2
 
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+# Jalankan server Nuxt Nitro
+NUXT_PUBLIC_API_BASE=https://api.domainkamu.com PORT=3000 pm2 start .output/server/index.mjs --name "cinelog-web"
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+### 3. Nginx Reverse Proxy Config (Opsional)
+Jika menggunakan Nginx di VPS:
+```nginx
+server {
+    listen 80;
+    server_name domainkamu.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
