@@ -1,8 +1,8 @@
 <template>
   <div class="search-page">
     <div class="hero-section">
-      <h1 class="hero-title">Cari & Lacak <span class="gradient-text">Film & TV Shows</span></h1>
-      <p class="hero-subtitle">Jelajahi ribuan judul, kelola progres episode, dan berikan penilaian sinematik terbaikmu.</p>
+      <h1 class="hero-title">Jelajahi & Lacak <span class="gradient-text">Film & TV Shows</span></h1>
+      <p class="hero-subtitle">Cari ribuan judul dari TMDB, lihat rincian sutradara, pemeran, season, dan klik episode untuk langsung ditambahkan ke Watchlist kamu.</p>
 
       <!-- Search Box -->
       <div class="search-box glass-panel">
@@ -49,10 +49,10 @@
         :key="item.id" 
         class="glass-card media-card"
       >
-        <div class="poster-wrapper" @click="openSaveModal(item)">
+        <div class="poster-wrapper clickable" @click="openSaveModal(item)">
           <img 
             :src="getImageUrl(item.poster_path)" 
-            :alt="item.title"
+            :alt="item.title || item.name"
             class="poster-img"
             @error="onImageError"
           />
@@ -60,120 +60,164 @@
             {{ item.media_type === 'tv' ? 'TV Show' : 'Movie' }}
           </span>
           <span v-if="item.vote_average" class="rating-badge">
-            ★ {{ (item.vote_average / 2).toFixed(1) }}
+            ★ {{ item.vote_average.toFixed(1) }} / 10.0
           </span>
         </div>
 
         <div class="card-info">
-          <h3 class="media-title" :title="item.title || item.name">{{ item.title || item.name }}</h3>
+          <h3 class="media-title clickable" @click="openSaveModal(item)">{{ item.title || item.name }}</h3>
           <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
           <p class="overview">{{ truncateText(item.overview, 110) }}</p>
 
           <button @click="openSaveModal(item)" class="btn-primary btn-full">
-            + Tambah ke Watchlist
+            Lihat Detail & Episode
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Modal Save & Detail -->
+    <!-- Modal Full Detail & Seasons Breakdown dengan Add to Watchlist Otomatis -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-      <div class="modal-content glass-panel animate-fade-in">
-        <div class="modal-header">
-          <div>
-            <h2 class="modal-title">{{ activeItem?.title || activeItem?.name }}</h2>
-            <p class="modal-meta">
-              {{ activeItem?.media_type === 'tv' ? 'TV Show' : 'Movie' }} • {{ formatYear(activeItem?.release_date || activeItem?.first_air_date) }}
-            </p>
+      <div class="modal-content glass-panel detail-modal-content animate-fade-in">
+        
+        <!-- Fixed Top Right Close Button -->
+        <button @click="showModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
+
+        <!-- Movie/Show Hero Backdrop Banner -->
+        <div class="hero-backdrop-banner" :style="getBackdropStyle(activeItem)">
+          <div class="hero-backdrop-gradient">
+            <div class="hero-media-info">
+              <span :class="['badge', activeItem?.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
+                {{ activeItem?.media_type === 'tv' ? 'TV Show' : 'Movie' }}
+              </span>
+              <span v-if="activeItem?.vote_average" class="hero-rating-badge">
+                ★ {{ activeItem.vote_average.toFixed(1) }} / 10.0 TMDB Rating
+              </span>
+              <h2 class="hero-media-title">{{ activeItem?.title || activeItem?.name }}</h2>
+              <p class="hero-media-subtitle">
+                {{ formatYear(activeItem?.release_date || activeItem?.first_air_date) }}
+                <span v-if="detailedInfo?.media_status"> • {{ detailedInfo.media_status }}</span>
+              </p>
+            </div>
           </div>
-          <button @click="showModal = false" class="close-btn">&times;</button>
         </div>
 
-        <!-- Detail info loading or rich info -->
-        <div v-if="isFetchingDetail" class="detail-loading">
-          <span>Memuat detail sutradara & episode...</span>
+        <!-- Detail Body -->
+        <div class="detail-body">
+          <div v-if="isFetchingDetail" class="loading-state text-sm">
+            <div class="spinner"></div>
+            <span>Memuat detail sutradara & cast...</span>
+          </div>
+
+          <div v-else-if="detailedInfo" class="meta-info-box">
+            <p v-if="detailedInfo.director"><strong>Sutradara / Pembuat:</strong> <span class="highlight-text">{{ detailedInfo.director }}</span></p>
+            <p v-if="detailedInfo.cast"><strong>Pemeran Utama:</strong> {{ detailedInfo.cast }}</p>
+            <p v-if="detailedInfo.media_type === 'tv'"><strong>Jumlah Episode:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ detailedInfo.total_seasons }} Season)</p>
+          </div>
+
+          <p class="overview-text">{{ activeItem?.overview }}</p>
+
+          <!-- Quick Action: Add to Watchlist & Rating Scale 10 -->
+          <div class="quick-add-bar glass-card">
+            <div class="rating-input-row">
+              <label>Beri Rating Kamu (Skala 1 - 10):</label>
+              <div class="star-rating-selector">
+                <span 
+                  v-for="star in 10" 
+                  :key="star"
+                  @click="form.rating = star"
+                  :class="['star-icon', { active: star <= form.rating }]"
+                >★</span>
+                <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10.0' : 'Belum dinilai' }}</span>
+              </div>
+            </div>
+
+            <div class="quick-buttons-row">
+              <button 
+                @click="saveToWatchlist('watching')" 
+                class="btn-primary flex-1"
+                :disabled="isSaving"
+              >
+                {{ isSaving ? 'Menyimpan...' : '+ Tambah ke Watchlist' }}
+              </button>
+              <button 
+                @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
+                :class="['btn-secondary', { active: form.favorite }]"
+              >
+                {{ form.favorite ? '★ Favorit' : '+ Favorit' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- If TV Show: Season Selector & Episodes List -->
+          <div v-if="activeItem?.media_type === 'tv'" class="seasons-section">
+            <div class="section-header-row">
+              <h4 class="section-subtitle">Daftar Season & Episode</h4>
+              <span class="watched-counter-badge" v-if="watchlistContext">
+                Progres: {{ watchlistContext.episodes_watched }} eps ditonton
+              </span>
+            </div>
+
+            <!-- Season Chips Selector -->
+            <div class="season-chips">
+              <button 
+                v-for="s in seasonsCount" 
+                :key="s"
+                @click="fetchSeasonEpisodes(s)"
+                :class="['season-chip', { active: selectedSeason === s }]"
+              >
+                Season {{ s }}
+              </button>
+            </div>
+
+            <!-- Episodes List -->
+            <div v-if="isLoadingEpisodes" class="loading-state text-sm">
+              <div class="spinner"></div>
+              <span>Memuat episode Season {{ selectedSeason }}...</span>
+            </div>
+
+            <div v-else class="episodes-list">
+              <div 
+                v-for="eps in episodesList" 
+                :key="eps.episode_number"
+                :class="['episode-item', 'glass-card', { watched: isEpisodeWatched(eps.episode_number) }]"
+              >
+                <div class="eps-banner-wrapper">
+                  <img 
+                    :src="getEpisodeStillUrl(eps.still_path)" 
+                    :alt="eps.name"
+                    class="eps-still-img"
+                    @error="onEpsImageError"
+                  />
+                  <span class="eps-num-badge">Eps {{ eps.episode_number }}</span>
+                </div>
+
+                <div class="eps-info">
+                  <div class="eps-header">
+                    <h5 class="eps-name">{{ eps.name }}</h5>
+                    <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
+                  </div>
+                  <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 110) }}</p>
+                </div>
+
+                <!-- Watched Toggle: Clicking directly adds to watchlist and updates episode progress! -->
+                <button 
+                  @click="toggleEpisodeWatched(eps.episode_number)"
+                  :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                >
+                  {{ isEpisodeWatched(eps.episode_number) ? '✓ Sudah' : '+ Tonton' }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div v-else-if="detailedInfo" class="rich-info-box">
-          <p v-if="detailedInfo.director"><strong>Sutradara / Pembuat:</strong> {{ detailedInfo.director }}</p>
-          <p v-if="detailedInfo.cast"><strong>Pemeran:</strong> {{ detailedInfo.cast }}</p>
-          <p v-if="detailedInfo.media_type === 'tv'"><strong>Jumlah Episode:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ detailedInfo.total_seasons }} Season)</p>
-          <p v-if="detailedInfo.next_air_date" class="next-air-highlight">
-            📅 Episode berikutnya tayang: {{ detailedInfo.next_air_date }} ({{ detailedInfo.next_episode_name }})
-          </p>
-        </div>
-
-        <form @submit.prevent="saveToWatchlist" class="modal-form">
-          <div class="form-group">
-            <label>Status Tontonan</label>
-            <select v-model="form.status" class="form-input">
-              <option value="watching">Sedang Nonton (Watching)</option>
-              <option value="completed">Selesai (Completed)</option>
-              <option value="plan_to_watch">Rencana Nonton (Plan to Watch)</option>
-              <option value="on_hold">Ditunda (On Hold)</option>
-              <option value="dropped">Dihentikan (Dropped)</option>
-            </select>
-          </div>
-
-          <!-- Rating Bintang (1 - 5 Bintang) -->
-          <div class="form-group">
-            <label>Rating Kamu (1 - 5 Bintang)</label>
-            <div class="star-rating-selector">
-              <span 
-                v-for="star in 5" 
-                :key="star"
-                @click="form.rating = star"
-                :class="['star-icon', { active: star <= form.rating }]"
-              >★</span>
-              <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 5.0' : 'Belum dinilai' }}</span>
-            </div>
-          </div>
-
-          <!-- If TV Show: Episode progress tracking -->
-          <div v-if="activeItem?.media_type === 'tv'" class="form-row">
-            <div class="form-group flex-1">
-              <label>Season</label>
-              <input v-model.number="form.season_watched" type="number" min="1" class="form-input" />
-            </div>
-            <div class="form-group flex-1">
-              <label>Eps Ditonton</label>
-              <input v-model.number="form.episodes_watched" type="number" min="0" class="form-input" />
-            </div>
-            <div class="form-group flex-1">
-              <label>Total Eps</label>
-              <input v-model.number="form.total_episodes" type="number" min="0" class="form-input" />
-            </div>
-          </div>
-
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="form.favorite" />
-              Tandai sebagai Favorit
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label>Catatan / Review Singkat</label>
-            <textarea 
-              v-model="form.notes" 
-              class="form-input text-area" 
-              placeholder="Tulis pendapatmu..."
-            ></textarea>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" @click="showModal = false" class="btn-secondary">Batal</button>
-            <button type="submit" class="btn-primary" :disabled="isSaving">
-              {{ isSaving ? 'Menyimpan...' : 'Simpan ke Watchlist' }}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
@@ -197,14 +241,26 @@ const detailedInfo = ref<any>(null)
 const isFetchingDetail = ref(false)
 const isSaving = ref(false)
 
+const selectedSeason = ref(1)
+const isLoadingEpisodes = ref(false)
+const episodesList = ref<any[]>([])
+const watchlistContext = ref<any>(null)
+
 const form = ref({
   status: 'watching',
-  rating: 4.5,
+  rating: 8.0,
   favorite: false,
   notes: '',
   season_watched: 1,
   episodes_watched: 0,
   total_episodes: 0
+})
+
+const seasonsCount = computed(() => {
+  if (detailedInfo.value?.seasons?.length) {
+    return detailedInfo.value.seasons.length
+  }
+  return detailedInfo.value?.total_seasons || 1
 })
 
 const handleSearch = async () => {
@@ -235,8 +291,23 @@ const getImageUrl = (path: string) => {
   return `https://image.tmdb.org/t/p/w500${path}`
 }
 
+const getBackdropStyle = (media: any) => {
+  const path = media?.backdrop_path || media?.poster_path
+  if (!path) return { background: '#1e293b' }
+  return { backgroundImage: `url(https://image.tmdb.org/t/p/w780${path})` }
+}
+
+const getEpisodeStillUrl = (path: string) => {
+  if (!path) return 'https://via.placeholder.com/160x90?text=No+Preview'
+  return `https://image.tmdb.org/t/p/w500${path}`
+}
+
 const onImageError = (e: Event) => {
   (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x450?text=No+Poster'
+}
+
+const onEpsImageError = (e: Event) => {
+  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/160x90?text=No+Preview'
 }
 
 const formatYear = (dateStr: string) => {
@@ -250,18 +321,16 @@ const truncateText = (text: string, len: number) => {
 }
 
 const openSaveModal = async (item: any) => {
-  if (!authStore.isAuth) {
-    alert('Silakan login terlebih dahulu.')
-    router.push('/login')
-    return
-  }
   activeItem.value = item
   detailedInfo.value = null
+  selectedSeason.value = 1
+  episodesList.value = []
+  watchlistContext.value = null
   isFetchingDetail.value = true
 
   form.value = {
     status: item.media_type === 'tv' ? 'watching' : 'completed',
-    rating: item.vote_average ? Math.min(5, Math.round((item.vote_average / 2) * 2) / 2) : 4.0,
+    rating: item.vote_average ? Math.round(item.vote_average) : 8.0,
     favorite: false,
     notes: '',
     season_watched: 1,
@@ -270,7 +339,26 @@ const openSaveModal = async (item: any) => {
   }
   showModal.value = true
 
-  // Fetch detailed info
+  // Check if item is already in user watchlist
+  if (authStore.isAuth) {
+    try {
+      const checkRes: any = await $fetch(useApiUrl(`/api/user/watchlist/check/${item.id}`), {
+        headers: { Authorization: `Bearer ${authStore.token}` },
+        params: { type: item.media_type || 'movie' }
+      })
+      if (checkRes.in_watchlist && checkRes.data) {
+        watchlistContext.value = checkRes.data
+        form.value.rating = checkRes.data.rating || form.value.rating
+        form.value.favorite = checkRes.data.favorite
+        form.value.season_watched = checkRes.data.season_watched || 1
+        form.value.episodes_watched = checkRes.data.episodes_watched || 0
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Fetch full detail from API
   try {
     const res: any = await $fetch(useApiUrl('/api/detail'), {
       params: {
@@ -280,16 +368,92 @@ const openSaveModal = async (item: any) => {
     })
     if (res.data) {
       detailedInfo.value = res.data
-      if (res.data.total_episodes) form.value.total_episodes = res.data.total_episodes
+      form.value.total_episodes = res.data.total_episodes || 0
     }
   } catch (err) {
     console.error(err)
   } finally {
     isFetchingDetail.value = false
   }
+
+  if (item.media_type === 'tv') {
+    fetchSeasonEpisodes(1)
+  }
 }
 
-const saveToWatchlist = async () => {
+const fetchSeasonEpisodes = async (seasonNum: number) => {
+  if (!activeItem.value) return
+  selectedSeason.value = seasonNum
+  isLoadingEpisodes.value = true
+
+  try {
+    const res: any = await $fetch(useApiUrl('/api/tv/season'), {
+      params: {
+        id: activeItem.value.id,
+        season: seasonNum
+      }
+    })
+    episodesList.value = res.data || []
+  } catch (err) {
+    console.error(err)
+  } finally {
+    isLoadingEpisodes.value = false
+  }
+}
+
+const isEpisodeWatched = (epsNumber: number) => {
+  if (!watchlistContext.value) return false
+  const watchedEps = watchlistContext.value.episodes_watched || 0
+  const currentSeason = watchlistContext.value.season_watched || 1
+  
+  if (selectedSeason.value < currentSeason) return true
+  if (selectedSeason.value === currentSeason) return epsNumber <= watchedEps
+  return false
+}
+
+const toggleEpisodeWatched = async (epsNumber: number) => {
+  if (!authStore.isAuth) {
+    alert('Silakan login terlebih dahulu.')
+    router.push('/login')
+    return
+  }
+
+  if (!watchlistContext.value) {
+    // Add to Watchlist instantly with episode progress
+    await saveToWatchlist('watching', epsNumber)
+    return
+  }
+
+  const targetEpsCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
+
+  try {
+    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${watchlistContext.value.id}/set-progress`), {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      },
+      body: {
+        season_watched: selectedSeason.value,
+        episodes_watched: Math.max(0, targetEpsCount)
+      }
+    })
+
+    if (res.data) {
+      watchlistContext.value.season_watched = res.data.season_watched
+      watchlistContext.value.episodes_watched = res.data.episodes_watched
+      watchlistContext.value.status = res.data.status
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number) => {
+  if (!authStore.isAuth) {
+    alert('Silakan login terlebih dahulu.')
+    router.push('/login')
+    return
+  }
   if (!activeItem.value) return
   isSaving.value = true
 
@@ -309,16 +473,16 @@ const saveToWatchlist = async () => {
       next_air_date: detailedInfo.value?.next_air_date || '',
       next_episode_name: detailedInfo.value?.next_episode_name || '',
       media_status: detailedInfo.value?.media_status || '',
-      status: form.value.status,
+      status: statusOverride || form.value.status,
       rating: form.value.rating,
       favorite: form.value.favorite,
       notes: form.value.notes,
-      season_watched: form.value.season_watched,
-      episodes_watched: form.value.episodes_watched,
-      total_episodes: form.value.total_episodes
+      season_watched: selectedSeason.value || form.value.season_watched,
+      episodes_watched: epsOverride !== undefined ? epsOverride : form.value.episodes_watched,
+      total_episodes: form.value.total_episodes || detailedInfo.value?.total_episodes || 0
     }
 
-    await $fetch(useApiUrl('/api/user/watchlist'), {
+    const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`
@@ -326,8 +490,9 @@ const saveToWatchlist = async () => {
       body: payload
     })
 
-    showModal.value = false
-    router.push('/watchlist')
+    if (res.data) {
+      watchlistContext.value = res.data
+    }
   } catch (err: any) {
     console.error(err)
     alert(err?.data?.error || 'Gagal menyimpan ke watchlist.')
@@ -493,124 +658,134 @@ const saveToWatchlist = async () => {
   justify-content: center;
 }
 
-/* Modal Styling */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  z-index: 100;
+/* Detail Modal Style */
+.detail-modal-content {
+  position: relative;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.close-btn-fixed {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  z-index: 30;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-btn-fixed:hover {
+  background: rgba(239, 68, 68, 0.85);
+  transform: scale(1.05);
+}
+
+.hero-backdrop-banner {
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.hero-backdrop-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  display: flex;
+  align-items: flex-end;
   padding: 20px;
 }
 
-.modal-content {
-  width: 100%;
-  max-width: 520px;
-  border-radius: 20px;
-  padding: 24px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
+.hero-media-info {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.modal-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-}
-
-.modal-meta {
+.hero-rating-badge {
+  color: #fbbf24;
+  font-weight: 700;
   font-size: 0.85rem;
-  color: var(--accent-gold);
 }
 
-.close-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.8rem;
-  cursor: pointer;
-  line-height: 1;
+.hero-media-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
 }
 
-.rich-info-box {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
-}
-
-.rich-info-box p {
-  margin-bottom: 4px;
-}
-
-.next-air-highlight {
-  color: #38bdf8;
-  font-weight: 600;
-}
-
-.detail-loading {
+.hero-media-subtitle {
   font-size: 0.85rem;
   color: var(--text-muted);
-  margin-bottom: 16px;
 }
 
-.form-group {
+.detail-body {
+  padding: 20px;
+}
+
+.meta-info-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
   margin-bottom: 14px;
 }
 
-.form-row {
-  display: flex;
-  gap: 12px;
-}
-
-.flex-1 {
-  flex: 1;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
+.highlight-text {
+  color: #fbbf24;
   font-weight: 600;
 }
 
-.form-input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-family: inherit;
-  outline: none;
-  font-size: 0.9rem;
+.overview-text {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
 }
 
-.form-input option {
-  background: #0f172a;
+.quick-add-bar {
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.rating-input-row {
+  margin-bottom: 12px;
+}
+
+.rating-input-row label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 6px;
 }
 
 .star-rating-selector {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .star-icon {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #475569;
   cursor: pointer;
   transition: color 0.2s;
@@ -621,34 +796,177 @@ const saveToWatchlist = async () => {
 }
 
 .rating-number {
-  margin-left: 10px;
+  margin-left: 8px;
   font-size: 0.85rem;
   color: #fbbf24;
   font-weight: 700;
 }
 
-.text-area {
-  min-height: 70px;
-  resize: vertical;
-}
-
-.checkbox-group {
-  margin: 10px 0;
-}
-
-.checkbox-label {
+.quick-buttons-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #fff;
-  font-size: 0.85rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
   gap: 10px;
-  margin-top: 20px;
+}
+
+.seasons-section {
+  margin-top: 16px;
+}
+
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-subtitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.watched-counter-badge {
+  font-size: 0.78rem;
+  color: #fbbf24;
+  font-weight: 700;
+  background: rgba(251, 191, 36, 0.12);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.season-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+.season-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.season-chip.active {
+  background: var(--accent-gold);
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.episode-item {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  align-items: center;
+  transition: all 0.2s;
+  border-radius: 14px;
+}
+
+.episode-item.watched {
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.eps-banner-wrapper {
+  position: relative;
+  width: 120px;
+  height: 68px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #151d2a;
+}
+
+.eps-still-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.eps-num-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.eps-info {
+  flex: 1;
+}
+
+.eps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2px;
+}
+
+.eps-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.eps-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.eps-overview {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.eps-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.eps-toggle-btn.active {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-secondary);
+}
+
+.text-sm {
+  font-size: 0.78rem;
+  padding: 6px 12px;
 }
 </style>
