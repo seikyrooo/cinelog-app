@@ -1,10 +1,23 @@
 <template>
   <div class="watchlist-page">
+    <!-- Header & Main View Mode (Shows vs Movies) -->
     <div class="header-banner">
-      <h1 class="page-title">Daftar Tontonan <span class="gradient-text">Saya</span></h1>
-      <p class="page-subtitle">Daftar film dan TV series favorit yang tersimpan aman di database & server VPS kamu.</p>
+      <div class="main-mode-toggle glass-panel">
+        <button 
+          @click="mediaTypeTab = 'tv'; fetchWatchlist()"
+          :class="['mode-btn', { active: mediaTypeTab === 'tv' }]"
+        >
+          📺 TV Shows (Series)
+        </button>
+        <button 
+          @click="mediaTypeTab = 'movie'; fetchWatchlist()"
+          :class="['mode-btn', { active: mediaTypeTab === 'movie' }]"
+        >
+          🎬 Movies
+        </button>
+      </div>
 
-      <!-- Status Filter Tabs -->
+      <!-- Secondary Status Filter Tabs -->
       <div class="filter-tabs">
         <button 
           v-for="status in statusTabs" 
@@ -19,7 +32,7 @@
           @click="favoriteOnly = !favoriteOnly; fetchWatchlist()"
           :class="['tab-btn favorite-tab', { active: favoriteOnly }]"
         >
-          ⭐ Hanya Favorit
+          ★ Favorit
         </button>
       </div>
     </div>
@@ -32,20 +45,99 @@
 
     <!-- Empty State -->
     <div v-else-if="watchlist.length === 0" class="empty-state glass-card">
-      <p class="empty-icon">🍿</p>
-      <h3>Belum Ada Film / Series Ditemukan</h3>
-      <p>Kamu belum menambahkan film ke kategori ini.</p>
-      <NuxtLink to="/" class="btn-primary" style="margin-top: 16px;">
-        🔍 Cari & Tambah Sekarang
+      <h3>Belum Ada {{ mediaTypeTab === 'tv' ? 'TV Show' : 'Film' }} Ditemukan</h3>
+      <p>Kamu belum menambahkan {{ mediaTypeTab === 'tv' ? 'TV series' : 'film' }} di kategori ini.</p>
+      <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">
+        + Cari {{ mediaTypeTab === 'tv' ? 'TV Series' : 'Film' }}
       </NuxtLink>
     </div>
 
-    <!-- Watchlist Grid -->
-    <div v-else class="watchlist-grid">
+    <!-- TV SHOWS TRACKER (TV Time Style) -->
+    <div v-else-if="mediaTypeTab === 'tv'" class="shows-list">
       <div 
         v-for="item in watchlist" 
         :key="item.id" 
-        class="glass-card item-card"
+        class="glass-card show-row-card"
+      >
+        <img 
+          :src="getPosterUrl(item.movie)" 
+          :alt="item.movie.title"
+          class="show-poster"
+          @error="onImageError"
+        />
+
+        <div class="show-content">
+          <div class="show-top">
+            <h3 class="show-title">{{ item.movie.title }}</h3>
+            <span :class="['badge', getStatusBadgeClass(item.status)]">
+              {{ getStatusLabel(item.status) }}
+            </span>
+          </div>
+
+          <p class="show-meta" v-if="item.movie.director || item.movie.cast">
+            <span v-if="item.movie.director">Kreator: {{ item.movie.director }}</span>
+          </p>
+
+          <!-- TV Time Progress Bar & Tracker -->
+          <div class="tracker-box">
+            <div class="tracker-info">
+              <span class="eps-counter">
+                Season {{ item.season_watched || 1 }} • Episode {{ item.episodes_watched }}
+                <span v-if="item.movie.total_episodes > 0"> / {{ item.movie.total_episodes }}</span>
+              </span>
+              <span class="eps-percent" v-if="item.movie.total_episodes > 0">
+                {{ Math.min(100, Math.round((item.episodes_watched / item.movie.total_episodes) * 100)) }}%
+              </span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar-bg" v-if="item.movie.total_episodes > 0">
+              <div 
+                class="progress-bar-fill"
+                :style="{ width: Math.min(100, (item.episodes_watched / item.movie.total_episodes) * 100) + '%' }"
+              ></div>
+            </div>
+
+            <!-- Upcoming episode air date banner -->
+            <div v-if="item.movie.next_air_date" class="next-air-banner">
+              📅 Episode berikutnya: <strong>{{ item.movie.next_air_date }}</strong>
+              <span v-if="item.movie.next_episode_name"> ({{ item.movie.next_episode_name }})</span>
+            </div>
+          </div>
+
+          <!-- Rating & Notes -->
+          <div class="show-footer">
+            <div class="stars-display" v-if="item.rating > 0">
+              <span class="stars-gold">★</span>
+              <span class="rating-text"><strong>{{ item.rating }}</strong> / 5.0</span>
+            </div>
+            
+            <div class="action-buttons">
+              <button 
+                @click="incrementEpisode(item)" 
+                class="btn-primary text-sm" 
+                title="Klik untuk menyelesaikan 1 episode lagi"
+              >
+                +1 Eps Nonton
+              </button>
+              <button @click="openEditModal(item)" class="btn-secondary text-sm">
+                Edit
+              </button>
+              <button @click="deleteItem(item.id)" class="btn-danger text-sm">
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOVIES TRACKER -->
+    <div v-else class="movies-grid">
+      <div 
+        v-for="item in watchlist" 
+        :key="item.id" 
+        class="glass-card movie-item-card"
       >
         <div class="card-poster">
           <img 
@@ -57,39 +149,30 @@
           <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
             {{ getStatusLabel(item.status) }}
           </span>
-          <span v-if="item.favorite" class="fav-badge">
-            ⭐ Favorit
-          </span>
+          <span v-if="item.favorite" class="fav-badge">★ Favorit</span>
         </div>
 
         <div class="card-details">
           <div class="details-top">
-            <span :class="['badge', item.movie.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
-              {{ item.movie.media_type === 'tv' ? 'TV Series' : 'Movie' }}
-            </span>
+            <span class="movie-year">{{ formatYear(item.movie.release_date) }}</span>
             <span class="user-rating" v-if="item.rating > 0">
-              ⭐ <strong>{{ item.rating }}</strong> / 10
+              ★ <strong>{{ item.rating }}</strong> / 5.0
             </span>
           </div>
 
           <h3 class="movie-title">{{ item.movie.title }}</h3>
-          <p class="release-date">{{ item.movie.release_date || 'Tahun tidak diketahui' }}</p>
-          
-          <p v-if="item.notes" class="user-notes">
-            💬 "{{ item.notes }}"
-          </p>
+          <p class="director-text" v-if="item.movie.director">Sutradara: {{ item.movie.director }}</p>
 
-          <!-- Asset Local indicator -->
-          <div class="asset-info" title="Asset disimpan secara independen di VPS storage">
-            <span class="vps-badge">☁️ VPS Asset Saved</span>
-          </div>
+          <p v-if="item.notes" class="user-notes">
+            "{{ item.notes }}"
+          </p>
 
           <div class="card-actions">
             <button @click="openEditModal(item)" class="btn-secondary text-sm">
-              ✏️ Edit
+              Edit
             </button>
             <button @click="deleteItem(item.id)" class="btn-danger text-sm">
-              🗑️ Hapus
+              Hapus
             </button>
           </div>
         </div>
@@ -106,35 +189,51 @@
           <div class="form-group">
             <label>Status Tontonan</label>
             <select v-model="editForm.status" class="form-input">
-              <option value="plan_to_watch">Plan to Watch</option>
-              <option value="watching">Watching</option>
-              <option value="completed">Completed</option>
-              <option value="on_hold">On Hold</option>
-              <option value="dropped">Dropped</option>
+              <option value="watching">Sedang Nonton (Watching)</option>
+              <option value="completed">Selesai (Completed)</option>
+              <option value="plan_to_watch">Rencana Nonton (Plan to Watch)</option>
+              <option value="on_hold">Ditunda (On Hold)</option>
+              <option value="dropped">Dihentikan (Dropped)</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>Rating (0.0 - 10.0)</label>
-            <input 
-              v-model.number="editForm.rating" 
-              type="number" 
-              step="0.5" 
-              min="0" 
-              max="10" 
-              class="form-input" 
-            />
+            <label>Rating Kamu (1 - 5 Bintang)</label>
+            <div class="star-rating-selector">
+              <span 
+                v-for="star in 5" 
+                :key="star"
+                @click="editForm.rating = star"
+                :class="['star-icon', { active: star <= editForm.rating }]"
+              >★</span>
+              <span class="rating-number">{{ editForm.rating > 0 ? editForm.rating + ' / 5.0' : 'Belum dinilai' }}</span>
+            </div>
+          </div>
+
+          <div v-if="editingItem?.movie?.media_type === 'tv'" class="form-row">
+            <div class="form-group flex-1">
+              <label>Season</label>
+              <input v-model.number="editForm.season_watched" type="number" min="1" class="form-input" />
+            </div>
+            <div class="form-group flex-1">
+              <label>Eps Ditonton</label>
+              <input v-model.number="editForm.episodes_watched" type="number" min="0" class="form-input" />
+            </div>
+            <div class="form-group flex-1">
+              <label>Total Eps</label>
+              <input v-model.number="editForm.total_episodes" type="number" min="0" class="form-input" />
+            </div>
           </div>
 
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" v-model="editForm.favorite" />
-              ⭐ Tandai sebagai Favorit
+              Tandai sebagai Favorit
             </label>
           </div>
 
           <div class="form-group">
-            <label>Catatan / Impression</label>
+            <label>Catatan / Review Singkat</label>
             <textarea v-model="editForm.notes" class="form-input text-area"></textarea>
           </div>
 
@@ -152,30 +251,32 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-const config = useRuntimeConfig()
 const authStore = useAuthStore()
 const router = useRouter()
 
 const isLoading = ref(true)
 const watchlist = ref<any[]>([])
+const mediaTypeTab = ref('tv') // 'tv' or 'movie'
 const activeStatus = ref('all')
 const favoriteOnly = ref(false)
 
 const showEditModal = ref(false)
 const editingItem = ref<any>(null)
 const editForm = ref({
-  status: 'plan_to_watch',
-  rating: 8.0,
+  status: 'watching',
+  rating: 4.5,
   favorite: false,
-  notes: ''
+  notes: '',
+  season_watched: 1,
+  episodes_watched: 0,
+  total_episodes: 0
 })
 
 const statusTabs = [
   { label: 'Semua', value: 'all' },
   { label: 'Watching', value: 'watching' },
   { label: 'Completed', value: 'completed' },
-  { label: 'Plan to Watch', value: 'plan_to_watch' },
-  { label: 'Dropped', value: 'dropped' }
+  { label: 'Plan to Watch', value: 'plan_to_watch' }
 ]
 
 const fetchWatchlist = async () => {
@@ -186,7 +287,9 @@ const fetchWatchlist = async () => {
   isLoading.value = true
 
   try {
-    const params: any = {}
+    const params: any = {
+      media_type: mediaTypeTab.value
+    }
     if (activeStatus.value !== 'all') params.status = activeStatus.value
     if (favoriteOnly.value) params.favorite = 'true'
 
@@ -222,6 +325,11 @@ const onImageError = (e: Event) => {
   (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x450?text=No+Poster'
 }
 
+const formatYear = (dateStr: string) => {
+  if (!dateStr) return ''
+  return dateStr.substring(0, 4)
+}
+
 const getStatusBadgeClass = (status: string) => {
   switch (status) {
     case 'watching': return 'badge-watching'
@@ -232,11 +340,28 @@ const getStatusBadgeClass = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'watching': return '▶️ Watching'
-    case 'completed': return '✅ Completed'
-    case 'on_hold': return '⏸️ On Hold'
-    case 'dropped': return '🚫 Dropped'
-    default: return '📌 Plan to Watch'
+    case 'watching': return 'Watching'
+    case 'completed': return 'Completed'
+    case 'on_hold': return 'On Hold'
+    case 'dropped': return 'Dropped'
+    default: return 'Plan to Watch'
+  }
+}
+
+const incrementEpisode = async (item: any) => {
+  try {
+    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${item.id}/progress`), {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      }
+    })
+    if (res.data) {
+      item.episodes_watched = res.data.episodes_watched
+      item.status = res.data.status
+    }
+  } catch (err) {
+    console.error(err)
   }
 }
 
@@ -244,9 +369,12 @@ const openEditModal = (item: any) => {
   editingItem.value = item
   editForm.value = {
     status: item.status,
-    rating: item.rating,
+    rating: item.rating || 4.0,
     favorite: item.favorite,
-    notes: item.notes || ''
+    notes: item.notes || '',
+    season_watched: item.season_watched || 1,
+    episodes_watched: item.episodes_watched || 0,
+    total_episodes: item.total_episodes || item.movie?.total_episodes || 0
   }
   showEditModal.value = true
 }
@@ -269,7 +397,7 @@ const updateWatchlist = async () => {
 }
 
 const deleteItem = async (id: number) => {
-  if (!confirm('Yakin ingin menghapus item ini dari watchlist kamu?')) return
+  if (!confirm('Hapus item ini dari watchlist kamu?')) return
   try {
     await $fetch(useApiUrl(`/api/user/watchlist/${id}`), {
       method: 'DELETE',
@@ -286,18 +414,36 @@ const deleteItem = async (id: number) => {
 
 <style scoped>
 .header-banner {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.page-title {
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin-bottom: 8px;
+.main-mode-toggle {
+  display: flex;
+  padding: 6px;
+  border-radius: 14px;
+  gap: 8px;
+  max-width: 380px;
 }
 
-.page-subtitle {
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
   color: var(--text-secondary);
-  margin-bottom: 24px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: var(--accent-purple);
+  color: #fff;
 }
 
 .filter-tabs {
@@ -307,20 +453,21 @@ const deleteItem = async (id: number) => {
 }
 
 .tab-btn {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 12px;
+  padding: 6px 14px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tab-btn.active {
-  background: var(--accent-purple);
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  border-color: var(--accent-purple);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .favorite-tab.active {
@@ -329,13 +476,134 @@ const deleteItem = async (id: number) => {
   border-color: var(--accent-gold);
 }
 
-.watchlist-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
+/* TV Shows List Layout (TV Time style) */
+.shows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.item-card {
+.show-row-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  align-items: flex-start;
+}
+
+.show-poster {
+  width: 90px;
+  height: 130px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.show-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.show-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.show-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.show-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.tracker-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.tracker-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+
+.eps-counter {
+  color: #fff;
+  font-weight: 600;
+}
+
+.eps-percent {
+  color: var(--accent-purple);
+  font-weight: 700;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #38bdf8);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.next-air-banner {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #38bdf8;
+}
+
+.show-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.stars-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stars-gold {
+  color: #fbbf24;
+}
+
+.rating-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Movies Grid Layout */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.movie-item-card {
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -345,7 +613,7 @@ const deleteItem = async (id: number) => {
   position: relative;
   width: 100%;
   padding-top: 140%;
-  background: #1e293b;
+  background: #151d2a;
 }
 
 .poster-img {
@@ -359,24 +627,24 @@ const deleteItem = async (id: number) => {
 
 .status-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
 }
 
 .fav-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(245, 158, 11, 0.9);
+  top: 10px;
+  right: 10px;
+  background: var(--accent-gold);
   color: #0f172a;
   font-weight: 700;
   font-size: 0.75rem;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
 }
 
 .card-details {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -386,54 +654,46 @@ const deleteItem = async (id: number) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.movie-year {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .user-rating {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #fbbf24;
 }
 
 .movie-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: #fff;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
-.release-date {
+.director-text {
   font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 
 .user-notes {
-  font-size: 0.85rem;
-  color: #e2e8f0;
+  font-size: 0.8rem;
+  color: #cbd5e1;
   font-style: italic;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px;
   border-radius: 8px;
   margin-bottom: 12px;
-}
-
-.asset-info {
-  margin-top: auto;
-  margin-bottom: 12px;
-}
-
-.vps-badge {
-  font-size: 0.7rem;
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 3px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .card-actions {
   display: flex;
   gap: 8px;
+  margin-top: auto;
 }
 
 .card-actions button {
@@ -446,13 +706,8 @@ const deleteItem = async (id: number) => {
   color: var(--text-secondary);
 }
 
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 12px;
-}
-
 .text-sm {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   padding: 6px 12px;
 }
 
@@ -460,7 +715,7 @@ const deleteItem = async (id: number) => {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   z-index: 100;
   display: flex;
@@ -473,54 +728,88 @@ const deleteItem = async (id: number) => {
   width: 100%;
   max-width: 480px;
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px;
 }
 
 .modal-title {
-  font-size: 1.5rem;
-  margin-bottom: 4px;
+  font-size: 1.4rem;
+  margin-bottom: 2px;
 }
 
 .modal-subtitle {
   color: var(--accent-gold);
-  font-weight: 600;
-  margin-bottom: 20px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.flex-1 {
+  flex: 1;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-weight: 600;
 }
 
 .form-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   color: #fff;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 10px;
   font-family: inherit;
   outline: none;
+  font-size: 0.9rem;
 }
 
 .form-input option {
   background: #0f172a;
 }
 
+.star-rating-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.star-icon {
+  font-size: 1.4rem;
+  color: #475569;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star-icon.active {
+  color: #fbbf24;
+}
+
+.rating-number {
+  margin-left: 8px;
+  font-size: 0.82rem;
+  color: #fbbf24;
+  font-weight: 700;
+}
+
 .text-area {
-  min-height: 80px;
+  min-height: 70px;
   resize: vertical;
 }
 
 .checkbox-group {
-  margin: 12px 0;
+  margin: 10px 0;
 }
 
 .checkbox-label {
@@ -529,12 +818,13 @@ const deleteItem = async (id: number) => {
   gap: 8px;
   cursor: pointer;
   color: #fff;
+  font-size: 0.85rem;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 20px;
 }
 </style>

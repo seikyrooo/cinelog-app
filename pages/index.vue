@@ -1,8 +1,8 @@
 <template>
   <div class="search-page">
     <div class="hero-section">
-      <h1 class="hero-title">Cari & Catat <span class="gradient-text">Film / TV Series</span></h1>
-      <p class="hero-subtitle">Cari judul favoritmu dari TMDB, beri rating, dan simpan gambarnya langsung ke VPS servermu.</p>
+      <h1 class="hero-title">Cari & Lacak <span class="gradient-text">Film & TV Shows</span></h1>
+      <p class="hero-subtitle">Jelajahi ribuan judul, kelola progres episode, dan berikan penilaian sinematik terbaikmu.</p>
 
       <!-- Search Box -->
       <div class="search-box glass-panel">
@@ -10,7 +10,7 @@
           v-model="searchQuery" 
           @keyup.enter="handleSearch"
           type="text" 
-          placeholder="Tulis judul film atau serial TV (contoh: Inception, Breaking Bad)..." 
+          placeholder="Cari judul film atau TV show..." 
           class="search-input"
         />
         
@@ -26,7 +26,7 @@
         </div>
 
         <button @click="handleSearch" class="btn-primary">
-          🔍 Cari
+          Cari
         </button>
       </div>
     </div>
@@ -34,12 +34,12 @@
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-state">
       <div class="spinner"></div>
-      <p>Mengambil data dari TMDB...</p>
+      <p>Mencari judul dari TMDB...</p>
     </div>
 
-    <!-- Empty / Initial state -->
+    <!-- Empty State -->
     <div v-else-if="results.length === 0 && searched" class="empty-state">
-      <p>❌ Tidak ditemukan film atau series dengan kata kunci "{{ searchQuery }}"</p>
+      <p>Tidak ditemukan hasil untuk "{{ searchQuery }}"</p>
     </div>
 
     <!-- Results Grid -->
@@ -49,7 +49,7 @@
         :key="item.id" 
         class="glass-card media-card"
       >
-        <div class="poster-wrapper">
+        <div class="poster-wrapper" @click="openSaveModal(item)">
           <img 
             :src="getImageUrl(item.poster_path)" 
             :alt="item.title"
@@ -57,76 +57,113 @@
             @error="onImageError"
           />
           <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'type-badge']">
-            {{ item.media_type === 'tv' ? '📺 TV Series' : '🎬 Movie' }}
+            {{ item.media_type === 'tv' ? 'TV Show' : 'Movie' }}
           </span>
           <span v-if="item.vote_average" class="rating-badge">
-            ⭐ {{ item.vote_average.toFixed(1) }}
+            ★ {{ (item.vote_average / 2).toFixed(1) }}
           </span>
         </div>
 
         <div class="card-info">
-          <h3 class="media-title">{{ item.title || item.name }}</h3>
-          <p class="release-date">{{ item.release_date || item.first_air_date || 'Tanggal tidak diketahui' }}</p>
+          <h3 class="media-title" :title="item.title || item.name">{{ item.title || item.name }}</h3>
+          <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
           <p class="overview">{{ truncateText(item.overview, 110) }}</p>
 
           <button @click="openSaveModal(item)" class="btn-primary btn-full">
-            ➕ Simpan ke List
+            + Tambah ke Watchlist
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Modal Save to Watchlist -->
+    <!-- Modal Save & Detail -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content glass-panel animate-fade-in">
-        <h2 class="modal-title">Simpan ke Watchlist</h2>
-        <p class="modal-subtitle">{{ activeItem?.title || activeItem?.name }}</p>
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">{{ activeItem?.title || activeItem?.name }}</h2>
+            <p class="modal-meta">
+              {{ activeItem?.media_type === 'tv' ? 'TV Show' : 'Movie' }} • {{ formatYear(activeItem?.release_date || activeItem?.first_air_date) }}
+            </p>
+          </div>
+          <button @click="showModal = false" class="close-btn">&times;</button>
+        </div>
+
+        <!-- Detail info loading or rich info -->
+        <div v-if="isFetchingDetail" class="detail-loading">
+          <span>Memuat detail sutradara & episode...</span>
+        </div>
+        <div v-else-if="detailedInfo" class="rich-info-box">
+          <p v-if="detailedInfo.director"><strong>Sutradara / Pembuat:</strong> {{ detailedInfo.director }}</p>
+          <p v-if="detailedInfo.cast"><strong>Pemeran:</strong> {{ detailedInfo.cast }}</p>
+          <p v-if="detailedInfo.media_type === 'tv'"><strong>Jumlah Episode:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ detailedInfo.total_seasons }} Season)</p>
+          <p v-if="detailedInfo.next_air_date" class="next-air-highlight">
+            📅 Episode berikutnya tayang: {{ detailedInfo.next_air_date }} ({{ detailedInfo.next_episode_name }})
+          </p>
+        </div>
 
         <form @submit.prevent="saveToWatchlist" class="modal-form">
           <div class="form-group">
             <label>Status Tontonan</label>
             <select v-model="form.status" class="form-input">
-              <option value="plan_to_watch">Plan to Watch (Rencana Nonton)</option>
-              <option value="watching">Watching (Sedang Nonton)</option>
-              <option value="completed">Completed (Selesai)</option>
-              <option value="on_hold">On Hold (Ditunda)</option>
-              <option value="dropped">Dropped (Dihentikan)</option>
+              <option value="watching">Sedang Nonton (Watching)</option>
+              <option value="completed">Selesai (Completed)</option>
+              <option value="plan_to_watch">Rencana Nonton (Plan to Watch)</option>
+              <option value="on_hold">Ditunda (On Hold)</option>
+              <option value="dropped">Dihentikan (Dropped)</option>
             </select>
           </div>
 
+          <!-- Rating Bintang (1 - 5 Bintang) -->
           <div class="form-group">
-            <label>Rating Pribadi (0.0 - 10.0)</label>
-            <input 
-              v-model.number="form.rating" 
-              type="number" 
-              step="0.5" 
-              min="0" 
-              max="10" 
-              class="form-input" 
-              placeholder="Contoh: 8.5"
-            />
+            <label>Rating Kamu (1 - 5 Bintang)</label>
+            <div class="star-rating-selector">
+              <span 
+                v-for="star in 5" 
+                :key="star"
+                @click="form.rating = star"
+                :class="['star-icon', { active: star <= form.rating }]"
+              >★</span>
+              <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 5.0' : 'Belum dinilai' }}</span>
+            </div>
+          </div>
+
+          <!-- If TV Show: Episode progress tracking -->
+          <div v-if="activeItem?.media_type === 'tv'" class="form-row">
+            <div class="form-group flex-1">
+              <label>Season</label>
+              <input v-model.number="form.season_watched" type="number" min="1" class="form-input" />
+            </div>
+            <div class="form-group flex-1">
+              <label>Eps Ditonton</label>
+              <input v-model.number="form.episodes_watched" type="number" min="0" class="form-input" />
+            </div>
+            <div class="form-group flex-1">
+              <label>Total Eps</label>
+              <input v-model.number="form.total_episodes" type="number" min="0" class="form-input" />
+            </div>
           </div>
 
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" v-model="form.favorite" />
-              ⭐ Tandai sebagai Favorit
+              Tandai sebagai Favorit
             </label>
           </div>
 
           <div class="form-group">
-            <label>Catatan Pribadi / Review</label>
+            <label>Catatan / Review Singkat</label>
             <textarea 
               v-model="form.notes" 
               class="form-input text-area" 
-              placeholder="Tulis pesan atau kesanmu tentang film ini..."
+              placeholder="Tulis pendapatmu..."
             ></textarea>
           </div>
 
           <div class="modal-actions">
             <button type="button" @click="showModal = false" class="btn-secondary">Batal</button>
             <button type="submit" class="btn-primary" :disabled="isSaving">
-              {{ isSaving ? 'Menyimpan & Download Asset...' : 'Simpan ke Database VPS' }}
+              {{ isSaving ? 'Menyimpan...' : 'Simpan ke Watchlist' }}
             </button>
           </div>
         </form>
@@ -139,11 +176,10 @@
 import { ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-const config = useRuntimeConfig()
 const authStore = useAuthStore()
 const router = useRouter()
 
-const searchQuery = ref('Avengers')
+const searchQuery = ref('Breaking Bad')
 const selectedType = ref('all')
 const isLoading = ref(false)
 const searched = ref(false)
@@ -151,19 +187,24 @@ const results = ref<any[]>([])
 
 const mediaTypes = [
   { label: 'Semua', value: 'all' },
-  { label: 'Movie', value: 'movie' },
-  { label: 'TV Series', value: 'tv' }
+  { label: 'Movies', value: 'movie' },
+  { label: 'TV Shows', value: 'tv' }
 ]
 
 const showModal = ref(false)
 const activeItem = ref<any>(null)
+const detailedInfo = ref<any>(null)
+const isFetchingDetail = ref(false)
 const isSaving = ref(false)
 
 const form = ref({
-  status: 'plan_to_watch',
-  rating: 8.0,
+  status: 'watching',
+  rating: 4.5,
   favorite: false,
-  notes: ''
+  notes: '',
+  season_watched: 1,
+  episodes_watched: 0,
+  total_episodes: 0
 })
 
 const handleSearch = async () => {
@@ -181,13 +222,12 @@ const handleSearch = async () => {
     results.value = res.data || []
   } catch (err) {
     console.error(err)
-    alert('Gagal mengambil data dari server API.')
+    alert('Gagal mengambil data pencarian.')
   } finally {
     isLoading.value = false
   }
 }
 
-// Initial search
 handleSearch()
 
 const getImageUrl = (path: string) => {
@@ -199,25 +239,54 @@ const onImageError = (e: Event) => {
   (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x450?text=No+Poster'
 }
 
+const formatYear = (dateStr: string) => {
+  if (!dateStr) return ''
+  return dateStr.substring(0, 4)
+}
+
 const truncateText = (text: string, len: number) => {
-  if (!text) return 'Tidak ada deskripsi.'
+  if (!text) return 'Belum ada ringkasan.'
   return text.length > len ? text.substring(0, len) + '...' : text
 }
 
-const openSaveModal = (item: any) => {
+const openSaveModal = async (item: any) => {
   if (!authStore.isAuth) {
-    alert('Silakan login terlebih dahulu untuk menyimpan ke list!')
+    alert('Silakan login terlebih dahulu.')
     router.push('/login')
     return
   }
   activeItem.value = item
+  detailedInfo.value = null
+  isFetchingDetail.value = true
+
   form.value = {
-    status: 'plan_to_watch',
-    rating: item.vote_average ? Math.round(item.vote_average * 10) / 10 : 8.0,
+    status: item.media_type === 'tv' ? 'watching' : 'completed',
+    rating: item.vote_average ? Math.min(5, Math.round((item.vote_average / 2) * 2) / 2) : 4.0,
     favorite: false,
-    notes: ''
+    notes: '',
+    season_watched: 1,
+    episodes_watched: 0,
+    total_episodes: 0
   }
   showModal.value = true
+
+  // Fetch detailed info
+  try {
+    const res: any = await $fetch(useApiUrl('/api/detail'), {
+      params: {
+        id: item.id,
+        type: item.media_type || 'movie'
+      }
+    })
+    if (res.data) {
+      detailedInfo.value = res.data
+      if (res.data.total_episodes) form.value.total_episodes = res.data.total_episodes
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    isFetchingDetail.value = false
+  }
 }
 
 const saveToWatchlist = async () => {
@@ -234,10 +303,19 @@ const saveToWatchlist = async () => {
       backdrop_path: activeItem.value.backdrop_path || '',
       release_date: activeItem.value.release_date || activeItem.value.first_air_date || '',
       vote_average: activeItem.value.vote_average || 0,
+      director: detailedInfo.value?.director || '',
+      cast: detailedInfo.value?.cast || '',
+      total_seasons: detailedInfo.value?.total_seasons || 0,
+      next_air_date: detailedInfo.value?.next_air_date || '',
+      next_episode_name: detailedInfo.value?.next_episode_name || '',
+      media_status: detailedInfo.value?.media_status || '',
       status: form.value.status,
       rating: form.value.rating,
       favorite: form.value.favorite,
-      notes: form.value.notes
+      notes: form.value.notes,
+      season_watched: form.value.season_watched,
+      episodes_watched: form.value.episodes_watched,
+      total_episodes: form.value.total_episodes
     }
 
     await $fetch(useApiUrl('/api/user/watchlist'), {
@@ -248,8 +326,8 @@ const saveToWatchlist = async () => {
       body: payload
     })
 
-    alert('✅ Berhasil disimpan! Asset poster telah di-backup ke VPS storage.')
     showModal.value = false
+    router.push('/watchlist')
   } catch (err: any) {
     console.error(err)
     alert(err?.data?.error || 'Gagal menyimpan ke watchlist.')
@@ -266,56 +344,56 @@ const saveToWatchlist = async () => {
 }
 
 .hero-title {
-  font-size: 2.8rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .hero-subtitle {
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  max-width: 600px;
-  margin: 0 auto 28px;
+  font-size: 1rem;
+  max-width: 580px;
+  margin: 0 auto 24px;
 }
 
 .search-box {
-  max-width: 750px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 12px;
-  border-radius: 20px;
+  padding: 10px 14px;
+  border-radius: 18px;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
 
 .search-input {
   flex: 1;
-  min-width: 250px;
+  min-width: 240px;
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 1rem;
-  padding: 10px 16px;
+  font-size: 0.95rem;
+  padding: 8px 14px;
   outline: none;
 }
 
 .filter-type {
   display: flex;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   padding: 4px;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .type-btn {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -325,30 +403,10 @@ const saveToWatchlist = async () => {
   color: #fff;
 }
 
-.loading-state, .empty-state {
-  text-align: center;
-  padding: 60px;
-  color: var(--text-secondary);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--accent-gold);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 22px;
 }
 
 .media-card {
@@ -360,9 +418,10 @@ const saveToWatchlist = async () => {
 .poster-wrapper {
   position: relative;
   width: 100%;
-  padding-top: 150%;
+  padding-top: 148%;
   overflow: hidden;
-  background: #1e293b;
+  background: #151d2a;
+  cursor: pointer;
 }
 
 .poster-img {
@@ -372,11 +431,11 @@ const saveToWatchlist = async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.3s ease;
 }
 
 .media-card:hover .poster-img {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
 .type-badge {
@@ -389,26 +448,26 @@ const saveToWatchlist = async () => {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(8px);
   color: #fbbf24;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   padding: 4px 8px;
   border-radius: 8px;
 }
 
 .card-info {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
 .media-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -418,14 +477,14 @@ const saveToWatchlist = async () => {
 .release-date {
   font-size: 0.8rem;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .overview {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.4;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex: 1;
 }
 
@@ -434,11 +493,11 @@ const saveToWatchlist = async () => {
   justify-content: center;
 }
 
-/* Modal styles */
+/* Modal Styling */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   z-index: 100;
   display: flex;
@@ -449,56 +508,132 @@ const saveToWatchlist = async () => {
 
 .modal-content {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
 .modal-title {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.modal-meta {
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.8rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.rich-info-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.rich-info-box p {
   margin-bottom: 4px;
 }
 
-.modal-subtitle {
-  color: var(--accent-gold);
+.next-air-highlight {
+  color: #38bdf8;
   font-weight: 600;
-  margin-bottom: 20px;
+}
+
+.detail-loading {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.flex-1 {
+  flex: 1;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-weight: 600;
 }
 
 .form-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   color: #fff;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 10px;
   font-family: inherit;
   outline: none;
+  font-size: 0.9rem;
 }
 
 .form-input option {
   background: #0f172a;
 }
 
+.star-rating-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.star-icon {
+  font-size: 1.5rem;
+  color: #475569;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star-icon.active {
+  color: #fbbf24;
+}
+
+.rating-number {
+  margin-left: 10px;
+  font-size: 0.85rem;
+  color: #fbbf24;
+  font-weight: 700;
+}
+
 .text-area {
-  min-height: 80px;
+  min-height: 70px;
   resize: vertical;
 }
 
 .checkbox-group {
-  margin: 12px 0;
+  margin: 10px 0;
 }
 
 .checkbox-label {
@@ -507,12 +642,13 @@ const saveToWatchlist = async () => {
   gap: 8px;
   cursor: pointer;
   color: #fff;
+  font-size: 0.85rem;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 20px;
 }
 </style>
