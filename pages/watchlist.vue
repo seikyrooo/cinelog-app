@@ -29,8 +29,7 @@
           <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
             <line x1="7" y1="2" x2="7" y2="22"></line>
-            <line x1="17" y1="2" x2="17" y2="22"></line>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <line x1="17" y1="12" x2="22" y2="12"></line>
           </svg>
           <span>Movies</span>
         </button>
@@ -351,7 +350,7 @@
         <!-- Wide 2-Column Layout Body -->
         <div class="detail-body wide-grid">
           
-          <!-- Left Column: Poster & Metadata Box -->
+          <!-- Left Column: Poster & Metadata Box & Favorite Button -->
           <div class="detail-left-col">
             <img 
               :src="getPosterUrl(activeDetailMedia || activeWatchlistContext?.movie)" 
@@ -359,6 +358,18 @@
               class="detail-poster-img glass-card"
               @error="onImageError"
             />
+
+            <!-- Favorite Toggle Action Button -->
+            <button 
+              v-if="activeWatchlistContext"
+              @click="toggleFavoriteStatus(activeWatchlistContext)"
+              :class="['fav-toggle-btn', { active: activeWatchlistContext.favorite }]"
+            >
+              <svg class="icon-inline" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>{{ activeWatchlistContext.favorite ? 'Hapus dari Favorit' : 'Tambah ke Favorit' }}</span>
+            </button>
 
             <div class="meta-info-box glass-card">
               <p v-if="activeDetailMedia?.director || activeWatchlistContext?.movie?.director">
@@ -608,8 +619,10 @@ const getTotalEps = (item: any) => {
 }
 
 const getRemainingEps = (item: any) => {
+  if (item.status === 'completed') return 0
   const total = getTotalEps(item)
   const watched = item.episodes_watched || 0
+  if (total > 0 && watched >= total) return 0
   if (total <= 0) return 0
   return Math.max(0, total - watched - 1)
 }
@@ -748,6 +761,37 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       activeWatchlistContext.value.status = res.data.status
       fetchWatchlist()
       showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const toggleFavoriteStatus = async (item: any) => {
+  const newFavState = !item.favorite
+  try {
+    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${item.id}`), {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      },
+      body: {
+        status: item.status,
+        rating: item.rating,
+        favorite: newFavState,
+        notes: item.notes || '',
+        season_watched: item.season_watched,
+        episodes_watched: item.episodes_watched,
+        total_episodes: item.total_episodes
+      }
+    })
+    if (res.data) {
+      item.favorite = newFavState
+      if (activeWatchlistContext.value) {
+        activeWatchlistContext.value.favorite = newFavState
+      }
+      fetchWatchlist()
+      showToast(newFavState ? 'Ditambahkan ke Favorit! ★' : 'Dihapus dari Favorit.')
     }
   } catch (err) {
     console.error(err)
@@ -899,6 +943,29 @@ const deleteItem = async (id: number) => {
 .check-svg {
   width: 22px;
   height: 22px;
+}
+
+.fav-toggle-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.fav-toggle-btn.active {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .tvtime-container {
