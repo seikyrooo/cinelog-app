@@ -197,9 +197,9 @@
 
                 <div class="eps-headline">
                   <span class="season-eps-code">
-                    S{{ padZero(item.season_watched || 1) }} | E{{ padZero(item.episodes_watched) }}
+                    S{{ padZero(item.season_watched || 1) }} | E{{ padZero(item.episodes_watched || getTotalEps(item)) }}
                   </span>
-                  <span class="badge-completed-tag">TAMAT ({{ item.episodes_watched }} eps)</span>
+                  <span class="badge-completed-tag">TAMAT ({{ item.episodes_watched || getTotalEps(item) }} eps)</span>
                 </div>
 
                 <p class="eps-title-text">Semua episode telah ditonton 100%</p>
@@ -565,15 +565,29 @@ const seasonsCount = computed(() => {
 })
 
 const watchNextList = computed(() => {
-  return watchlist.value.filter(item => item.status === 'watching' || item.status === 'plan_to_watch')
+  return watchlist.value.filter(item => {
+    const total = getTotalEps(item)
+    const watched = item.episodes_watched || 0
+    const isTamat = item.status === 'completed' || (total > 0 && watched >= total)
+    return !isTamat && (item.status === 'watching' || item.status === 'plan_to_watch')
+  })
 })
 
 const haventWatchedList = computed(() => {
-  return watchlist.value.filter(item => item.status === 'on_hold')
+  return watchlist.value.filter(item => {
+    const total = getTotalEps(item)
+    const watched = item.episodes_watched || 0
+    const isTamat = item.status === 'completed' || (total > 0 && watched >= total)
+    return !isTamat && item.status === 'on_hold'
+  })
 })
 
 const watchedHistoryList = computed(() => {
-  return watchlist.value.filter(item => item.status === 'completed')
+  return watchlist.value.filter(item => {
+    const total = getTotalEps(item)
+    const watched = item.episodes_watched || 0
+    return item.status === 'completed' || (total > 0 && watched >= total)
+  })
 })
 
 const upcomingList = computed(() => {
@@ -619,12 +633,11 @@ const getTotalEps = (item: any) => {
 }
 
 const getRemainingEps = (item: any) => {
-  if (item.status === 'completed') return 0
   const total = getTotalEps(item)
   const watched = item.episodes_watched || 0
-  if (total > 0 && watched >= total) return 0
+  if (item.status === 'completed' || (total > 0 && watched >= total)) return 0
   if (total <= 0) return 0
-  return Math.max(0, total - watched - 1)
+  return Math.max(0, total - watched)
 }
 
 const getNextEpsName = (item: any) => {
@@ -760,7 +773,12 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       activeWatchlistContext.value.episodes_watched = res.data.episodes_watched
       activeWatchlistContext.value.status = res.data.status
       fetchWatchlist()
-      showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
+
+      if (res.data.status === 'completed') {
+        showToast('🎉 Tamat! Series berpindah ke Watched History')
+      } else {
+        showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
+      }
     }
   } catch (err) {
     console.error(err)
@@ -856,7 +874,12 @@ const incrementEpisode = async (item: any) => {
       item.episodes_watched = res.data.episodes_watched
       item.status = res.data.status
       fetchWatchlist()
-      showToast(`+1 Episode! Total ${item.episodes_watched} eps ditonton`)
+
+      if (res.data.status === 'completed') {
+        showToast('🎉 Tamat! Series ini telah berpindah ke Watched History')
+      } else {
+        showToast(`+1 Episode! Total ${item.episodes_watched} eps ditonton`)
+      }
     }
   } catch (err) {
     console.error(err)
