@@ -63,20 +63,21 @@
           :src="getPosterUrl(item.movie)" 
           :alt="item.movie.title"
           class="show-poster clickable"
-          @click="openDetailModal(item.movie)"
+          @click="openDetailModal(item)"
           @error="onImageError"
         />
 
         <div class="show-content">
           <div class="show-top">
-            <h3 class="show-title clickable" @click="openDetailModal(item.movie)">{{ item.movie.title }}</h3>
+            <h3 class="show-title clickable" @click="openDetailModal(item)">{{ item.movie.title }}</h3>
             <span :class="['badge', getStatusBadgeClass(item.status)]">
               {{ getStatusLabel(item.status) }}
             </span>
           </div>
 
           <p class="show-meta" v-if="item.movie.director || item.movie.cast">
-            <span v-if="item.movie.director">Kreator: {{ item.movie.director }}</span>
+            <span v-if="item.movie.director" class="meta-director">Kreator: <strong>{{ item.movie.director }}</strong></span>
+            <span v-if="item.movie.cast" class="meta-cast"> • {{ truncateText(item.movie.cast, 40) }}</span>
           </p>
 
           <!-- TV Time Progress Bar & Tracker -->
@@ -84,18 +85,18 @@
             <div class="tracker-info">
               <span class="eps-counter">
                 Season {{ item.season_watched || 1 }} • Episode {{ item.episodes_watched }}
-                <span v-if="item.movie.total_episodes > 0"> / {{ item.movie.total_episodes }}</span>
+                <span v-if="getEffectiveTotalEps(item) > 0"> / {{ getEffectiveTotalEps(item) }}</span>
               </span>
-              <span class="eps-percent" v-if="item.movie.total_episodes > 0">
-                {{ Math.min(100, Math.round((item.episodes_watched / item.movie.total_episodes) * 100)) }}%
+              <span class="eps-percent" v-if="getEffectiveTotalEps(item) > 0">
+                {{ Math.min(100, Math.round((item.episodes_watched / getEffectiveTotalEps(item)) * 100)) }}%
               </span>
             </div>
 
             <!-- Progress Bar -->
-            <div class="progress-bar-bg" v-if="item.movie.total_episodes > 0">
+            <div class="progress-bar-bg" v-if="getEffectiveTotalEps(item) > 0">
               <div 
                 class="progress-bar-fill"
-                :style="{ width: Math.min(100, (item.episodes_watched / item.movie.total_episodes) * 100) + '%' }"
+                :style="{ width: Math.min(100, (item.episodes_watched / getEffectiveTotalEps(item)) * 100) + '%' }"
               ></div>
             </div>
 
@@ -121,8 +122,8 @@
               >
                 +1 Eps Nonton
               </button>
-              <button @click="openDetailModal(item.movie)" class="btn-secondary text-sm">
-                Detail
+              <button @click="openDetailModal(item)" class="btn-secondary text-sm">
+                Lihat Episode
               </button>
               <button @click="openEditModal(item)" class="btn-secondary text-sm">
                 Edit
@@ -143,7 +144,7 @@
         :key="item.id" 
         class="glass-card movie-item-card"
       >
-        <div class="card-poster clickable" @click="openDetailModal(item.movie)">
+        <div class="card-poster clickable" @click="openDetailModal(item)">
           <img 
             :src="getPosterUrl(item.movie)" 
             :alt="item.movie.title"
@@ -164,7 +165,7 @@
             </span>
           </div>
 
-          <h3 class="movie-title clickable" @click="openDetailModal(item.movie)">{{ item.movie.title }}</h3>
+          <h3 class="movie-title clickable" @click="openDetailModal(item)">{{ item.movie.title }}</h3>
           <p class="director-text" v-if="item.movie.director">Sutradara: {{ item.movie.director }}</p>
 
           <p v-if="item.notes" class="user-notes">
@@ -172,7 +173,7 @@
           </p>
 
           <div class="card-actions">
-            <button @click="openDetailModal(item.movie)" class="btn-secondary text-sm">
+            <button @click="openDetailModal(item)" class="btn-secondary text-sm">
               Detail
             </button>
             <button @click="openEditModal(item)" class="btn-secondary text-sm">
@@ -191,9 +192,9 @@
       <div class="modal-content glass-panel detail-modal-content animate-fade-in">
         <div class="modal-header">
           <div>
-            <h2 class="modal-title">{{ activeDetailMedia?.title }}</h2>
+            <h2 class="modal-title">{{ activeDetailMedia?.title || activeWatchlistContext?.movie?.title }}</h2>
             <p class="modal-meta">
-              {{ activeDetailMedia?.media_type === 'tv' ? 'TV Show' : 'Movie' }} • {{ formatYear(activeDetailMedia?.release_date) }}
+              {{ activeDetailMedia?.media_type === 'tv' || activeWatchlistContext?.movie?.media_type === 'tv' ? 'TV Show' : 'Movie' }} • {{ formatYear(activeDetailMedia?.release_date || activeWatchlistContext?.movie?.release_date) }}
             </p>
           </div>
           <button @click="showDetailModal = false" class="close-btn">&times;</button>
@@ -201,17 +202,33 @@
 
         <!-- Detail Banner & Overview -->
         <div class="detail-body">
-          <p v-if="activeDetailMedia?.director"><strong>Sutradara / Pembuat:</strong> {{ activeDetailMedia.director }}</p>
-          <p v-if="activeDetailMedia?.cast"><strong>Pemeran Utama:</strong> {{ activeDetailMedia.cast }}</p>
-          <p class="overview-text">{{ activeDetailMedia?.overview }}</p>
+          <div class="meta-info-box">
+            <p v-if="activeDetailMedia?.director || activeWatchlistContext?.movie?.director">
+              <strong>Sutradara / Pembuat:</strong> {{ activeDetailMedia?.director || activeWatchlistContext?.movie?.director }}
+            </p>
+            <p v-if="activeDetailMedia?.cast || activeWatchlistContext?.movie?.cast">
+              <strong>Pemeran Utama:</strong> {{ activeDetailMedia?.cast || activeWatchlistContext?.movie?.cast }}
+            </p>
+            <p v-if="activeDetailMedia?.media_status">
+              <strong>Status:</strong> <span class="badge-status-text">{{ activeDetailMedia.media_status }}</span>
+            </p>
+          </div>
 
-          <!-- If TV Show: Season Selector & Episodes List -->
-          <div v-if="activeDetailMedia?.media_type === 'tv'" class="seasons-section">
-            <h4 class="section-subtitle">Daftar Season & Episode</h4>
+          <p class="overview-text">{{ activeDetailMedia?.overview || activeWatchlistContext?.movie?.overview }}</p>
 
+          <!-- If TV Show: Season Selector & Interactive Episodes List -->
+          <div v-if="isTvShowContext" class="seasons-section">
+            <div class="section-header-row">
+              <h4 class="section-subtitle">Daftar Season & Episode</h4>
+              <span class="watched-counter-badge" v-if="activeWatchlistContext">
+                Progres: {{ activeWatchlistContext.episodes_watched }} eps ditonton
+              </span>
+            </div>
+
+            <!-- Season Chips (Season 1, 2, 3...) -->
             <div class="season-chips">
               <button 
-                v-for="s in (activeDetailMedia.total_seasons || 1)" 
+                v-for="s in seasonsCount" 
                 :key="s"
                 @click="fetchSeasonEpisodes(s)"
                 :class="['season-chip', { active: selectedSeason === s }]"
@@ -220,8 +237,9 @@
               </button>
             </div>
 
-            <!-- Episodes List -->
+            <!-- Episodes List with Checkmark Toggles -->
             <div v-if="isLoadingEpisodes" class="loading-state text-sm">
+              <div class="spinner"></div>
               <span>Memuat daftar episode Season {{ selectedSeason }}...</span>
             </div>
 
@@ -229,14 +247,22 @@
               <div 
                 v-for="eps in episodesList" 
                 :key="eps.episode_number"
-                class="episode-item glass-card"
+                :class="['episode-item', 'glass-card', { watched: isEpisodeWatched(eps.episode_number) }]"
               >
                 <div class="eps-num">Eps {{ eps.episode_number }}</div>
                 <div class="eps-info">
                   <h5 class="eps-name">{{ eps.name }}</h5>
                   <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
-                  <p class="eps-overview" v-if="eps.overview">{{ eps.overview }}</p>
+                  <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 100) }}</p>
                 </div>
+
+                <button 
+                  v-if="activeWatchlistContext"
+                  @click="toggleEpisodeWatched(eps.episode_number)"
+                  :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                >
+                  {{ isEpisodeWatched(eps.episode_number) ? '✓ Sudah' : '+ Tonton' }}
+                </button>
               </div>
             </div>
           </div>
@@ -313,7 +339,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
@@ -339,6 +365,7 @@ const editForm = ref({
 
 const showDetailModal = ref(false)
 const activeDetailMedia = ref<any>(null)
+const activeWatchlistContext = ref<any>(null)
 const selectedSeason = ref(1)
 const isLoadingEpisodes = ref(false)
 const episodesList = ref<any[]>([])
@@ -349,6 +376,17 @@ const statusTabs = [
   { label: 'Completed', value: 'completed' },
   { label: 'Plan to Watch', value: 'plan_to_watch' }
 ]
+
+const isTvShowContext = computed(() => {
+  return activeDetailMedia.value?.media_type === 'tv' || activeWatchlistContext.value?.movie?.media_type === 'tv'
+})
+
+const seasonsCount = computed(() => {
+  if (activeDetailMedia.value?.seasons?.length) {
+    return activeDetailMedia.value.seasons.length
+  }
+  return activeDetailMedia.value?.total_seasons || activeWatchlistContext.value?.movie?.total_seasons || 1
+})
 
 const fetchWatchlist = async () => {
   if (!authStore.isAuth) {
@@ -382,26 +420,51 @@ onMounted(() => {
   fetchWatchlist()
 })
 
-const openDetailModal = async (movie: any) => {
-  activeDetailMedia.value = movie
-  selectedSeason.value = 1
+const getEffectiveTotalEps = (item: any) => {
+  if (item.total_episodes > 0) return item.total_episodes
+  if (item.movie?.total_episodes > 0) return item.movie.total_episodes
+  return 0
+}
+
+const openDetailModal = async (contextItem: any) => {
+  let movieObj = contextItem.movie ? contextItem.movie : contextItem
+  activeWatchlistContext.value = contextItem.movie ? contextItem : null
+  activeDetailMedia.value = movieObj
+  selectedSeason.value = contextItem.season_watched || 1
   episodesList.value = []
   showDetailModal.value = true
 
-  if (movie.media_type === 'tv') {
-    fetchSeasonEpisodes(1)
+  // Fetch full detail from API
+  try {
+    const res: any = await $fetch(useApiUrl('/api/detail'), {
+      params: {
+        id: movieObj.tmdb_id || movieObj.id,
+        type: movieObj.media_type || 'tv'
+      }
+    })
+    if (res.data) {
+      activeDetailMedia.value = res.data
+    }
+  } catch (err) {
+    console.error(err)
+  }
+
+  if (isTvShowContext.value) {
+    fetchSeasonEpisodes(selectedSeason.value)
   }
 }
 
 const fetchSeasonEpisodes = async (seasonNum: number) => {
-  if (!activeDetailMedia.value) return
+  const tmdbId = activeDetailMedia.value?.id || activeDetailMedia.value?.tmdb_id || activeWatchlistContext.value?.movie?.tmdb_id
+  if (!tmdbId) return
+
   selectedSeason.value = seasonNum
   isLoadingEpisodes.value = true
 
   try {
     const res: any = await $fetch(useApiUrl('/api/tv/season'), {
       params: {
-        id: activeDetailMedia.value.tmdb_id,
+        id: tmdbId,
         season: seasonNum
       }
     })
@@ -410,6 +473,43 @@ const fetchSeasonEpisodes = async (seasonNum: number) => {
     console.error(err)
   } finally {
     isLoadingEpisodes.value = false
+  }
+}
+
+const isEpisodeWatched = (epsNumber: number) => {
+  if (!activeWatchlistContext.value) return false
+  const watchedEps = activeWatchlistContext.value.episodes_watched || 0
+  const currentSeason = activeWatchlistContext.value.season_watched || 1
+  
+  if (selectedSeason.value < currentSeason) return true
+  if (selectedSeason.value === currentSeason) return epsNumber <= watchedEps
+  return false
+}
+
+const toggleEpisodeWatched = async (epsNumber: number) => {
+  if (!activeWatchlistContext.value) return
+
+  const targetEpsCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
+
+  try {
+    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${activeWatchlistContext.value.id}/set-progress`), {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`
+      },
+      body: {
+        season_watched: selectedSeason.value,
+        episodes_watched: Math.max(0, targetEpsCount)
+      }
+    })
+
+    if (res.data) {
+      activeWatchlistContext.value.season_watched = res.data.season_watched
+      activeWatchlistContext.value.episodes_watched = res.data.episodes_watched
+      activeWatchlistContext.value.status = res.data.status
+    }
+  } catch (err) {
+    console.error(err)
   }
 }
 
@@ -430,6 +530,11 @@ const onImageError = (e: Event) => {
 const formatYear = (dateStr: string) => {
   if (!dateStr) return ''
   return dateStr.substring(0, 4)
+}
+
+const truncateText = (text: string, len: number) => {
+  if (!text) return ''
+  return text.length > len ? text.substring(0, len) + '...' : text
 }
 
 const getStatusBadgeClass = (status: string) => {
@@ -629,6 +734,10 @@ const deleteItem = async (id: number) => {
   margin-bottom: 12px;
 }
 
+.meta-director {
+  color: #fbbf24;
+}
+
 .tracker-box {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-border);
@@ -808,7 +917,24 @@ const deleteItem = async (id: number) => {
 
 /* Detail Modal Seasons & Episodes */
 .detail-modal-content {
-  max-width: 600px;
+  max-width: 650px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.meta-info-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.badge-status-text {
+  color: #4ade80;
+  font-weight: 600;
 }
 
 .overview-text {
@@ -822,11 +948,26 @@ const deleteItem = async (id: number) => {
   margin-top: 16px;
 }
 
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .section-subtitle {
   font-size: 1rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 10px;
+}
+
+.watched-counter-badge {
+  font-size: 0.78rem;
+  color: #fbbf24;
+  font-weight: 700;
+  background: rgba(251, 191, 36, 0.12);
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 
 .season-chips {
@@ -841,11 +982,12 @@ const deleteItem = async (id: number) => {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   cursor: pointer;
   white-space: nowrap;
+  transition: all 0.2s;
 }
 
 .season-chip.active {
@@ -857,16 +999,22 @@ const deleteItem = async (id: number) => {
 .episodes-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 260px;
+  gap: 10px;
+  max-height: 320px;
   overflow-y: auto;
 }
 
 .episode-item {
   display: flex;
   gap: 12px;
-  padding: 10px;
-  align-items: flex-start;
+  padding: 12px;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.episode-item.watched {
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.04);
 }
 
 .eps-num {
@@ -879,12 +1027,17 @@ const deleteItem = async (id: number) => {
   white-space: nowrap;
 }
 
+.episode-item.watched .eps-num {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+}
+
 .eps-info {
   flex: 1;
 }
 
 .eps-name {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #fff;
   margin-bottom: 2px;
@@ -900,6 +1053,25 @@ const deleteItem = async (id: number) => {
   color: var(--text-secondary);
   margin-top: 4px;
   line-height: 1.3;
+}
+
+.eps-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.eps-toggle-btn.active {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
 }
 
 .loading-state, .empty-state {
