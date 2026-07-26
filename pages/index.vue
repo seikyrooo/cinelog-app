@@ -1102,4 +1102,22 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   font-size: 0.78rem;
   padding: 6px 12px;
 }
+
+/* Modal Overlay Fixed Overlay Styling */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+}
 </style>
