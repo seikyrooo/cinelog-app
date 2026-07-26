@@ -1,8 +1,27 @@
 <template>
   <div class="search-page">
+    <!-- Featured Hero Banner on Explore -->
+    <div v-if="featuredShow" class="featured-hero-banner glass-card" :style="getBackdropStyle(featuredShow)">
+      <div class="featured-gradient-overlay">
+        <div class="featured-content">
+          <div class="featured-badges">
+            <span class="badge badge-tv">🔥 TRENDING EXPLORE</span>
+            <span class="hero-rating-badge">★ {{ featuredShow.vote_average?.toFixed(1) || '9.0' }} / 10.0</span>
+          </div>
+          <h2 class="featured-title">{{ featuredShow.title || featuredShow.name }}</h2>
+          <p class="featured-overview">{{ truncateText(featuredShow.overview, 140) }}</p>
+          <div class="featured-actions">
+            <button @click="openSaveModal(featuredShow)" class="btn-primary">
+              🎬 Lihat Detail & Daftar Episode
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="hero-section">
       <h1 class="hero-title">Jelajahi & Lacak <span class="gradient-text">Film & TV Shows</span></h1>
-      <p class="hero-subtitle">Cari ribuan judul dari TMDB, lihat rincian sutradara, pemeran, season, dan klik episode untuk langsung ditambahkan ke Watchlist kamu.</p>
+      <p class="hero-subtitle">Cari ribuan judul dari TMDB, klik banner untuk melihat sutradara, pemeran, season, dan klik episode untuk langsung ditambahkan ke Watchlist kamu.</p>
 
       <!-- Search Box -->
       <div class="search-box glass-panel">
@@ -47,9 +66,10 @@
       <div 
         v-for="item in results" 
         :key="item.id" 
-        class="glass-card media-card"
+        class="glass-card media-card clickable"
+        @click="openSaveModal(item)"
       >
-        <div class="poster-wrapper clickable" @click="openSaveModal(item)">
+        <div class="poster-wrapper">
           <img 
             :src="getImageUrl(item.poster_path)" 
             :alt="item.title || item.name"
@@ -65,11 +85,11 @@
         </div>
 
         <div class="card-info">
-          <h3 class="media-title clickable" @click="openSaveModal(item)">{{ item.title || item.name }}</h3>
+          <h3 class="media-title">{{ item.title || item.name }}</h3>
           <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
           <p class="overview">{{ truncateText(item.overview, 110) }}</p>
 
-          <button @click="openSaveModal(item)" class="btn-primary btn-full">
+          <button class="btn-primary btn-full">
             Lihat Detail & Episode
           </button>
         </div>
@@ -217,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
@@ -228,6 +248,7 @@ const selectedType = ref('all')
 const isLoading = ref(false)
 const searched = ref(false)
 const results = ref<any[]>([])
+const featuredShow = ref<any>(null)
 
 const mediaTypes = [
   { label: 'Semua', value: 'all' },
@@ -276,15 +297,19 @@ const handleSearch = async () => {
       }
     })
     results.value = res.data || []
+    if (results.value.length > 0 && !featuredShow.value) {
+      featuredShow.value = results.value[0]
+    }
   } catch (err) {
     console.error(err)
-    alert('Gagal mengambil data pencarian.')
   } finally {
     isLoading.value = false
   }
 }
 
-handleSearch()
+onMounted(() => {
+  handleSearch()
+})
 
 const getImageUrl = (path: string) => {
   if (!path) return 'https://via.placeholder.com/300x450?text=No+Poster'
@@ -376,7 +401,7 @@ const openSaveModal = async (item: any) => {
     isFetchingDetail.value = false
   }
 
-  if (item.media_type === 'tv') {
+  if (item.media_type === 'tv' || !item.media_type) {
     fetchSeasonEpisodes(1)
   }
 }
@@ -419,7 +444,6 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
   }
 
   if (!watchlistContext.value) {
-    // Add to Watchlist instantly with episode progress
     await saveToWatchlist('watching', epsNumber)
     return
   }
@@ -503,6 +527,55 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 </script>
 
 <style scoped>
+.featured-hero-banner {
+  position: relative;
+  height: 260px;
+  border-radius: 24px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 32px;
+}
+
+.featured-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+}
+
+.featured-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 600px;
+}
+
+.featured-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.featured-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.featured-overview {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.featured-actions {
+  margin-top: 6px;
+}
+
 .hero-section {
   text-align: center;
   margin-bottom: 40px;
@@ -586,7 +659,6 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   padding-top: 148%;
   overflow: hidden;
   background: #151d2a;
-  cursor: pointer;
 }
 
 .poster-img {
