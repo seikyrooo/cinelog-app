@@ -74,18 +74,21 @@
                   <span class="season-eps-code">
                     S{{ padZero(item.season_watched || 1) }} | E{{ padZero((item.episodes_watched || 0) + 1) }}
                   </span>
-                  <span class="remaining-count" v-if="getRemainingEps(item) > 0">
-                    +{{ getRemainingEps(item) }}
+                  <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
+                    +{{ getRemainingEps(item) }} eps lagi
                   </span>
                 </div>
 
-                <p class="eps-title-text" @click="openDetailModal(item)">
-                  {{ getNextEpsName(item) }}
+                <p class="eps-title-text clickable" @click="openDetailModal(item)">
+                  <span class="eps-label">Next Episode:</span> <strong>{{ getNextEpsName(item) }}</strong>
                 </p>
 
                 <div class="card-badges-row">
                   <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
                   <span v-if="item.favorite" class="badge-fav">★ FAVORIT</span>
+                  <span class="badge-total-info" v-if="getTotalEps(item) > 0">
+                    Tersisa {{ getRemainingEps(item) }} dari {{ getTotalEps(item) }} eps
+                  </span>
                 </div>
               </div>
 
@@ -130,6 +133,9 @@
                   <span class="season-eps-code">
                     S{{ padZero(item.season_watched || 1) }} | E{{ padZero((item.episodes_watched || 0) + 1) }}
                   </span>
+                  <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
+                    +{{ getRemainingEps(item) }} eps lagi
+                  </span>
                 </div>
 
                 <p class="eps-title-text">Belum dilanjutkan lagi</p>
@@ -169,10 +175,10 @@
                   <span class="season-eps-code">
                     S{{ padZero(item.season_watched || 1) }} | E{{ padZero(item.episodes_watched) }}
                   </span>
-                  <span class="badge-completed-tag">SELESAI</span>
+                  <span class="badge-completed-tag">TAMAT ({{ item.episodes_watched }} eps)</span>
                 </div>
 
-                <p class="eps-title-text">Semua episode telah ditonton</p>
+                <p class="eps-title-text">Semua episode telah ditonton 100%</p>
               </div>
 
               <div class="circle-check-btn completed">✓</div>
@@ -214,7 +220,7 @@
               </div>
 
               <p class="eps-title-text" v-if="item.movie.next_episode_name">
-                "{{ item.movie.next_episode_name }}"
+                Judul Eps: "{{ item.movie.next_episode_name }}"
               </p>
             </div>
           </div>
@@ -279,7 +285,7 @@
       </div>
     </div>
 
-    <!-- Modal Full Detail & Seasons Breakdown dengan Banner Backdrop & Episode Still Banners -->
+    <!-- Modal Full Detail & Seasons Breakdown -->
     <div v-if="showDetailModal" class="modal-overlay" @click.self="showDetailModal = false">
       <div class="modal-content glass-panel detail-modal-content animate-fade-in">
         
@@ -447,7 +453,7 @@ const router = useRouter()
 const isLoading = ref(true)
 const watchlist = ref<any[]>([])
 const mediaTypeTab = ref('tv')
-const activeTvSubTab = ref('watchlist') // 'watchlist' or 'upcoming'
+const activeTvSubTab = ref('watchlist')
 
 const showEditModal = ref(false)
 const editingItem = ref<any>(null)
@@ -479,7 +485,6 @@ const seasonsCount = computed(() => {
   return activeDetailMedia.value?.total_seasons || activeWatchlistContext.value?.movie?.total_seasons || 1
 })
 
-// Categorized Lists matching TV Time layout
 const watchNextList = computed(() => {
   return watchlist.value.filter(item => item.status === 'watching' || item.status === 'plan_to_watch')
 })
@@ -530,15 +535,21 @@ const padZero = (num: number) => {
   return num < 10 ? `0${num}` : `${num}`
 }
 
+const getTotalEps = (item: any) => {
+  return item.movie?.total_episodes || item.total_episodes || 0
+}
+
 const getRemainingEps = (item: any) => {
-  const total = item.movie?.total_episodes || item.total_episodes || 0
+  const total = getTotalEps(item)
   const watched = item.episodes_watched || 0
+  if (total <= 0) return 0
   return Math.max(0, total - watched - 1)
 }
 
 const getNextEpsName = (item: any) => {
   if (item.movie?.next_episode_name) return item.movie.next_episode_name
-  return `Episode ${(item.episodes_watched || 0) + 1}`
+  const nextNum = (item.episodes_watched || 0) + 1
+  return `Episode ${nextNum}`
 }
 
 const getBackdropStyle = (media: any) => {
@@ -617,7 +628,6 @@ const isEpisodeWatched = (epsNumber: number) => {
 }
 
 const toggleEpisodeWatched = async (epsNumber: number) => {
-  // If not in watchlist, add to watchlist first!
   if (!activeWatchlistContext.value) {
     try {
       const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
@@ -952,10 +962,13 @@ const deleteItem = async (id: number) => {
   color: #fff;
 }
 
-.remaining-count {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-weight: 600;
+.remaining-count-pill {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
 }
 
 .eps-title-text {
@@ -965,8 +978,15 @@ const deleteItem = async (id: number) => {
   font-weight: 500;
 }
 
+.eps-label {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
 .card-badges-row {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -997,7 +1017,11 @@ const deleteItem = async (id: number) => {
   border-radius: 6px;
 }
 
-/* Big Circle Checkmark Button matching TV Time screenshot */
+.badge-total-info {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 .circle-check-btn {
   width: 44px;
   height: 44px;
@@ -1027,7 +1051,6 @@ const deleteItem = async (id: number) => {
   color: #ffffff;
 }
 
-/* Upcoming Card */
 .upcoming-date-box {
   color: #38bdf8;
   font-size: 0.85rem;
@@ -1128,7 +1151,7 @@ const deleteItem = async (id: number) => {
   flex: 1;
 }
 
-/* Detail Modal Style with Backdrop & Episode Still Banner */
+/* Detail Modal Style */
 .detail-modal-content {
   position: relative;
   max-width: 680px;
