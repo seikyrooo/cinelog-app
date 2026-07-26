@@ -187,36 +187,46 @@
       </div>
     </div>
 
-    <!-- Modal Full Detail & Seasons Breakdown -->
+    <!-- Modal Full Detail & Seasons Breakdown dengan Banner Backdrop & Episode Still Banners -->
     <div v-if="showDetailModal" class="modal-overlay" @click.self="showDetailModal = false">
       <div class="modal-content glass-panel detail-modal-content animate-fade-in">
-        <div class="modal-header">
-          <div>
-            <h2 class="modal-title">{{ activeDetailMedia?.title || activeWatchlistContext?.movie?.title }}</h2>
-            <p class="modal-meta">
-              {{ activeDetailMedia?.media_type === 'tv' || activeWatchlistContext?.movie?.media_type === 'tv' ? 'TV Show' : 'Movie' }} • {{ formatYear(activeDetailMedia?.release_date || activeWatchlistContext?.movie?.release_date) }}
-            </p>
+        
+        <!-- Fixed Top Right Close Button -->
+        <button @click="showDetailModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
+
+        <!-- Movie/Show Hero Backdrop Banner -->
+        <div class="hero-backdrop-banner" :style="getBackdropStyle(activeDetailMedia)">
+          <div class="hero-backdrop-gradient">
+            <div class="hero-media-info">
+              <span :class="['badge', isTvShowContext ? 'badge-tv' : 'badge-movie']">
+                {{ isTvShowContext ? 'TV Show' : 'Movie' }}
+              </span>
+              <span v-if="activeDetailMedia?.vote_average" class="hero-rating-badge">
+                ★ {{ (activeDetailMedia.vote_average / 2).toFixed(1) }} / 5.0
+              </span>
+              <h2 class="hero-media-title">{{ activeDetailMedia?.title || activeWatchlistContext?.movie?.title }}</h2>
+              <p class="hero-media-subtitle">
+                {{ formatYear(activeDetailMedia?.release_date || activeWatchlistContext?.movie?.release_date) }}
+                <span v-if="activeDetailMedia?.media_status"> • {{ activeDetailMedia.media_status }}</span>
+              </p>
+            </div>
           </div>
-          <button @click="showDetailModal = false" class="close-btn">&times;</button>
         </div>
 
-        <!-- Detail Banner & Overview -->
+        <!-- Detail Body -->
         <div class="detail-body">
           <div class="meta-info-box">
             <p v-if="activeDetailMedia?.director || activeWatchlistContext?.movie?.director">
-              <strong>Sutradara / Pembuat:</strong> {{ activeDetailMedia?.director || activeWatchlistContext?.movie?.director }}
+              <strong>Sutradara / Pembuat:</strong> <span class="highlight-text">{{ activeDetailMedia?.director || activeWatchlistContext?.movie?.director }}</span>
             </p>
             <p v-if="activeDetailMedia?.cast || activeWatchlistContext?.movie?.cast">
               <strong>Pemeran Utama:</strong> {{ activeDetailMedia?.cast || activeWatchlistContext?.movie?.cast }}
-            </p>
-            <p v-if="activeDetailMedia?.media_status">
-              <strong>Status:</strong> <span class="badge-status-text">{{ activeDetailMedia.media_status }}</span>
             </p>
           </div>
 
           <p class="overview-text">{{ activeDetailMedia?.overview || activeWatchlistContext?.movie?.overview }}</p>
 
-          <!-- If TV Show: Season Selector & Interactive Episodes List -->
+          <!-- If TV Show: Season Selector & Interactive Episode Cards with Still Banners -->
           <div v-if="isTvShowContext" class="seasons-section">
             <div class="section-header-row">
               <h4 class="section-subtitle">Daftar Season & Episode</h4>
@@ -225,7 +235,7 @@
               </span>
             </div>
 
-            <!-- Season Chips (Season 1, 2, 3...) -->
+            <!-- Season Chips Selector (Season 1, 2, 3...) -->
             <div class="season-chips">
               <button 
                 v-for="s in seasonsCount" 
@@ -237,10 +247,10 @@
               </button>
             </div>
 
-            <!-- Episodes List with Checkmark Toggles -->
+            <!-- Episodes List with Episode Still Banner -->
             <div v-if="isLoadingEpisodes" class="loading-state text-sm">
               <div class="spinner"></div>
-              <span>Memuat daftar episode Season {{ selectedSeason }}...</span>
+              <span>Memuat episode Season {{ selectedSeason }}...</span>
             </div>
 
             <div v-else class="episodes-list">
@@ -249,13 +259,26 @@
                 :key="eps.episode_number"
                 :class="['episode-item', 'glass-card', { watched: isEpisodeWatched(eps.episode_number) }]"
               >
-                <div class="eps-num">Eps {{ eps.episode_number }}</div>
-                <div class="eps-info">
-                  <h5 class="eps-name">{{ eps.name }}</h5>
-                  <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
-                  <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 100) }}</p>
+                <!-- Episode Banner Still Image -->
+                <div class="eps-banner-wrapper">
+                  <img 
+                    :src="getEpisodeStillUrl(eps.still_path)" 
+                    :alt="eps.name"
+                    class="eps-still-img"
+                    @error="onEpsImageError"
+                  />
+                  <span class="eps-num-badge">Eps {{ eps.episode_number }}</span>
                 </div>
 
+                <div class="eps-info">
+                  <div class="eps-header">
+                    <h5 class="eps-name">{{ eps.name }}</h5>
+                    <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
+                  </div>
+                  <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 110) }}</p>
+                </div>
+
+                <!-- Watched Checkmark Toggle Button -->
                 <button 
                   v-if="activeWatchlistContext"
                   @click="toggleEpisodeWatched(eps.episode_number)"
@@ -273,6 +296,9 @@
     <!-- Modal Edit Watchlist Item -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal-content glass-panel animate-fade-in">
+        <!-- Fixed Close Button -->
+        <button @click="showEditModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
+
         <h2 class="modal-title">Edit Watchlist</h2>
         <p class="modal-subtitle">{{ editingItem?.movie?.title }}</p>
 
@@ -426,6 +452,22 @@ const getEffectiveTotalEps = (item: any) => {
   return 0
 }
 
+const getBackdropStyle = (media: any) => {
+  const path = media?.backdrop_path || media?.poster_path
+  if (!path) return { background: '#1e293b' }
+  const url = path.startsWith('/uploads') ? useApiUrl(path) : `https://image.tmdb.org/t/p/w780${path}`
+  return { backgroundImage: `url(${url})` }
+}
+
+const getEpisodeStillUrl = (path: string) => {
+  if (!path) return 'https://via.placeholder.com/160x90?text=No+Preview'
+  return `https://image.tmdb.org/t/p/w500${path}`
+}
+
+const onEpsImageError = (e: Event) => {
+  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/160x90?text=No+Preview'
+}
+
 const openDetailModal = async (contextItem: any) => {
   let movieObj = contextItem.movie ? contextItem.movie : contextItem
   activeWatchlistContext.value = contextItem.movie ? contextItem : null
@@ -434,7 +476,6 @@ const openDetailModal = async (contextItem: any) => {
   episodesList.value = []
   showDetailModal.value = true
 
-  // Fetch full detail from API
   try {
     const res: any = await $fetch(useApiUrl('/api/detail'), {
       params: {
@@ -687,7 +728,7 @@ const deleteItem = async (id: number) => {
   cursor: pointer;
 }
 
-/* TV Shows List Layout (TV Time style) */
+/* TV Shows List Layout */
 .shows-list {
   display: flex;
   flex-direction: column;
@@ -915,33 +956,107 @@ const deleteItem = async (id: number) => {
   flex: 1;
 }
 
-/* Detail Modal Seasons & Episodes */
+/* Detail Modal Style with Backdrop & Episode Still Banner */
 .detail-modal-content {
-  max-width: 650px;
-  max-height: 88vh;
+  position: relative;
+  max-width: 680px;
+  max-height: 90vh;
   overflow-y: auto;
+  padding: 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* Fixed Top Right Close Button */
+.close-btn-fixed {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  z-index: 30;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-btn-fixed:hover {
+  background: rgba(239, 68, 68, 0.85);
+  transform: scale(1.05);
+}
+
+.hero-backdrop-banner {
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.hero-backdrop-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+}
+
+.hero-media-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hero-rating-badge {
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.hero-media-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.hero-media-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.detail-body {
+  padding: 20px;
 }
 
 .meta-info-box {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-border);
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
-.badge-status-text {
-  color: #4ade80;
+.highlight-text {
+  color: #fbbf24;
   font-weight: 600;
 }
 
 .overview-text {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin: 12px 0;
+  line-height: 1.6;
+  margin-bottom: 20px;
 }
 
 .seasons-section {
@@ -952,12 +1067,12 @@ const deleteItem = async (id: number) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .section-subtitle {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: #fff;
 }
 
@@ -975,7 +1090,7 @@ const deleteItem = async (id: number) => {
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .season-chip {
@@ -999,70 +1114,92 @@ const deleteItem = async (id: number) => {
 .episodes-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: 320px;
+  gap: 12px;
+  max-height: 340px;
   overflow-y: auto;
 }
 
 .episode-item {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   padding: 12px;
   align-items: center;
   transition: all 0.2s;
+  border-radius: 14px;
 }
 
 .episode-item.watched {
   border-color: rgba(74, 222, 128, 0.3);
-  background: rgba(74, 222, 128, 0.04);
+  background: rgba(74, 222, 128, 0.05);
 }
 
-.eps-num {
-  font-size: 0.8rem;
+.eps-banner-wrapper {
+  position: relative;
+  width: 120px;
+  height: 68px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #151d2a;
+}
+
+.eps-still-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.eps-num-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.7rem;
   font-weight: 800;
-  color: var(--accent-purple);
-  background: rgba(139, 92, 246, 0.15);
-  padding: 4px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.episode-item.watched .eps-num {
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .eps-info {
   flex: 1;
 }
 
+.eps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2px;
+}
+
 .eps-name {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 2px;
 }
 
 .eps-date {
   font-size: 0.75rem;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .eps-overview {
   font-size: 0.78rem;
   color: var(--text-secondary);
   margin-top: 4px;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .eps-toggle-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -1103,6 +1240,7 @@ const deleteItem = async (id: number) => {
   max-width: 480px;
   border-radius: 20px;
   padding: 24px;
+  position: relative;
 }
 
 .modal-title {
