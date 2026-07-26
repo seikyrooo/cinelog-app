@@ -1,5 +1,14 @@
 <template>
   <div class="tvtime-container">
+    <!-- Toast Notification -->
+    <div v-if="toastMessage" class="toast-notification animate-fade-in">
+      <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+
     <!-- Main Top Mode: Shows vs Movies -->
     <div class="top-nav-bar">
       <div class="mode-switcher glass-panel">
@@ -7,13 +16,23 @@
           @click="mediaTypeTab = 'tv'; fetchWatchlist()"
           :class="['mode-tab', { active: mediaTypeTab === 'tv' }]"
         >
-          📺 TV Shows
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+            <polyline points="17 2 12 7 7 2"></polyline>
+          </svg>
+          <span>TV Shows</span>
         </button>
         <button 
           @click="mediaTypeTab = 'movie'; fetchWatchlist()"
           :class="['mode-tab', { active: mediaTypeTab === 'movie' }]"
         >
-          🎬 Movies
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+            <line x1="7" y1="2" x2="7" y2="22"></line>
+            <line x1="17" y1="2" x2="17" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+          </svg>
+          <span>Movies</span>
         </button>
       </div>
     </div>
@@ -98,13 +117,15 @@
                 class="circle-check-btn"
                 title="Klik untuk tandai episode ini selesai ditonton"
               >
-                ✓
+                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 2: HAVENT WATCHED FOR A WHILE (Inactive > 14 days) -->
+        <!-- SECTION 2: HAVENT WATCHED FOR A WHILE (Inactive / On Hold) -->
         <div v-if="haventWatchedList.length > 0" class="section-group">
           <div class="section-pill-header">
             <span class="pill-badge idle-badge">HAVENT WATCHED FOR A WHILE</span>
@@ -141,7 +162,11 @@
                 <p class="eps-title-text">Belum dilanjutkan lagi</p>
               </div>
 
-              <button @click="incrementEpisode(item)" class="circle-check-btn">✓</button>
+              <button @click="incrementEpisode(item)" class="circle-check-btn">
+                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -181,7 +206,11 @@
                 <p class="eps-title-text">Semua episode telah ditonton 100%</p>
               </div>
 
-              <div class="circle-check-btn completed">✓</div>
+              <div class="circle-check-btn completed">
+                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -216,7 +245,13 @@
               </div>
 
               <div class="upcoming-date-box">
-                📅 Rilis: <strong>{{ item.movie.next_air_date }}</strong>
+                <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Rilis: <strong>{{ item.movie.next_air_date }}</strong></span>
               </div>
 
               <p class="eps-title-text" v-if="item.movie.next_episode_name">
@@ -401,7 +436,10 @@
                     @click="toggleEpisodeWatched(eps.episode_number)"
                     :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
                   >
-                    {{ isEpisodeWatched(eps.episode_number) ? '✓ Sudah' : '+ Tonton' }}
+                    <svg v-if="isEpisodeWatched(eps.episode_number)" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Sudah' : '+ Tonton' }}</span>
                   </button>
                 </div>
               </div>
@@ -476,6 +514,7 @@ const isLoading = ref(true)
 const watchlist = ref<any[]>([])
 const mediaTypeTab = ref('tv')
 const activeTvSubTab = ref('watchlist')
+const toastMessage = ref('')
 
 const showEditModal = ref(false)
 const editingItem = ref<any>(null)
@@ -495,6 +534,13 @@ const activeWatchlistContext = ref<any>(null)
 const selectedSeason = ref(1)
 const isLoadingEpisodes = ref(false)
 const episodesList = ref<any[]>([])
+
+const showToast = (msg: string) => {
+  toastMessage.value = msg
+  setTimeout(() => {
+    toastMessage.value = ''
+  }, 3000)
+}
 
 const isTvShowContext = computed(() => {
   return activeDetailMedia.value?.media_type === 'tv' || activeWatchlistContext.value?.movie?.media_type === 'tv'
@@ -582,7 +628,7 @@ const getBackdropStyle = (media: any) => {
 }
 
 const getEpisodeStillUrl = (path: string) => {
-  if (!path) return 'https://via.placeholder.com/160x90?text=No+Preview'
+  if (!path) return 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
   return `https://image.tmdb.org/t/p/w500${path}`
 }
 
@@ -617,14 +663,14 @@ const fetchSeasonEpisodes = async (seasonNum: number) => {
   const tmdbId = activeDetailMedia.value?.id || activeDetailMedia.value?.tmdb_id || activeWatchlistContext.value?.movie?.tmdb_id
   if (!tmdbId) return
 
-  selectedSeason.value = seasonNum
+  selectedSeason.value = Math.max(1, Math.min(seasonNum, seasonsCount.value))
   isLoadingEpisodes.value = true
 
   try {
     const res: any = await $fetch(useApiUrl('/api/tv/season'), {
       params: {
         id: tmdbId,
-        season: seasonNum
+        season: selectedSeason.value
       }
     })
     episodesList.value = res.data || []
@@ -674,6 +720,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       if (res.data) {
         activeWatchlistContext.value = res.data
         fetchWatchlist()
+        showToast(`Tersimpan: Season ${selectedSeason.value} Episode ${epsNumber}`)
       }
     } catch (err) {
       console.error(err)
@@ -700,6 +747,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       activeWatchlistContext.value.episodes_watched = res.data.episodes_watched
       activeWatchlistContext.value.status = res.data.status
       fetchWatchlist()
+      showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
     }
   } catch (err) {
     console.error(err)
@@ -713,15 +761,15 @@ const getPosterUrl = (movie: any) => {
   if (movie?.poster_path) {
     return `https://image.tmdb.org/t/p/w500${movie.poster_path}`
   }
-  return 'https://via.placeholder.com/300x450?text=No+Poster'
+  return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
 }
 
 const onImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x450?text=No+Poster'
+  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
 }
 
 const onEpsImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/160x90?text=No+Preview'
+  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
 }
 
 const formatYear = (dateStr: string) => {
@@ -764,6 +812,7 @@ const incrementEpisode = async (item: any) => {
       item.episodes_watched = res.data.episodes_watched
       item.status = res.data.status
       fetchWatchlist()
+      showToast(`+1 Episode! Total ${item.episodes_watched} eps ditonton`)
     }
   } catch (err) {
     console.error(err)
@@ -796,6 +845,7 @@ const updateWatchlist = async () => {
     })
     showEditModal.value = false
     fetchWatchlist()
+    showToast('Watchlist berhasil diperbarui!')
   } catch (err: any) {
     alert(err?.data?.error || 'Gagal mengupdate watchlist.')
   }
@@ -811,6 +861,7 @@ const deleteItem = async (id: number) => {
       }
     })
     fetchWatchlist()
+    showToast('Item berhasil dihapus dari watchlist.')
   } catch (err: any) {
     alert(err?.data?.error || 'Gagal menghapus item.')
   }
@@ -818,6 +869,38 @@ const deleteItem = async (id: number) => {
 </script>
 
 <style scoped>
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 10000;
+  background: #10b981;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-inline {
+  width: 16px;
+  height: 16px;
+}
+
+.check-svg {
+  width: 22px;
+  height: 22px;
+}
+
 .tvtime-container {
   max-width: 800px;
   margin: 0 auto;
@@ -848,6 +931,10 @@ const deleteItem = async (id: number) => {
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all 0.2s;
 }
 
@@ -1045,14 +1132,12 @@ const deleteItem = async (id: number) => {
 }
 
 .circle-check-btn {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: #ffffff;
   border: none;
   color: #000000;
-  font-size: 1.3rem;
-  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1077,6 +1162,9 @@ const deleteItem = async (id: number) => {
   color: #38bdf8;
   font-size: 0.85rem;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Movies Grid Layout */
@@ -1258,7 +1346,7 @@ const deleteItem = async (id: number) => {
 
 .detail-body.wide-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 260px 1fr;
   gap: 24px;
   padding: 24px;
 }
@@ -1455,6 +1543,9 @@ const deleteItem = async (id: number) => {
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .eps-toggle-btn.active {
@@ -1474,112 +1565,21 @@ const deleteItem = async (id: number) => {
   padding: 6px 12px;
 }
 
-/* Modal styles */
+/* Modal Overlay Fixed Overlay Styling */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal-content {
-  width: 100%;
-  max-width: 480px;
-  border-radius: 20px;
-  padding: 24px;
-  position: relative;
-}
-
-.modal-title {
-  font-size: 1.4rem;
-  margin-bottom: 2px;
-}
-
-.modal-subtitle {
-  color: var(--accent-gold);
-  font-size: 0.85rem;
-  margin-bottom: 16px;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.form-input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-family: inherit;
-  outline: none;
-  font-size: 0.9rem;
-}
-
-.form-input option {
-  background: #0f172a;
-}
-
-.star-rating-selector {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.star-icon {
-  font-size: 1.3rem;
-  color: #475569;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.star-icon.active {
-  color: #fbbf24;
-}
-
-.rating-number {
-  margin-left: 8px;
-  font-size: 0.85rem;
-  color: #fbbf24;
-  font-weight: 700;
-}
-
-.text-area {
-  min-height: 70px;
-  resize: vertical;
-}
-
-.checkbox-group {
-  margin: 10px 0;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #fff;
-  font-size: 0.85rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
 }
 </style>

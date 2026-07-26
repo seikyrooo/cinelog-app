@@ -1,18 +1,40 @@
 <template>
   <div class="search-page">
+    <!-- Notification Toast -->
+    <div v-if="toastMessage" class="toast-notification animate-fade-in">
+      <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+
     <!-- Featured Hero Banner on Explore -->
     <div v-if="featuredShow" class="featured-hero-banner glass-card" :style="getBackdropStyle(featuredShow)">
       <div class="featured-gradient-overlay">
         <div class="featured-content">
           <div class="featured-badges">
-            <span class="badge badge-tv">🔥 TRENDING EXPLORE</span>
-            <span class="hero-rating-badge">★ {{ featuredShow.vote_average?.toFixed(1) || '9.0' }} / 10.0</span>
+            <span class="badge badge-tv">
+              <svg class="icon-inline-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              TRENDING EXPLORE
+            </span>
+            <span class="hero-rating-badge">
+              <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              {{ featuredShow.vote_average?.toFixed(1) || '9.0' }} / 10.0
+            </span>
           </div>
           <h2 class="featured-title">{{ featuredShow.title || featuredShow.name }}</h2>
           <p class="featured-overview">{{ truncateText(featuredShow.overview, 140) }}</p>
           <div class="featured-actions">
             <button @click="openSaveModal(featuredShow)" class="btn-primary">
-              🎬 Lihat Detail & Daftar Episode
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Lihat Detail & Daftar Episode</span>
             </button>
           </div>
         </div>
@@ -45,7 +67,11 @@
         </div>
 
         <button @click="handleSearch" class="btn-primary">
-          Cari
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Cari</span>
         </button>
       </div>
     </div>
@@ -80,7 +106,10 @@
             {{ item.media_type === 'tv' ? 'TV Show' : 'Movie' }}
           </span>
           <span v-if="item.vote_average" class="rating-badge">
-            ★ {{ item.vote_average.toFixed(1) }} / 10.0
+            <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            {{ item.vote_average.toFixed(1) }} / 10.0
           </span>
         </div>
 
@@ -90,7 +119,11 @@
           <p class="overview">{{ truncateText(item.overview, 110) }}</p>
 
           <button class="btn-primary btn-full">
-            Lihat Detail & Episode
+            <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Lihat Detail & Episode</span>
           </button>
         </div>
       </div>
@@ -112,7 +145,10 @@
                   {{ activeItem?.media_type === 'tv' ? 'TV Show' : 'Movie' }}
                 </span>
                 <span v-if="activeItem?.vote_average" class="hero-rating-badge">
-                  ★ {{ activeItem.vote_average.toFixed(1) }} / 10.0 TMDB Rating
+                  <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                  {{ activeItem.vote_average.toFixed(1) }} / 10.0 TMDB Rating
                 </span>
               </div>
               <h2 class="hero-media-title">{{ activeItem?.title || activeItem?.name }}</h2>
@@ -157,13 +193,19 @@
                   class="btn-primary flex-1"
                   :disabled="isSaving"
                 >
-                  {{ isSaving ? 'Menyimpan...' : '+ Tambah Watchlist' }}
+                  <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>{{ isSaving ? 'Menyimpan...' : 'Tambah Watchlist' }}</span>
                 </button>
                 <button 
                   @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
                   :class="['btn-secondary', { active: form.favorite }]"
                 >
-                  {{ form.favorite ? '★ Favorit' : '+ Favorit' }}
+                  <svg class="icon-inline" viewBox="0 0 24 24" :fill="form.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -250,7 +292,10 @@
                     @click="toggleEpisodeWatched(eps.episode_number)"
                     :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
                   >
-                    {{ isEpisodeWatched(eps.episode_number) ? '✓ Sudah' : '+ Tonton' }}
+                    <svg v-if="isEpisodeWatched(eps.episode_number)" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Sudah' : '+ Tonton' }}</span>
                   </button>
                 </div>
               </div>
@@ -275,6 +320,7 @@ const isLoading = ref(false)
 const searched = ref(false)
 const results = ref<any[]>([])
 const featuredShow = ref<any>(null)
+const toastMessage = ref('')
 
 const mediaTypes = [
   { label: 'Semua', value: 'all' },
@@ -310,6 +356,13 @@ const seasonsCount = computed(() => {
   return detailedInfo.value?.total_seasons || 1
 })
 
+const showToast = (msg: string) => {
+  toastMessage.value = msg
+  setTimeout(() => {
+    toastMessage.value = ''
+  }, 3000)
+}
+
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) return
   isLoading.value = true
@@ -338,7 +391,7 @@ onMounted(() => {
 })
 
 const getImageUrl = (path: string) => {
-  if (!path) return 'https://via.placeholder.com/300x450?text=No+Poster'
+  if (!path) return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
   return `https://image.tmdb.org/t/p/w500${path}`
 }
 
@@ -349,16 +402,16 @@ const getBackdropStyle = (media: any) => {
 }
 
 const getEpisodeStillUrl = (path: string) => {
-  if (!path) return 'https://via.placeholder.com/160x90?text=No+Preview'
+  if (!path) return 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
   return `https://image.tmdb.org/t/p/w500${path}`
 }
 
 const onImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x450?text=No+Poster'
+  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
 }
 
 const onEpsImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/160x90?text=No+Preview'
+  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
 }
 
 const formatYear = (dateStr: string) => {
@@ -381,7 +434,7 @@ const openSaveModal = async (item: any) => {
 
   form.value = {
     status: item.media_type === 'tv' ? 'watching' : 'completed',
-    rating: item.vote_average ? Math.round(item.vote_average) : 8.0,
+    rating: item.vote_average ? Math.min(10, Math.max(1, Math.round(item.vote_average))) : 8.0,
     favorite: false,
     notes: '',
     season_watched: 1,
@@ -434,14 +487,14 @@ const openSaveModal = async (item: any) => {
 
 const fetchSeasonEpisodes = async (seasonNum: number) => {
   if (!activeItem.value) return
-  selectedSeason.value = seasonNum
+  selectedSeason.value = Math.max(1, Math.min(seasonNum, seasonsCount.value))
   isLoadingEpisodes.value = true
 
   try {
     const res: any = await $fetch(useApiUrl('/api/tv/season'), {
       params: {
         id: activeItem.value.id,
-        season: seasonNum
+        season: selectedSeason.value
       }
     })
     episodesList.value = res.data || []
@@ -464,7 +517,7 @@ const isEpisodeWatched = (epsNumber: number) => {
 
 const toggleEpisodeWatched = async (epsNumber: number) => {
   if (!authStore.isAuth) {
-    alert('Silakan login terlebih dahulu.')
+    showToast('Silakan login terlebih dahulu.')
     router.push('/login')
     return
   }
@@ -492,6 +545,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       watchlistContext.value.season_watched = res.data.season_watched
       watchlistContext.value.episodes_watched = res.data.episodes_watched
       watchlistContext.value.status = res.data.status
+      showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
     }
   } catch (err) {
     console.error(err)
@@ -500,7 +554,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
 
 const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number) => {
   if (!authStore.isAuth) {
-    alert('Silakan login terlebih dahulu.')
+    showToast('Silakan login terlebih dahulu.')
     router.push('/login')
     return
   }
@@ -524,7 +578,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
       next_episode_name: detailedInfo.value?.next_episode_name || '',
       media_status: detailedInfo.value?.media_status || '',
       status: statusOverride || form.value.status,
-      rating: form.value.rating,
+      rating: Math.min(10, Math.max(0, form.value.rating)),
       favorite: form.value.favorite,
       notes: form.value.notes,
       season_watched: selectedSeason.value || form.value.season_watched,
@@ -542,6 +596,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 
     if (res.data) {
       watchlistContext.value = res.data
+      showToast(`Tersimpan di Watchlist: ${payload.title}`)
     }
   } catch (err: any) {
     console.error(err)
@@ -553,6 +608,44 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 </script>
 
 <style scoped>
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 10000;
+  background: #10b981;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-inline {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-inline-sm {
+  width: 14px;
+  height: 14px;
+}
+
+.icon-star-gold {
+  width: 14px;
+  height: 14px;
+  color: #fbbf24;
+}
+
 .featured-hero-banner {
   position: relative;
   height: 260px;
@@ -718,6 +811,9 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   font-size: 0.75rem;
   padding: 4px 8px;
   border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .card-info {
@@ -825,6 +921,9 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   color: #fbbf24;
   font-weight: 800;
   font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .hero-media-title {
@@ -1084,6 +1183,9 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .eps-toggle-btn.active {
