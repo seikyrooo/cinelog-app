@@ -96,9 +96,9 @@
       </div>
     </div>
 
-    <!-- Modal Full Detail & Seasons Breakdown dengan Add to Watchlist Otomatis -->
+    <!-- Modal Full Detail Spasius & Wide 2-Column Layout -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-      <div class="modal-content glass-panel detail-modal-content animate-fade-in">
+      <div class="modal-content glass-panel detail-modal-content wide-modal animate-fade-in">
         
         <!-- Fixed Top Right Close Button -->
         <button @click="showModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
@@ -107,12 +107,14 @@
         <div class="hero-backdrop-banner" :style="getBackdropStyle(activeItem)">
           <div class="hero-backdrop-gradient">
             <div class="hero-media-info">
-              <span :class="['badge', activeItem?.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
-                {{ activeItem?.media_type === 'tv' ? 'TV Show' : 'Movie' }}
-              </span>
-              <span v-if="activeItem?.vote_average" class="hero-rating-badge">
-                ★ {{ activeItem.vote_average.toFixed(1) }} / 10.0 TMDB Rating
-              </span>
+              <div class="banner-badges">
+                <span :class="['badge', activeItem?.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
+                  {{ activeItem?.media_type === 'tv' ? 'TV Show' : 'Movie' }}
+                </span>
+                <span v-if="activeItem?.vote_average" class="hero-rating-badge">
+                  ★ {{ activeItem.vote_average.toFixed(1) }} / 10.0 TMDB Rating
+                </span>
+              </div>
               <h2 class="hero-media-title">{{ activeItem?.title || activeItem?.name }}</h2>
               <p class="hero-media-subtitle">
                 {{ formatYear(activeItem?.release_date || activeItem?.first_air_date) }}
@@ -122,111 +124,135 @@
           </div>
         </div>
 
-        <!-- Detail Body -->
-        <div class="detail-body">
-          <div v-if="isFetchingDetail" class="loading-state text-sm">
-            <div class="spinner"></div>
-            <span>Memuat detail sutradara & cast...</span>
-          </div>
+        <!-- Wide 2-Column Layout Body -->
+        <div class="detail-body wide-grid">
+          
+          <!-- Left Column: Poster & Quick Action Bar & Metadata -->
+          <div class="detail-left-col">
+            <img 
+              :src="getImageUrl(activeItem?.poster_path)" 
+              :alt="activeItem?.title || activeItem?.name"
+              class="detail-poster-img glass-card"
+              @error="onImageError"
+            />
 
-          <div v-else-if="detailedInfo" class="meta-info-box">
-            <p v-if="detailedInfo.director"><strong>Sutradara / Pembuat:</strong> <span class="highlight-text">{{ detailedInfo.director }}</span></p>
-            <p v-if="detailedInfo.cast"><strong>Pemeran Utama:</strong> {{ detailedInfo.cast }}</p>
-            <p v-if="detailedInfo.media_type === 'tv'"><strong>Jumlah Episode:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ detailedInfo.total_seasons }} Season)</p>
-          </div>
+            <!-- Quick Action Bar -->
+            <div class="quick-add-bar glass-card">
+              <div class="rating-input-row">
+                <label>Beri Rating (Skala 1 - 10):</label>
+                <div class="star-rating-selector">
+                  <span 
+                    v-for="star in 10" 
+                    :key="star"
+                    @click="form.rating = star"
+                    :class="['star-icon', { active: star <= form.rating }]"
+                  >★</span>
+                  <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10.0' : '' }}</span>
+                </div>
+              </div>
 
-          <p class="overview-text">{{ activeItem?.overview }}</p>
-
-          <!-- Quick Action: Add to Watchlist & Rating Scale 10 -->
-          <div class="quick-add-bar glass-card">
-            <div class="rating-input-row">
-              <label>Beri Rating Kamu (Skala 1 - 10):</label>
-              <div class="star-rating-selector">
-                <span 
-                  v-for="star in 10" 
-                  :key="star"
-                  @click="form.rating = star"
-                  :class="['star-icon', { active: star <= form.rating }]"
-                >★</span>
-                <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10.0' : 'Belum dinilai' }}</span>
+              <div class="quick-buttons-row">
+                <button 
+                  @click="saveToWatchlist('watching')" 
+                  class="btn-primary flex-1"
+                  :disabled="isSaving"
+                >
+                  {{ isSaving ? 'Menyimpan...' : '+ Tambah Watchlist' }}
+                </button>
+                <button 
+                  @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
+                  :class="['btn-secondary', { active: form.favorite }]"
+                >
+                  {{ form.favorite ? '★ Favorit' : '+ Favorit' }}
+                </button>
               </div>
             </div>
 
-            <div class="quick-buttons-row">
-              <button 
-                @click="saveToWatchlist('watching')" 
-                class="btn-primary flex-1"
-                :disabled="isSaving"
-              >
-                {{ isSaving ? 'Menyimpan...' : '+ Tambah ke Watchlist' }}
-              </button>
-              <button 
-                @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
-                :class="['btn-secondary', { active: form.favorite }]"
-              >
-                {{ form.favorite ? '★ Favorit' : '+ Favorit' }}
-              </button>
+            <!-- Metadata Box -->
+            <div v-if="isFetchingDetail" class="loading-state text-sm">
+              <div class="spinner"></div>
+              <span>Memuat detail sutradara & cast...</span>
+            </div>
+
+            <div v-else-if="detailedInfo" class="meta-info-box glass-card">
+              <p v-if="detailedInfo.director">
+                <strong>Sutradara / Pembuat:</strong> <br>
+                <span class="highlight-text">{{ detailedInfo.director }}</span>
+              </p>
+              <p v-if="detailedInfo.cast">
+                <strong>Pemeran Utama:</strong> <br>
+                {{ detailedInfo.cast }}
+              </p>
+              <p v-if="detailedInfo.media_type === 'tv'">
+                <strong>Total Episode:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ seasonsCount }} Season)
+              </p>
             </div>
           </div>
 
-          <!-- If TV Show: Season Selector & Episodes List -->
-          <div v-if="activeItem?.media_type === 'tv'" class="seasons-section">
-            <div class="section-header-row">
-              <h4 class="section-subtitle">Daftar Season & Episode</h4>
-              <span class="watched-counter-badge" v-if="watchlistContext">
-                Progres: {{ watchlistContext.episodes_watched }} eps ditonton
-              </span>
-            </div>
+          <!-- Right Column: Overview, Seasons Selector, & Spacious Episode Grid -->
+          <div class="detail-right-col">
+            <h4 class="section-subtitle">Ringkasan Sinopsis</h4>
+            <p class="overview-text">{{ activeItem?.overview }}</p>
 
-            <!-- Season Chips Selector -->
-            <div class="season-chips">
-              <button 
-                v-for="s in seasonsCount" 
-                :key="s"
-                @click="fetchSeasonEpisodes(s)"
-                :class="['season-chip', { active: selectedSeason === s }]"
-              >
-                Season {{ s }}
-              </button>
-            </div>
+            <!-- If TV Show: Season Selector & Episodes List -->
+            <div v-if="activeItem?.media_type === 'tv' || !activeItem?.media_type" class="seasons-section">
+              <div class="section-header-row">
+                <h4 class="section-subtitle">Daftar Season & Episode</h4>
+                <span class="watched-counter-badge" v-if="watchlistContext">
+                  Progres: {{ watchlistContext.episodes_watched }} eps ditonton
+                </span>
+              </div>
 
-            <!-- Episodes List -->
-            <div v-if="isLoadingEpisodes" class="loading-state text-sm">
-              <div class="spinner"></div>
-              <span>Memuat episode Season {{ selectedSeason }}...</span>
-            </div>
-
-            <div v-else class="episodes-list">
-              <div 
-                v-for="eps in episodesList" 
-                :key="eps.episode_number"
-                :class="['episode-item', 'glass-card', { watched: isEpisodeWatched(eps.episode_number) }]"
-              >
-                <div class="eps-banner-wrapper">
-                  <img 
-                    :src="getEpisodeStillUrl(eps.still_path)" 
-                    :alt="eps.name"
-                    class="eps-still-img"
-                    @error="onEpsImageError"
-                  />
-                  <span class="eps-num-badge">Eps {{ eps.episode_number }}</span>
-                </div>
-
-                <div class="eps-info">
-                  <div class="eps-header">
-                    <h5 class="eps-name">{{ eps.name }}</h5>
-                    <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
-                  </div>
-                  <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 110) }}</p>
-                </div>
-
-                <!-- Watched Toggle: Clicking directly adds to watchlist and updates episode progress! -->
+              <!-- Season Chips Selector -->
+              <div class="season-chips">
                 <button 
-                  @click="toggleEpisodeWatched(eps.episode_number)"
-                  :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                  v-for="s in seasonsCount" 
+                  :key="s"
+                  @click="fetchSeasonEpisodes(s)"
+                  :class="['season-chip', { active: selectedSeason === s }]"
                 >
-                  {{ isEpisodeWatched(eps.episode_number) ? '✓ Sudah' : '+ Tonton' }}
+                  Season {{ s }}
                 </button>
+              </div>
+
+              <!-- Episodes List -->
+              <div v-if="isLoadingEpisodes" class="loading-state text-sm">
+                <div class="spinner"></div>
+                <span>Memuat episode Season {{ selectedSeason }}...</span>
+              </div>
+
+              <div v-else class="episodes-list">
+                <div 
+                  v-for="eps in episodesList" 
+                  :key="eps.episode_number"
+                  :class="['episode-item', 'glass-card', { watched: isEpisodeWatched(eps.episode_number) }]"
+                >
+                  <div class="eps-banner-wrapper">
+                    <img 
+                      :src="getEpisodeStillUrl(eps.still_path)" 
+                      :alt="eps.name"
+                      class="eps-still-img"
+                      @error="onEpsImageError"
+                    />
+                    <span class="eps-num-badge">Eps {{ eps.episode_number }}</span>
+                  </div>
+
+                  <div class="eps-info">
+                    <div class="eps-header">
+                      <h5 class="eps-name">{{ eps.name }}</h5>
+                      <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
+                    </div>
+                    <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 120) }}</p>
+                  </div>
+
+                  <!-- Watched Toggle Button -->
+                  <button 
+                    @click="toggleEpisodeWatched(eps.episode_number)"
+                    :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                  >
+                    {{ isEpisodeWatched(eps.episode_number) ? '✓ Sudah' : '+ Tonton' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -730,30 +756,31 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   justify-content: center;
 }
 
-/* Detail Modal Style */
-.detail-modal-content {
+/* WIDE & SPACIOUS DETAIL MODAL (Wide 2-Column Layout) */
+.detail-modal-content.wide-modal {
   position: relative;
-  max-width: 680px;
+  width: 92vw;
+  max-width: 1040px;
   max-height: 90vh;
   overflow-y: auto;
   padding: 0;
-  border-radius: 24px;
+  border-radius: 28px;
   overflow: hidden;
 }
 
 .close-btn-fixed {
   position: absolute;
-  top: 16px;
-  right: 18px;
-  z-index: 30;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  top: 18px;
+  right: 20px;
+  z-index: 40;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -762,12 +789,12 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .close-btn-fixed:hover {
-  background: rgba(239, 68, 68, 0.85);
-  transform: scale(1.05);
+  background: rgba(239, 68, 68, 0.9);
+  transform: scale(1.08);
 }
 
 .hero-backdrop-banner {
-  height: 220px;
+  height: 250px;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -776,10 +803,16 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 .hero-backdrop-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
   display: flex;
   align-items: flex-end;
-  padding: 20px;
+  padding: 24px;
+}
+
+.banner-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .hero-media-info {
@@ -790,34 +823,63 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 
 .hero-rating-badge {
   color: #fbbf24;
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 800;
+  font-size: 0.9rem;
 }
 
 .hero-media-title {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 2.2rem;
+  font-weight: 900;
   color: #fff;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .hero-media-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
 }
 
-.detail-body {
-  padding: 20px;
+.detail-body.wide-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .detail-body.wide-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-poster-img {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  aspect-ratio: 2 / 3;
+}
+
+.detail-right-col {
+  display: flex;
+  flex-direction: column;
 }
 
 .meta-info-box {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-border);
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: 14px;
+  border-radius: 14px;
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .highlight-text {
@@ -826,16 +888,15 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .overview-text {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 16px;
+  font-size: 0.92rem;
+  color: #cbd5e1;
+  line-height: 1.65;
+  margin-bottom: 20px;
 }
 
 .quick-add-bar {
   padding: 16px;
   border-radius: 16px;
-  margin-bottom: 20px;
 }
 
 .rating-input-row {
@@ -857,7 +918,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .star-icon {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #475569;
   cursor: pointer;
   transition: color 0.2s;
@@ -880,7 +941,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .seasons-section {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .section-header-row {
@@ -891,17 +952,18 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .section-subtitle {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #fff;
+  margin-bottom: 8px;
 }
 
 .watched-counter-badge {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #fbbf24;
-  font-weight: 700;
+  font-weight: 800;
   background: rgba(251, 191, 36, 0.12);
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 8px;
 }
 
@@ -910,16 +972,16 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .season-chip {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
@@ -928,36 +990,36 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 .season-chip.active {
   background: var(--accent-gold);
   color: #0f172a;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .episodes-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 340px;
+  max-height: 380px;
   overflow-y: auto;
 }
 
 .episode-item {
   display: flex;
-  gap: 14px;
-  padding: 12px;
+  gap: 16px;
+  padding: 14px;
   align-items: center;
   transition: all 0.2s;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .episode-item.watched {
-  border-color: rgba(74, 222, 128, 0.3);
-  background: rgba(74, 222, 128, 0.05);
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.06);
 }
 
 .eps-banner-wrapper {
   position: relative;
-  width: 120px;
-  height: 68px;
-  border-radius: 8px;
+  width: 130px;
+  height: 74px;
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
   background: #151d2a;
@@ -973,10 +1035,10 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   position: absolute;
   bottom: 4px;
   left: 4px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.88);
   backdrop-filter: blur(4px);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
@@ -990,36 +1052,35 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .eps-name {
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: #fff;
 }
 
 .eps-date {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .eps-overview {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-top: 4px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .eps-toggle-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.8rem;
+  font-weight: 800;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
