@@ -62,13 +62,14 @@
         <img 
           :src="getPosterUrl(item.movie)" 
           :alt="item.movie.title"
-          class="show-poster"
+          class="show-poster clickable"
+          @click="openDetailModal(item.movie)"
           @error="onImageError"
         />
 
         <div class="show-content">
           <div class="show-top">
-            <h3 class="show-title">{{ item.movie.title }}</h3>
+            <h3 class="show-title clickable" @click="openDetailModal(item.movie)">{{ item.movie.title }}</h3>
             <span :class="['badge', getStatusBadgeClass(item.status)]">
               {{ getStatusLabel(item.status) }}
             </span>
@@ -120,6 +121,9 @@
               >
                 +1 Eps Nonton
               </button>
+              <button @click="openDetailModal(item.movie)" class="btn-secondary text-sm">
+                Detail
+              </button>
               <button @click="openEditModal(item)" class="btn-secondary text-sm">
                 Edit
               </button>
@@ -139,7 +143,7 @@
         :key="item.id" 
         class="glass-card movie-item-card"
       >
-        <div class="card-poster">
+        <div class="card-poster clickable" @click="openDetailModal(item.movie)">
           <img 
             :src="getPosterUrl(item.movie)" 
             :alt="item.movie.title"
@@ -160,7 +164,7 @@
             </span>
           </div>
 
-          <h3 class="movie-title">{{ item.movie.title }}</h3>
+          <h3 class="movie-title clickable" @click="openDetailModal(item.movie)">{{ item.movie.title }}</h3>
           <p class="director-text" v-if="item.movie.director">Sutradara: {{ item.movie.director }}</p>
 
           <p v-if="item.notes" class="user-notes">
@@ -168,12 +172,73 @@
           </p>
 
           <div class="card-actions">
+            <button @click="openDetailModal(item.movie)" class="btn-secondary text-sm">
+              Detail
+            </button>
             <button @click="openEditModal(item)" class="btn-secondary text-sm">
               Edit
             </button>
             <button @click="deleteItem(item.id)" class="btn-danger text-sm">
               Hapus
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Full Detail & Seasons Breakdown -->
+    <div v-if="showDetailModal" class="modal-overlay" @click.self="showDetailModal = false">
+      <div class="modal-content glass-panel detail-modal-content animate-fade-in">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">{{ activeDetailMedia?.title }}</h2>
+            <p class="modal-meta">
+              {{ activeDetailMedia?.media_type === 'tv' ? 'TV Show' : 'Movie' }} • {{ formatYear(activeDetailMedia?.release_date) }}
+            </p>
+          </div>
+          <button @click="showDetailModal = false" class="close-btn">&times;</button>
+        </div>
+
+        <!-- Detail Banner & Overview -->
+        <div class="detail-body">
+          <p v-if="activeDetailMedia?.director"><strong>Sutradara / Pembuat:</strong> {{ activeDetailMedia.director }}</p>
+          <p v-if="activeDetailMedia?.cast"><strong>Pemeran Utama:</strong> {{ activeDetailMedia.cast }}</p>
+          <p class="overview-text">{{ activeDetailMedia?.overview }}</p>
+
+          <!-- If TV Show: Season Selector & Episodes List -->
+          <div v-if="activeDetailMedia?.media_type === 'tv'" class="seasons-section">
+            <h4 class="section-subtitle">Daftar Season & Episode</h4>
+
+            <div class="season-chips">
+              <button 
+                v-for="s in (activeDetailMedia.total_seasons || 1)" 
+                :key="s"
+                @click="fetchSeasonEpisodes(s)"
+                :class="['season-chip', { active: selectedSeason === s }]"
+              >
+                Season {{ s }}
+              </button>
+            </div>
+
+            <!-- Episodes List -->
+            <div v-if="isLoadingEpisodes" class="loading-state text-sm">
+              <span>Memuat daftar episode Season {{ selectedSeason }}...</span>
+            </div>
+
+            <div v-else class="episodes-list">
+              <div 
+                v-for="eps in episodesList" 
+                :key="eps.episode_number"
+                class="episode-item glass-card"
+              >
+                <div class="eps-num">Eps {{ eps.episode_number }}</div>
+                <div class="eps-info">
+                  <h5 class="eps-name">{{ eps.name }}</h5>
+                  <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
+                  <p class="eps-overview" v-if="eps.overview">{{ eps.overview }}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -256,7 +321,7 @@ const router = useRouter()
 
 const isLoading = ref(true)
 const watchlist = ref<any[]>([])
-const mediaTypeTab = ref('tv') // 'tv' or 'movie'
+const mediaTypeTab = ref('tv')
 const activeStatus = ref('all')
 const favoriteOnly = ref(false)
 
@@ -271,6 +336,12 @@ const editForm = ref({
   episodes_watched: 0,
   total_episodes: 0
 })
+
+const showDetailModal = ref(false)
+const activeDetailMedia = ref<any>(null)
+const selectedSeason = ref(1)
+const isLoadingEpisodes = ref(false)
+const episodesList = ref<any[]>([])
 
 const statusTabs = [
   { label: 'Semua', value: 'all' },
@@ -310,6 +381,37 @@ const fetchWatchlist = async () => {
 onMounted(() => {
   fetchWatchlist()
 })
+
+const openDetailModal = async (movie: any) => {
+  activeDetailMedia.value = movie
+  selectedSeason.value = 1
+  episodesList.value = []
+  showDetailModal.value = true
+
+  if (movie.media_type === 'tv') {
+    fetchSeasonEpisodes(1)
+  }
+}
+
+const fetchSeasonEpisodes = async (seasonNum: number) => {
+  if (!activeDetailMedia.value) return
+  selectedSeason.value = seasonNum
+  isLoadingEpisodes.value = true
+
+  try {
+    const res: any = await $fetch(useApiUrl('/api/tv/season'), {
+      params: {
+        id: activeDetailMedia.value.tmdb_id,
+        season: seasonNum
+      }
+    })
+    episodesList.value = res.data || []
+  } catch (err) {
+    console.error(err)
+  } finally {
+    isLoadingEpisodes.value = false
+  }
+}
 
 const getPosterUrl = (movie: any) => {
   if (movie?.local_poster_path) {
@@ -474,6 +576,10 @@ const deleteItem = async (id: number) => {
   background: var(--accent-gold);
   color: #0f172a;
   border-color: var(--accent-gold);
+}
+
+.clickable {
+  cursor: pointer;
 }
 
 /* TV Shows List Layout (TV Time style) */
@@ -698,6 +804,102 @@ const deleteItem = async (id: number) => {
 
 .card-actions button {
   flex: 1;
+}
+
+/* Detail Modal Seasons & Episodes */
+.detail-modal-content {
+  max-width: 600px;
+}
+
+.overview-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 12px 0;
+}
+
+.seasons-section {
+  margin-top: 16px;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.season-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.season-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.season-chip.active {
+  background: var(--accent-gold);
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.episode-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  align-items: flex-start;
+}
+
+.eps-num {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--accent-purple);
+  background: rgba(139, 92, 246, 0.15);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.eps-info {
+  flex: 1;
+}
+
+.eps-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.eps-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.eps-overview {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.3;
 }
 
 .loading-state, .empty-state {
