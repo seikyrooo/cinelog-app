@@ -68,8 +68,7 @@ const handleLogin = async () => {
     })
 
     if (res.token) {
-      // Decode user_id from token payload if available or fetch profile
-      authStore.setAuth(res.token, 1)
+      authStore.setAuth(res.token, res.user_id || res.user?.id, res.user)
       router.push('/')
     }
   } catch (err: any) {

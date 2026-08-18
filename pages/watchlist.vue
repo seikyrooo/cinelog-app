@@ -519,6 +519,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
+const api = useApi()
 const router = useRouter()
 
 const isLoading = ref(true)
@@ -606,12 +607,7 @@ const fetchWatchlist = async () => {
       media_type: mediaTypeTab.value
     }
 
-    const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      },
-      params
-    })
+    const res: any = await api.getLibrary(params)
     watchlist.value = res.data || []
   } catch (err) {
     console.error(err)
@@ -720,12 +716,7 @@ const isEpisodeWatched = (epsNumber: number) => {
 const toggleEpisodeWatched = async (epsNumber: number) => {
   if (!activeWatchlistContext.value) {
     try {
-      const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`
-        },
-        body: {
+      const res: any = await api.addLibraryItem({
           tmdb_id: activeDetailMedia.value.id || activeDetailMedia.value.tmdb_id,
           media_type: activeDetailMedia.value.media_type || 'tv',
           title: activeDetailMedia.value.title,
@@ -741,7 +732,6 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
           status: 'watching',
           season_watched: selectedSeason.value,
           episodes_watched: epsNumber
-        }
       })
       if (res.data) {
         activeWatchlistContext.value = res.data
@@ -757,15 +747,9 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
   const targetEpsCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
 
   try {
-    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${activeWatchlistContext.value.id}/set-progress`), {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: {
+    const res: any = await api.setLibraryProgress(activeWatchlistContext.value.id, {
         season_watched: selectedSeason.value,
         episodes_watched: Math.max(0, targetEpsCount)
-      }
     })
 
     if (res.data) {
@@ -788,12 +772,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
 const toggleFavoriteStatus = async (item: any) => {
   const newFavState = !item.favorite
   try {
-    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${item.id}`), {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: {
+    const res: any = await api.updateLibraryItem(item.id, {
         status: item.status,
         rating: item.rating,
         favorite: newFavState,
@@ -801,7 +780,6 @@ const toggleFavoriteStatus = async (item: any) => {
         season_watched: item.season_watched,
         episodes_watched: item.episodes_watched,
         total_episodes: item.total_episodes
-      }
     })
     if (res.data) {
       item.favorite = newFavState
@@ -864,12 +842,7 @@ const getStatusLabel = (status: string) => {
 
 const incrementEpisode = async (item: any) => {
   try {
-    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${item.id}/progress`), {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    })
+    const res: any = await api.incrementLibraryProgress(item.id)
     if (res.data) {
       item.episodes_watched = res.data.episodes_watched
       item.status = res.data.status
@@ -903,13 +876,7 @@ const openEditModal = (item: any) => {
 const updateWatchlist = async () => {
   if (!editingItem.value) return
   try {
-    await $fetch(useApiUrl(`/api/user/watchlist/${editingItem.value.id}`), {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: editForm.value
-    })
+    await api.updateLibraryItem(editingItem.value.id, editForm.value)
     showEditModal.value = false
     fetchWatchlist()
     showToast('Watchlist berhasil diperbarui!')
@@ -921,12 +888,7 @@ const updateWatchlist = async () => {
 const deleteItem = async (id: number) => {
   if (!confirm('Hapus item ini dari watchlist kamu?')) return
   try {
-    await $fetch(useApiUrl(`/api/user/watchlist/${id}`), {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      }
-    })
+    await api.deleteLibraryItem(id)
     fetchWatchlist()
     showToast('Item berhasil dihapus dari watchlist.')
   } catch (err: any) {

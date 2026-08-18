@@ -31,6 +31,13 @@
             </svg>
             <span>Watchlist Saya</span>
           </NuxtLink>
+          <NuxtLink v-if="authStore.isAuth" to="/profile" class="nav-item" active-class="active">
+            <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Profile</span>
+          </NuxtLink>
         </nav>
 
         <div class="auth-actions">
@@ -40,7 +47,7 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span>{{ authStore.user?.username || 'Member' }}</span>
+              <span>{{ authStore.user?.username || `User #${authStore.userId}` }}</span>
             </span>
             <button @click="handleLogout" class="btn-secondary text-sm">
               <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
