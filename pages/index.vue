@@ -10,7 +10,7 @@
     </div>
 
     <!-- Featured Hero Banner on Explore -->
-    <div v-if="featuredShow" class="featured-hero-banner glass-card" :style="getBackdropStyle(featuredShow)">
+    <section v-if="featuredShow" class="featured-hero-banner glass-card" :style="getBackdropStyle(featuredShow)" aria-label="Pilihan trending CineLog">
       <div class="featured-gradient-overlay">
         <div class="featured-content">
           <div class="featured-badges">
@@ -18,7 +18,7 @@
               <svg class="icon-inline-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
-              TRENDING EXPLORE
+              Pilihan Malam Ini
             </span>
             <span class="hero-rating-badge">
               <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
@@ -27,6 +27,7 @@
               {{ featuredShow.vote_average?.toFixed(1) || '9.0' }} / 10.0
             </span>
           </div>
+          <p class="featured-kicker">Featured from TMDB</p>
           <h2 class="featured-title">{{ featuredShow.title || featuredShow.name }}</h2>
           <p class="featured-overview">{{ truncateText(featuredShow.overview, 140) }}</p>
           <div class="featured-actions">
@@ -34,25 +35,52 @@
               <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
-              <span>Lihat Detail & Daftar Episode</span>
+              <span>Buka dossier tontonan</span>
             </button>
           </div>
         </div>
+        <div class="featured-side-note" aria-hidden="true">
+          <span class="side-note-label">CineLog Pick</span>
+          <strong>{{ formatYear(featuredShow.release_date || featuredShow.first_air_date) || 'Now' }}</strong>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="hero-section">
-      <h1 class="hero-title">Jelajahi & Lacak <span class="gradient-text">Film & TV Shows</span></h1>
-      <p class="hero-subtitle">Cari ribuan judul dari TMDB, klik banner untuk melihat sutradara, pemeran, season, dan klik episode untuk langsung ditambahkan ke Watchlist kamu.</p>
+    <section class="hero-section" aria-labelledby="explore-title">
+      <div class="hero-copy">
+        <span class="eyebrow">Search desk · TMDB powered</span>
+        <h1 id="explore-title" class="hero-title">Temukan tontonan, simpan progres, lanjut tanpa nebak episode.</h1>
+        <p class="hero-subtitle">CineLog dibuat seperti meja kurator pribadi: cari judul, cek cast dan season, lalu tandai episode yang sudah kamu tonton dari satu tempat.</p>
+      </div>
+
+      <div class="hero-metrics" aria-label="Fitur utama CineLog">
+        <div class="metric-card">
+          <strong>TMDB</strong>
+          <span>Search source</span>
+        </div>
+        <div class="metric-card">
+          <strong>Episode</strong>
+          <span>Progress tracking</span>
+        </div>
+        <div class="metric-card">
+          <strong>Watchlist</strong>
+          <span>Personal library</span>
+        </div>
+      </div>
 
       <!-- Search Box -->
-      <div class="search-box glass-panel">
+      <div class="search-box glass-panel" role="search" aria-label="Cari film dan TV show">
+        <svg class="search-leading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
         <input 
           v-model="searchQuery" 
           @keyup.enter="handleSearch"
           type="text" 
-          placeholder="Cari judul film atau TV show..." 
+          placeholder="Contoh: The Bear, Dune, One Piece..." 
           class="search-input"
+          aria-label="Judul film atau TV show"
         />
         
         <div class="filter-type">
@@ -61,6 +89,7 @@
             :key="t.value"
             @click="selectedType = t.value; handleSearch()"
             :class="['type-btn', { active: selectedType === t.value }]"
+            :aria-pressed="selectedType === t.value"
           >
             {{ t.label }}
           </button>
@@ -74,7 +103,7 @@
           <span>Cari</span>
         </button>
       </div>
-    </div>
+    </section>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-state">
@@ -83,17 +112,30 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="results.length === 0 && searched" class="empty-state">
-      <p>Tidak ditemukan hasil untuk "{{ searchQuery }}"</p>
+    <div v-else-if="results.length === 0 && searched" class="empty-state glass-card" role="status">
+      <span class="empty-icon">⌕</span>
+      <h2>Tidak ada judul yang cocok</h2>
+      <p>Hasil untuk "{{ searchQuery }}" belum ketemu. Coba pakai judul asli, tahun rilis, atau ubah filter Movie/TV.</p>
     </div>
 
     <!-- Results Grid -->
-    <div v-else-if="results.length > 0" class="results-grid">
+    <section v-else-if="results.length > 0" class="results-section" aria-labelledby="results-title">
+      <div class="results-header">
+        <div>
+          <span class="eyebrow">Search results</span>
+          <h2 id="results-title">{{ results.length }} judul ditemukan</h2>
+        </div>
+        <p>Tap kartu untuk melihat detail, rating TMDB, cast, season, dan episode.</p>
+      </div>
+      <div class="results-grid">
       <div 
         v-for="item in results" 
         :key="item.id" 
         class="glass-card media-card clickable"
         @click="openSaveModal(item)"
+        role="button"
+        tabindex="0"
+        @keyup.enter="openSaveModal(item)"
       >
         <div class="poster-wrapper">
           <img 
@@ -123,11 +165,12 @@
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <span>Lihat Detail & Episode</span>
+            <span>Buka detail</span>
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </section>
 
     <!-- Modal Full Detail Spasius & Wide 2-Column Layout -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
@@ -649,28 +692,41 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 
 .featured-hero-banner {
   position: relative;
-  height: 260px;
-  border-radius: 24px;
+  min-height: 320px;
+  border-radius: 26px;
   overflow: hidden;
   background-size: cover;
   background-position: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
+  border-color: rgba(245, 158, 11, 0.22);
 }
 
 .featured-gradient-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  background:
+    linear-gradient(90deg, rgba(7, 9, 14, 0.95) 0%, rgba(7, 9, 14, 0.74) 48%, rgba(7, 9, 14, 0.15) 100%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.92) 100%);
   display: flex;
   align-items: flex-end;
-  padding: 24px;
+  justify-content: space-between;
+  padding: 32px;
 }
 
 .featured-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 600px;
+  gap: 10px;
+  max-width: 640px;
+}
+
+.featured-kicker,
+.eyebrow {
+  color: var(--accent-gold);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .featured-badges {
@@ -680,49 +736,121 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .featured-title {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  font-weight: 900;
   color: #fff;
-  line-height: 1.2;
+  line-height: 0.98;
+  max-width: 12ch;
 }
 
 .featured-overview {
-  font-size: 0.85rem;
   color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.featured-actions {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  max-width: 58ch;
   margin-top: 6px;
 }
 
+.featured-side-note {
+  align-self: flex-start;
+  min-width: 132px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(7, 9, 14, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(14px);
+  text-align: right;
+}
+
+.side-note-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+}
+
+.featured-side-note strong {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  color: #fff;
+}
+
 .hero-section {
-  text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
+  display: grid;
+  gap: 22px;
+}
+
+.hero-copy {
+  max-width: 780px;
 }
 
 .hero-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: 10px;
+  font-size: clamp(2.15rem, 5vw, 4.65rem);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  margin-top: 10px;
+  margin-bottom: 16px;
+  max-width: 12ch;
 }
 
 .hero-subtitle {
   color: var(--text-secondary);
   font-size: 1rem;
-  max-width: 580px;
-  margin: 0 auto 24px;
+  line-height: 1.75;
+  max-width: 68ch;
+  margin-bottom: 0;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 720px;
+}
+
+.metric-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metric-card strong,
+.metric-card span {
+  display: block;
+}
+
+.metric-card strong {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
+.metric-card span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 2px;
 }
 
 .search-box {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 10px 14px;
-  border-radius: 18px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 20px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.search-leading-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-gold);
+  margin-left: 6px;
 }
 
 .search-input {
@@ -757,20 +885,46 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .type-btn.active {
-  background: var(--accent-purple);
-  color: #fff;
+  background: #f59e0b;
+  color: #111827;
+}
+
+.results-section {
+  display: grid;
+  gap: 18px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+}
+
+.results-header h2 {
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  margin-top: 6px;
+}
+
+.results-header p {
+  color: var(--text-muted);
+  max-width: 390px;
+  line-height: 1.55;
+  font-size: 0.9rem;
 }
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
 }
 
 .media-card {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border-radius: 18px;
+  cursor: pointer;
 }
 
 .poster-wrapper {
@@ -822,6 +976,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   display: flex;
   flex-direction: column;
   flex: 1;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(7, 9, 14, 0.98));
 }
 
 .media-title {
@@ -851,6 +1006,29 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 .btn-full {
   width: 100%;
   justify-content: center;
+}
+
+.empty-state {
+  max-width: 560px;
+  margin: 24px auto;
+  padding: 32px;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--accent-gold);
+  font-size: 2rem;
+  margin-bottom: 14px;
+}
+
+.empty-state h2 {
+  margin-bottom: 8px;
 }
 
 /* WIDE & SPACIOUS DETAIL MODAL (Wide 2-Column Layout) */
@@ -947,6 +1125,23 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 @media (max-width: 768px) {
+  .featured-gradient-overlay {
+    padding: 24px;
+  }
+
+  .featured-side-note {
+    display: none;
+  }
+
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .results-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .detail-body.wide-grid {
     grid-template-columns: 1fr;
   }
