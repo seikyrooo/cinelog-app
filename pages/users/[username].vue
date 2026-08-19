@@ -72,7 +72,7 @@
       <div v-else-if="activeTab === 'favorites' || activeTab === 'ratings'" class="public-grid">
         <article v-for="item in activeItems" :key="item.id" class="public-card glass-card">
           <div class="public-card-poster">
-            <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Media poster'" @error="onImageError" />
+            <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Media poster'" @error="onImageError" loading="lazy" decoding="async" />
             <span :class="['badge', item.movie?.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'poster-type-badge']">
               {{ item.movie?.media_type === 'tv' ? 'TV' : 'Movie' }}
             </span>
@@ -100,7 +100,7 @@
         <div v-else class="followers-grid">
           <article v-for="user in currentFollowUsers" :key="user.id" class="follower-card glass-card">
             <NuxtLink :to="`/users/${user.username}`" class="follower-avatar">
-              <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" />
+              <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" loading="lazy" decoding="async" />
               <span v-else>{{ user.username.slice(0, 2).toUpperCase() }}</span>
             </NuxtLink>
             <div class="follower-meta">
