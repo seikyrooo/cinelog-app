@@ -966,7 +966,7 @@ const isEpisodeWatched = (epsNumber: number) => {
   const watchedCount = watchlistContext.value.episodes_watched || 0
   const totalEps = watchlistContext.value.total_episodes || watchlistContext.value.movie?.total_episodes || detailedInfo.value?.total_episodes || 0
   
-  if (watchlistContext.value.status === 'completed' || (totalEps > 0 && watchedCount >= totalEps)) {
+  if (totalEps > 0 && watchedCount >= totalEps) {
     return true
   }
 

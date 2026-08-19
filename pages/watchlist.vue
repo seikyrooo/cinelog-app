@@ -957,8 +957,8 @@ const watchNextList = computed(() => {
   return watchlist.value.filter(item => {
     const total = getTotalEps(item)
     const watched = item.episodes_watched || 0
-    const isTamat = item.status === 'completed' || (total > 0 && watched >= total)
-    return !isTamat && (item.status === 'watching' || item.status === 'plan_to_watch')
+    const isTamat = total > 0 && watched >= total
+    return !isTamat && (item.status === 'watching' || item.status === 'plan_to_watch' || item.status === 'completed')
   })
 })
 
@@ -966,7 +966,7 @@ const haventWatchedList = computed(() => {
   return watchlist.value.filter(item => {
     const total = getTotalEps(item)
     const watched = item.episodes_watched || 0
-    const isTamat = item.status === 'completed' || (total > 0 && watched >= total)
+    const isTamat = total > 0 && watched >= total
     return !isTamat && item.status === 'on_hold'
   })
 })
@@ -975,7 +975,7 @@ const watchedHistoryList = computed(() => {
   return watchlist.value.filter(item => {
     const total = getTotalEps(item)
     const watched = item.episodes_watched || 0
-    return item.status === 'completed' || (total > 0 && watched >= total)
+    return total > 0 && watched >= total
   })
 })
 
@@ -1051,7 +1051,7 @@ const getTotalEps = (item: any) => {
 const getRemainingEps = (item: any) => {
   const total = getTotalEps(item)
   const watched = item.episodes_watched || 0
-  if (item.status === 'completed' || (total > 0 && watched >= total)) return 0
+  if (total > 0 && watched >= total) return 0
   if (total <= 0) return 0
   return Math.max(0, total - watched)
 }
@@ -1061,7 +1061,7 @@ const getEpisodeProgressCode = (item: any) => {
   const nextWatched = totalWatched + 1
   const totalEps = getTotalEps(item)
 
-  if (item.status === 'completed' || (totalEps > 0 && totalWatched >= totalEps)) {
+  if (totalEps > 0 && totalWatched >= totalEps) {
     return `S${padZero(item.movie?.total_seasons || item.season_watched || 1)} | All Caught Up`
   }
 
@@ -1222,7 +1222,7 @@ const isEpisodeWatched = (epsNumber: number) => {
   const watchedEps = activeWatchlistContext.value.episodes_watched || 0
   const totalEps = activeWatchlistContext.value.total_episodes || activeWatchlistContext.value.movie?.total_episodes || 0
   
-  if (activeWatchlistContext.value.status === 'completed' || (totalEps > 0 && watchedEps >= totalEps)) {
+  if (totalEps > 0 && watchedEps >= totalEps) {
     return true
   }
 
@@ -1292,10 +1292,16 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
 const updateItemRating = async (item: any, rating: number) => {
   if (!item || !item.id) return
   item.rating = rating
+
+  // Rating is independent of completion - rating a show never forces it to completed/ended
+  const total = getTotalEps(item)
+  const isFinished = total > 0 && (item.episodes_watched || 0) >= total
+  const currentStatus = isFinished ? 'completed' : (item.status === 'completed' ? 'watching' : (item.status || 'watching'))
+
   try {
     const res: any = await api.updateLibraryItem(item.id, {
       rating: rating,
-      status: item.status || 'watching',
+      status: currentStatus,
       favorite: item.favorite,
       notes: item.notes || '',
       episodes_watched: item.episodes_watched || 0,
@@ -1303,8 +1309,10 @@ const updateItemRating = async (item: any, rating: number) => {
     })
     if (res.data) {
       item.rating = res.data.rating
+      item.status = res.data.status
       if (activeWatchlistContext.value && activeWatchlistContext.value.id === item.id) {
         activeWatchlistContext.value.rating = res.data.rating
+        activeWatchlistContext.value.status = res.data.status
       }
       showToast(`⭐ Rated ${rating} / 10!`)
     }
@@ -1429,7 +1437,7 @@ const getStatusLabel = (status: string) => {
 
 const incrementEpisode = async (item: any) => {
   const total = getTotalEps(item)
-  if (item.status === 'completed' || (total > 0 && item.episodes_watched >= total)) {
+  if (total > 0 && item.episodes_watched >= total) {
     showToast('🎉 All episodes already watched! Show is in Completed History.')
     return
   }
