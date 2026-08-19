@@ -1,32 +1,51 @@
 <template>
   <section class="public-profile-page">
-    <div v-if="isLoading" class="public-state glass-card" aria-busy="true">Loading public profile...</div>
+    <div v-if="isLoading" class="public-state glass-card" aria-busy="true">
+      <div class="spinner"></div>
+      <p>Loading profile...</p>
+    </div>
     <div v-else-if="error" class="public-state glass-card" role="alert">
       <h1>Profile Unavailable</h1>
       <p>{{ error }}</p>
+      <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">Return Home</NuxtLink>
     </div>
     <template v-else-if="profile">
       <header class="public-hero glass-card">
         <div class="public-avatar" aria-hidden="true">
-          <img v-if="profile.user.avatar_url" :src="profile.user.avatar_url" alt="" />
+          <img v-if="profile.user.avatar_url" :src="getAvatarUrl(profile.user.avatar_url)" alt="User avatar" />
           <span v-else>{{ profile.user.username.slice(0, 2).toUpperCase() }}</span>
         </div>
         <div class="public-copy">
-          <h1>@{{ profile.user.username }}</h1>
-          <p>{{ profile.user.bio || 'No bio provided yet.' }}</p>
+          <div class="username-row">
+            <h1>@{{ profile.user.username }}</h1>
+            <button 
+              v-if="authStore.isAuth && authStore.user?.username !== profile.user.username"
+              @click="toggleFollow" 
+              :class="['btn-follow', { following: isFollowing }]"
+            >
+              {{ isFollowing ? 'Following ✓' : '+ Follow' }}
+            </button>
+          </div>
+          <p class="bio-text">{{ profile.user.bio || 'No bio provided yet.' }}</p>
         </div>
         <div class="public-stats" aria-label="Public statistics">
-          <div><strong>{{ profile.favorite_count }}</strong><span>Favorites</span></div>
-          <div><strong>{{ profile.rating_count }}</strong><span>Ratings</span></div>
+          <div class="stat-card">
+            <strong>{{ profile.favorite_count }}</strong>
+            <span>Favorites</span>
+          </div>
+          <div class="stat-card">
+            <strong>{{ profile.rating_count }}</strong>
+            <span>Ratings</span>
+          </div>
         </div>
       </header>
 
       <div class="tabs" role="tablist" aria-label="Public profile tabs">
         <button :class="['tab-btn', { active: activeTab === 'favorites' }]" type="button" @click="activeTab = 'favorites'">
-          Public Favorites
+          Public Favorites ({{ favorites.length }})
         </button>
         <button :class="['tab-btn', { active: activeTab === 'ratings' }]" type="button" @click="activeTab = 'ratings'">
-          Public Ratings
+          Public Ratings ({{ ratings.length }})
         </button>
       </div>
 
@@ -36,15 +55,19 @@
 
       <div v-else class="public-grid">
         <article v-for="item in activeItems" :key="item.id" class="public-card glass-card">
-          <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Media poster'" @error="onImageError" />
-          <div class="public-card-body">
-            <span :class="['badge', item.movie?.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
+          <div class="public-card-poster">
+            <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Media poster'" @error="onImageError" />
+            <span :class="['badge', item.movie?.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'poster-type-badge']">
               {{ item.movie?.media_type === 'tv' ? 'TV' : 'Movie' }}
             </span>
+          </div>
+          <div class="public-card-body">
             <h2>{{ item.movie?.title || 'Untitled' }}</h2>
-            <p>{{ formatYear(item.movie?.release_date) }} · {{ getStatusLabel(item.status) }}</p>
-            <strong v-if="item.rating" class="rating-tag">★ {{ item.rating }}/10</strong>
-            <strong v-else-if="item.favorite" class="favorite-tag">♥ Favorite</strong>
+            <p>{{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }} · {{ getStatusLabel(item.status) }}</p>
+            <div class="card-footer-tags">
+              <strong v-if="item.rating" class="rating-tag">★ {{ item.rating }}/10</strong>
+              <strong v-if="item.favorite" class="favorite-tag">♥ Favorite</strong>
+            </div>
           </div>
         </article>
       </div>
@@ -54,10 +77,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '~/stores/auth'
 import type { PublicProfile } from '~/composables/useApi'
 
 const route = useRoute()
 const api = useApi()
+const authStore = useAuthStore()
 
 const username = computed(() => String(route.params.username || ''))
 const profile = ref<PublicProfile | null>(null)
@@ -65,6 +90,7 @@ const favorites = ref<any[]>([])
 const ratings = ref<any[]>([])
 const activeTab = ref<'favorites' | 'ratings'>('favorites')
 const isLoading = ref(true)
+const isFollowing = ref(false)
 const error = ref('')
 
 const activeItems = computed(() => activeTab.value === 'favorites' ? favorites.value : ratings.value)
@@ -85,6 +111,29 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
+const getAvatarUrl = (path?: string) => {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) return useApiUrl(path)
+  return path
+}
+
+const toggleFollow = async () => {
+  if (!profile.value?.user?.id) return
+  const targetId = profile.value.user.id
+  try {
+    if (isFollowing.value) {
+      await api.unfollowUser(targetId)
+      isFollowing.value = false
+    } else {
+      await api.followUser(targetId)
+      isFollowing.value = true
+    }
+  } catch (err) {
+    console.error('Failed to toggle follow status:', err)
+  }
+}
 
 const getPosterUrl = (movie: any) => {
   let path = ''
@@ -269,20 +318,67 @@ const getStatusLabel = (status: string) => {
   text-overflow: ellipsis;
 }
 
-.rating-tag {
-  color: var(--accent-star);
-  font-size: 0.85rem;
+.username-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-.favorite-tag {
-  color: var(--accent-red);
-  font-size: 0.85rem;
+.btn-follow {
+  background: rgba(229, 9, 20, 0.14);
+  border: 1px solid var(--border-red);
+  color: #ff6b6b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-follow:hover {
+  background: var(--accent-red);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-follow.following {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.public-card-poster {
+  position: relative;
+  overflow: hidden;
+}
+
+.poster-type-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.card-footer-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .public-state {
-  padding: 32px;
+  padding: 40px 24px;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 @media (max-width: 760px) {

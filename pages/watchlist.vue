@@ -38,7 +38,7 @@
 
     <!-- TV Shows TV Time Experience -->
     <div v-if="mediaTypeTab === 'tv'" class="tv-experience">
-      <!-- Sub-tabs: WATCH LIST vs UPCOMING -->
+      <!-- Sub-tabs: WATCH LIST vs RADAR / UPCOMING -->
       <div class="sub-tab-bar">
         <button 
           @click="activeTvSubTab = 'watchlist'"
@@ -50,7 +50,8 @@
           @click="activeTvSubTab = 'upcoming'"
           :class="['sub-tab-btn', { active: activeTvSubTab === 'upcoming' }]"
         >
-          UPCOMING
+          <span>RADAR / UPCOMING</span>
+          <span v-if="upcomingList.length > 0" class="sub-tab-badge">{{ upcomingList.length }}</span>
         </button>
       </div>
 
@@ -180,8 +181,6 @@
                     <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6"></polyline>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      <line x1="10" y1="11" x2="10" y2="17"></line>
-                      <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
                   </button>
                 </div>
@@ -190,118 +189,17 @@
           </div>
         </div>
 
-        <!-- SECTION 2: HAVENT WATCHED FOR A WHILE (Inactive / On Hold) -->
+        <!-- SECTION 2: HAVEN'T WATCHED YET / ON HOLD -->
         <div v-if="haventWatchedList.length > 0" class="section-group">
           <div class="section-pill-header">
-            <span class="pill-badge idle-badge">ON HOLD</span>
+            <span class="pill-badge on-hold-badge">ON HOLD / HAVEN'T WATCHED</span>
           </div>
 
           <div class="shows-stack">
             <div 
               v-for="item in haventWatchedList" 
               :key="item.id" 
-              class="swipe-action-wrapper"
-              :class="{ 'swipe-active': activeSwipeItemId === item.id }"
-            >
-              <!-- Background Action Reveal Layer (Swipe Right) -->
-              <div 
-                class="swipe-action-reveal"
-                :style="{
-                  opacity: activeSwipeItemId === item.id ? Math.min(1, swipeOffset / 50) : 0,
-                  transform: `scale(${activeSwipeItemId === item.id ? Math.min(1, 0.75 + (swipeOffset / 250)) : 0.8})`
-                }"
-              >
-                <div class="swipe-reveal-content">
-                  <svg class="swipe-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <span class="swipe-text">Watched</span>
-                </div>
-              </div>
-
-              <!-- Foreground Card (Draggable) -->
-              <div 
-                class="tvtime-card glass-card idle-card"
-                :style="getCardSwipeStyle(item.id)"
-                @touchstart="onTouchStart($event, item)"
-                @touchmove="onTouchMove($event, item)"
-                @touchend="onTouchEnd($event, item)"
-                @pointerdown="onPointerDown($event, item)"
-                @pointermove="onPointerMove($event, item)"
-                @pointerup="onPointerUp($event, item)"
-                @pointercancel="onPointerCancel($event, item)"
-              >
-                <img 
-                  :src="getPosterUrl(item)" 
-                  :alt="item.movie?.title || item.title"
-                  class="tvtime-poster clickable"
-                  @click="openDetailModal(item)"
-                  @error="onImageError"
-                />
-
-                <div class="tvtime-card-body">
-                  <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                    <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                  </div>
-
-                  <div class="eps-headline">
-                    <span class="season-eps-code">
-                      {{ getEpisodeProgressCode(item) }}
-                    </span>
-                    <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                      +{{ getRemainingEps(item) }} eps left
-                    </span>
-                  </div>
-
-                  <p class="eps-title-text">Paused watching</p>
-                </div>
-
-                <div class="card-side-actions">
-                  <button 
-                    @click="incrementEpisode(item)" 
-                    :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
-                    :disabled="getRemainingEps(item) === 0"
-                    title="Mark this episode watched"
-                    aria-label="Mark episode watched"
-                  >
-                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  </button>
-
-                  <button 
-                    @click.stop="deleteItem(item.id)" 
-                    class="circle-trash-btn"
-                    title="Remove from Watchlist"
-                    aria-label="Remove from Watchlist"
-                  >
-                    <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      <line x1="10" y1="11" x2="10" y2="17"></line>
-                      <line x1="14" y1="11" x2="14" y2="17"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 3: WATCHED HISTORY (Completed Shows) -->
-        <div v-if="watchedHistoryList.length > 0" class="section-group">
-          <div class="section-pill-header">
-            <span class="pill-badge history-badge">COMPLETED HISTORY</span>
-          </div>
-
-          <div class="shows-stack">
-            <div 
-              v-for="item in watchedHistoryList" 
-              :key="item.id" 
-              class="tvtime-card glass-card completed-card"
+              class="tvtime-card glass-card on-hold-card"
             >
               <img 
                 :src="getPosterUrl(item)" 
@@ -321,32 +219,118 @@
 
                 <div class="eps-headline">
                   <span class="season-eps-code">
-                    S{{ padZero(item.movie?.total_seasons || item.season_watched || 1) }} | ALL CAUGHT UP
+                    {{ getEpisodeProgressCode(item) }}
                   </span>
-                  <span class="badge-completed-tag">COMPLETED ({{ item.episodes_watched || getTotalEps(item) }} eps)</span>
+                  <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
+                    +{{ getRemainingEps(item) }} eps left
+                  </span>
                 </div>
 
-                <p class="eps-title-text">All episodes watched 100%</p>
+                <p class="eps-title-text clickable" @click="openDetailModal(item)">
+                  <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
+                </p>
 
-                <!-- Interactive Rating Bar for Completed Show -->
+                <!-- Interactive Quick Rating Bar -->
                 <div class="card-rating-quick-bar" @click.stop>
-                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Rating:' : 'Rate Series:' }}</span>
+                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
                   <div class="quick-stars">
                     <span 
                       v-for="star in 10" 
                       :key="star"
                       @click="updateItemRating(item, star)"
                       :class="['mini-star', { active: star <= (item.rating || 0) }]"
-                      :title="'Rate ' + star + ' / 10'"
                     >★</span>
                   </div>
                   <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
                 </div>
               </div>
 
+              <!-- Side Actions (Increment Episode + Remove) -->
               <div class="card-side-actions">
-                <div class="circle-check-btn completed" title="Series Completed">
+                <button 
+                  @click="incrementEpisode(item)" 
+                  class="circle-check-btn"
+                  title="Mark this episode watched"
+                  aria-label="Mark episode watched"
+                >
                   <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+
+                <button 
+                  @click.stop="deleteItem(item.id)" 
+                  class="circle-trash-btn"
+                  title="Remove from Watchlist"
+                  aria-label="Remove from Watchlist"
+                >
+                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: COMPLETED / TAMAT -->
+        <div v-if="watchedHistoryList.length > 0" class="section-group">
+          <div class="section-pill-header">
+            <span class="pill-badge completed-history-badge">COMPLETED HISTORY (TAMAT)</span>
+          </div>
+
+          <div class="shows-stack">
+            <div 
+              v-for="item in watchedHistoryList" 
+              :key="item.id" 
+              class="tvtime-card glass-card history-card"
+            >
+              <img 
+                :src="getPosterUrl(item)" 
+                :alt="item.movie?.title || item.title"
+                class="tvtime-poster clickable"
+                @click="openDetailModal(item)"
+                @error="onImageError"
+              />
+
+              <div class="tvtime-card-body">
+                <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+
+                <div class="eps-headline">
+                  <span class="season-eps-code completed-code">
+                    ✓ All {{ getTotalEps(item) }} Episodes Watched
+                  </span>
+                </div>
+
+                <p class="history-completed-text">
+                  Series Completed.
+                </p>
+
+                <!-- Interactive Quick Rating Bar -->
+                <div class="card-rating-quick-bar" @click.stop>
+                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
+                  <div class="quick-stars">
+                    <span 
+                      v-for="star in 10" 
+                      :key="star"
+                      @click="updateItemRating(item, star)"
+                      :class="['mini-star', { active: star <= (item.rating || 0) }]"
+                    >★</span>
+                  </div>
+                  <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                </div>
+              </div>
+
+              <!-- Side Actions (Completed Badge + Remove) -->
+              <div class="card-side-actions">
+                <div class="completed-check-icon" title="Series Completed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
@@ -360,8 +344,6 @@
                   <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
                   </svg>
                 </button>
               </div>
@@ -369,58 +351,158 @@
           </div>
         </div>
 
-        <!-- Empty State -->
-        <div v-if="watchlist.length === 0" class="empty-state glass-card">
-          <h3>Your TV Watchlist is Empty</h3>
-          <p>Discover and add your favorite TV series from the Explore page.</p>
+        <!-- Empty state when all lists are empty -->
+        <div v-if="watchNextList.length === 0 && haventWatchedList.length === 0 && watchedHistoryList.length === 0" class="empty-state glass-card">
+          <h3>No TV Shows In Your Watchlist</h3>
+          <p>Explore trending and popular TV series to start tracking your next binge!</p>
           <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Browse TV Shows</NuxtLink>
         </div>
       </div>
 
-      <!-- UPCOMING TAB -->
-      <div v-else-if="activeTvSubTab === 'upcoming'" class="upcoming-section">
-        <div v-if="upcomingList.length > 0" class="shows-stack">
-          <div 
-            v-for="item in upcomingList" 
-            :key="item.id" 
-            class="tvtime-card glass-card upcoming-card"
-          >
-            <img 
-              :src="getPosterUrl(item)" 
-              :alt="item.movie?.title || item.title"
-              class="tvtime-poster clickable"
+      <!-- RELEASE RADAR / UPCOMING TAB -->
+      <div v-else-if="activeTvSubTab === 'upcoming'" class="radar-experience">
+        <!-- Radar Control Banner -->
+        <div class="radar-control-card glass-card">
+          <div class="radar-info-col">
+            <div class="radar-title-row">
+              <span class="radar-pulse-dot"></span>
+              <h2>Release Radar</h2>
+              <span class="radar-count-tag">{{ upcomingList.length }} Upcoming Episodes Scheduled</span>
+            </div>
+            <p class="radar-desc">Live schedule and countdowns for new episodes of TV shows in your watchlist.</p>
+          </div>
+
+          <button @click="syncRadarAirDates" class="btn-sync-radar" :disabled="isSyncingRadar">
+            <svg :class="['sync-icon', { spinning: isSyncingRadar }]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span>{{ isSyncingRadar ? 'Syncing TMDB...' : 'Sync Air Dates' }}</span>
+          </button>
+        </div>
+
+        <!-- Confirmed Upcoming Schedule Section -->
+        <div v-if="upcomingList.length > 0" class="radar-schedule-group">
+          <div class="section-pill-header">
+            <span class="pill-badge radar-schedule-badge">SCHEDULED AIR DATES</span>
+          </div>
+
+          <div class="shows-stack">
+            <div 
+              v-for="item in upcomingList" 
+              :key="item.id" 
+              class="tvtime-card glass-card radar-item-card clickable"
               @click="openDetailModal(item)"
-              @error="onImageError"
-            />
+            >
+              <img 
+                :src="getPosterUrl(item)" 
+                :alt="item.movie?.title || item.title"
+                class="tvtime-poster"
+                @error="onImageError"
+              />
 
-            <div class="tvtime-card-body">
-              <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
+              <div class="tvtime-card-body">
+                <div class="show-title-tag">
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+
+                <!-- Air Date Countdown Box -->
+                <div class="radar-countdown-row">
+                  <span 
+                    :class="['countdown-badge', { 
+                      'badge-today': getAirDateCountdown(item.movie?.next_air_date).isToday,
+                      'badge-soon': getAirDateCountdown(item.movie?.next_air_date).isSoon && !getAirDateCountdown(item.movie?.next_air_date).isToday,
+                      'badge-future': !getAirDateCountdown(item.movie?.next_air_date).isSoon
+                    }]"
+                  >
+                    {{ getAirDateCountdown(item.movie?.next_air_date).label }}
+                  </span>
+                  <span class="radar-status-pill" v-if="item.movie?.media_status">
+                    {{ item.movie.media_status }}
+                  </span>
+                </div>
+
+                <p class="eps-title-text" v-if="item.movie?.next_episode_name">
+                  <span class="eps-label">Next Ep:</span> <strong>"{{ item.movie?.next_episode_name }}"</strong>
+                </p>
+
+                <div class="card-badges-row">
+                  <span class="badge-total-info">
+                    Current Progress: S{{ padZero(item.season_watched || 1) }} ({{ item.episodes_watched || 0 }} eps watched)
+                  </span>
+                </div>
               </div>
 
-              <div class="upcoming-date-box">
-                <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span>Airs: <strong>{{ item.movie?.next_air_date }}</strong></span>
+              <!-- Side Action Button -->
+              <div class="card-side-actions">
+                <button class="btn-radar-details" @click.stop="openDetailModal(item)">
+                  <span>Details</span>
+                </button>
               </div>
-
-              <p class="eps-title-text" v-if="item.movie?.next_episode_name">
-                Episode: "{{ item.movie?.next_episode_name }}"
-              </p>
             </div>
           </div>
         </div>
 
-        <div v-else class="empty-state glass-card">
-          <h3>No Upcoming Episodes Scheduled</h3>
-          <p>TV series in your watchlist currently have no new episode air dates scheduled.</p>
+        <!-- Ongoing / Returning Series (Awaiting Schedule) -->
+        <div v-if="ongoingReturningList.length > 0" class="radar-schedule-group">
+          <div class="section-pill-header">
+            <span class="pill-badge on-hold-badge">RETURNING SERIES (AWAITING DATES)</span>
+          </div>
+
+          <div class="shows-stack">
+            <div 
+              v-for="item in ongoingReturningList" 
+              :key="item.id" 
+              class="tvtime-card glass-card radar-item-card clickable"
+              @click="openDetailModal(item)"
+            >
+              <img 
+                :src="getPosterUrl(item)" 
+                :alt="item.movie?.title || item.title"
+                class="tvtime-poster"
+                @error="onImageError"
+              />
+
+              <div class="tvtime-card-body">
+                <div class="show-title-tag">
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+
+                <div class="radar-countdown-row">
+                  <span class="countdown-badge badge-tba">Next Season in Production / TBA</span>
+                  <span class="radar-status-pill">{{ item.movie?.media_status || 'Ongoing' }}</span>
+                </div>
+
+                <div class="card-badges-row">
+                  <span class="badge-total-info">
+                    Progress: S{{ padZero(item.season_watched || 1) }} • {{ item.episodes_watched || 0 }} eps watched
+                  </span>
+                </div>
+              </div>
+
+              <div class="card-side-actions">
+                <button class="btn-radar-details" @click.stop="openDetailModal(item)">
+                  <span>Details</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty Radar State -->
+        <div v-if="upcomingList.length === 0 && ongoingReturningList.length === 0" class="empty-state glass-card">
+          <h3>No Upcoming Episodes on Radar</h3>
+          <p>Shows in your watchlist currently have no new episode air dates scheduled. Click "Sync Air Dates" to check TMDB for recent announcements!</p>
+          <button @click="syncRadarAirDates" class="btn-primary" style="margin-top: 14px;" :disabled="isSyncingRadar">
+            <span>{{ isSyncingRadar ? 'Checking TMDB...' : 'Sync Air Dates Now' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -979,9 +1061,66 @@ const watchedHistoryList = computed(() => {
   })
 })
 
+const isSyncingRadar = ref(false)
+
 const upcomingList = computed(() => {
-  return watchlist.value.filter(item => item.movie?.next_air_date && item.movie.next_air_date !== '')
+  return watchlist.value
+    .filter(item => item.movie?.next_air_date && item.movie.next_air_date !== '')
+    .sort((a, b) => (a.movie?.next_air_date || '').localeCompare(b.movie?.next_air_date || ''))
 })
+
+const ongoingReturningList = computed(() => {
+  return watchlist.value.filter(item => {
+    const isTV = (item.movie?.media_type || item.media_type) === 'tv'
+    const hasUpcoming = item.movie?.next_air_date && item.movie.next_air_date !== ''
+    const isReturning = item.movie?.media_status === 'Returning Series' || item.movie?.media_status === 'In Production' || item.movie?.media_status === 'Planned'
+    return isTV && !hasUpcoming && isReturning
+  })
+})
+
+const syncRadarAirDates = async () => {
+  if (!authStore.isAuth) {
+    showToast('Please sign in first.')
+    return
+  }
+
+  isSyncingRadar.value = true
+  try {
+    const res = await api.syncRadar()
+    showToast(res.message || 'Radar air dates synchronized!')
+    await fetchWatchlist()
+  } catch (err: any) {
+    console.error('Failed to sync radar:', err)
+    showToast('Failed to sync radar. Please try again.')
+  } finally {
+    isSyncingRadar.value = false
+  }
+}
+
+const getAirDateCountdown = (dateStr?: string) => {
+  if (!dateStr) return { label: 'TBA', isToday: false, isSoon: false, isPast: false }
+  
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const airDate = new Date(dateStr)
+  airDate.setHours(0, 0, 0, 0)
+  
+  const diffTime = airDate.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0) {
+    return { label: `Aired (${dateStr})`, isToday: false, isSoon: false, isPast: true }
+  } else if (diffDays === 0) {
+    return { label: '🔥 Airs Today!', isToday: true, isSoon: true, isPast: false }
+  } else if (diffDays === 1) {
+    return { label: '⚡ Tomorrow!', isToday: false, isSoon: true, isPast: false }
+  } else if (diffDays <= 7) {
+    return { label: `In ${diffDays} days (${dateStr})`, isToday: false, isSoon: true, isPast: false }
+  } else {
+    return { label: `Airs ${dateStr} (in ${diffDays} days)`, isToday: false, isSoon: false, isPast: false }
+  }
+}
 
 const fetchWatchlist = async () => {
   if (!authStore.isAuth) {
@@ -2033,17 +2172,209 @@ const deleteItem = async (id: number) => {
   transform: none;
 }
 
-.upcoming-date-box {
-  color: var(--text-primary);
-  font-size: 0.84rem;
-  margin-bottom: 4px;
+.sub-tab-badge {
+  background: var(--accent-red);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+
+/* Radar Experience Styles */
+.radar-experience {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.radar-control-card {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+.radar-info-col {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
-.upcoming-date-box strong {
-  color: var(--accent-red);
+.radar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.radar-title-row h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.radar-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.radar-count-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 10px;
+  border-radius: 6px;
+}
+
+.radar-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.btn-sync-radar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid var(--border-red);
+  color: #ff6b6b;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-sync-radar:hover:not(:disabled) {
+  background: var(--accent-red);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-sync-radar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sync-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.sync-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.radar-schedule-group {
+  margin-bottom: 8px;
+}
+
+.radar-schedule-badge {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.3);
+}
+
+.radar-item-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.radar-item-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(229, 9, 20, 0.4);
+}
+
+.radar-countdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 2px 0;
+}
+
+.countdown-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.countdown-badge.badge-today {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.countdown-badge.badge-soon {
+  background: rgba(234, 179, 8, 0.16);
+  border: 1px solid rgba(234, 179, 8, 0.45);
+  color: #fde047;
+}
+
+.countdown-badge.badge-future {
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.countdown-badge.badge-tba {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+.radar-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.btn-radar-details {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-radar-details:hover {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
 }
 
 /* Movies Grid Layout */

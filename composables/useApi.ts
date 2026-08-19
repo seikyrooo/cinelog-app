@@ -98,10 +98,28 @@ export const useApi = () => {
     headers: authHeaders()
   })
 
+  const uploadAvatar = (formData: FormData) => $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/me/avatar'), {
+    method: 'POST',
+    headers: authHeaders(),
+    body: formData
+  })
+
+  const getRadar = () => $fetch<{ success: boolean; data: any[] }>(useApiUrl('/api/me/radar'), {
+    headers: authHeaders()
+  })
+
+  const syncRadar = () => $fetch<{ success: boolean; message: string }>(useApiUrl('/api/me/radar/sync'), {
+    method: 'POST',
+    headers: authHeaders()
+  })
+
   return {
     authHeaders,
     getMe,
     updateMe,
+    uploadAvatar,
+    getRadar,
+    syncRadar,
     getLibrary,
     getLibraryItem,
     addLibraryItem,
