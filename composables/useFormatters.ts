@@ -19,8 +19,14 @@ export const useFormatters = () => {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path
     }
-    if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    if (path.startsWith('/api/uploads/')) {
       return useApiUrl(path)
+    }
+    if (path.startsWith('/uploads/')) {
+      return useApiUrl('/api' + path)
+    }
+    if (path.startsWith('uploads/')) {
+      return useApiUrl('/api/' + path)
     }
     return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
   }
@@ -42,8 +48,14 @@ export const useFormatters = () => {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path
     }
-    if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    if (path.startsWith('/api/uploads/')) {
       return useApiUrl(path)
+    }
+    if (path.startsWith('/uploads/')) {
+      return useApiUrl('/api' + path)
+    }
+    if (path.startsWith('uploads/')) {
+      return useApiUrl('/api/' + path)
     }
     return `https://image.tmdb.org/t/p/original${path.startsWith('/') ? path : '/' + path}`
   }
@@ -51,9 +63,12 @@ export const useFormatters = () => {
   const getAvatarUrl = (path?: string): string => {
     if (!path || path === 'null' || path === 'undefined') return ''
     if (path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://')) return path
-    if (path.startsWith('/uploads/') || path.startsWith('uploads/')) return useApiUrl(path)
-    if (path.startsWith('/')) return useApiUrl(path)
-    return useApiUrl('/uploads/avatars/' + path)
+    if (path.startsWith('/api/uploads/')) return useApiUrl(path)
+    if (path.startsWith('api/uploads/')) return useApiUrl('/' + path)
+    if (path.startsWith('/uploads/')) return useApiUrl('/api' + path)
+    if (path.startsWith('uploads/')) return useApiUrl('/api/' + path)
+    if (path.startsWith('/')) return useApiUrl('/api/uploads/avatars' + path)
+    return useApiUrl('/api/uploads/avatars/' + path)
   }
 
   const onAvatarError = (e: Event) => {

@@ -67,12 +67,19 @@ const handleRegister = async () => {
   isLoading.value = true
   errorMessage.value = ''
 
+  const cleanUsername = username.value.trim()
+  if (/\s/.test(cleanUsername) || !/^[a-zA-Z0-9_]{3,30}$/.test(cleanUsername)) {
+    errorMessage.value = 'Username must be 3-30 characters with letters, numbers, or underscores (no spaces allowed).'
+    isLoading.value = false
+    return
+  }
+
   try {
     await $fetch(useApiUrl('/api/auth/register'), {
       method: 'POST',
       body: {
-        username: username.value,
-        email: email.value,
+        username: cleanUsername,
+        email: email.value.trim().toLowerCase(),
         password: password.value
       }
     })
