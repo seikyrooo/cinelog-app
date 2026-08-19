@@ -645,15 +645,31 @@ const getNextEpsName = (item: any) => {
 }
 
 const getBackdropStyle = (media: any) => {
-  const path = media?.backdrop_path || media?.poster_path
-  if (!path) return { background: '#121216' }
-  const url = path.startsWith('/uploads') ? useApiUrl(path) : `https://image.tmdb.org/t/p/w1280${path}`
-  return { backgroundImage: `url(${url})` }
+  if (!media) return { background: '#121216' }
+  const path = media?.backdrop_path || media?.local_backdrop_path || media?.poster_path || media?.local_poster_path || media?.movie?.backdrop_path || media?.movie?.poster_path
+  if (!path || path === 'null' || path === 'undefined') {
+    return { backgroundImage: `url(https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1280&q=80)` }
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return { backgroundImage: `url(${path})` }
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return { backgroundImage: `url(${useApiUrl(path)})` }
+  }
+  return { backgroundImage: `url(https://image.tmdb.org/t/p/w1280${path.startsWith('/') ? path : '/' + path})` }
 }
 
 const getEpisodeStillUrl = (path: string) => {
-  if (!path) return 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
-  return `https://image.tmdb.org/t/p/w500${path}`
+  if (!path || path === 'null' || path === 'undefined') {
+    return 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return useApiUrl(path)
+  }
+  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
 }
 
 const openDetailModal = async (contextItem: any) => {
@@ -794,22 +810,45 @@ const toggleFavoriteStatus = async (item: any) => {
   }
 }
 
-const getPosterUrl = (movie: any) => {
-  if (movie?.local_poster_path) {
-    return useApiUrl(movie.local_poster_path)
+const getPosterUrl = (itemOrPath: any) => {
+  let path = ''
+  if (typeof itemOrPath === 'object' && itemOrPath !== null) {
+    path = itemOrPath.local_poster_path || 
+           itemOrPath.poster_path || 
+           itemOrPath.movie?.local_poster_path || 
+           itemOrPath.movie?.poster_path || 
+           itemOrPath.local_backdrop_path || 
+           itemOrPath.backdrop_path || 
+           itemOrPath.movie?.backdrop_path || 
+           ''
+  } else if (typeof itemOrPath === 'string') {
+    path = itemOrPath
   }
-  if (movie?.poster_path) {
-    return `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+
+  if (!path || path === 'null' || path === 'undefined') {
+    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
   }
-  return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return useApiUrl(path)
+  }
+  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
 }
 
 const onImageError = (e: Event) => {
-  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  const target = e.target as HTMLImageElement
+  if (target && !target.src.includes('unsplash')) {
+    target.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  }
 }
 
 const onEpsImageError = (e: Event) => {
-  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  const target = e.target as HTMLImageElement
+  if (target && !target.src.includes('unsplash')) {
+    target.src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  }
 }
 
 const formatYear = (dateStr: string) => {

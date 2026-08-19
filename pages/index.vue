@@ -171,14 +171,14 @@
     <!-- Horizontal Scrolling Shelves / Discovery Feeds (IDLIX / Netflix Layout) -->
     <div v-else class="discovery-container">
       
-      <!-- SHELF 1: 🔥 Trending This Week -->
+      <!-- SHELF 1: Trending Now -->
       <section class="shelf-section" aria-labelledby="shelf-trending-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
-            <span class="shelf-emoji">🔥</span>
+            <span class="shelf-indicator" aria-hidden="true"></span>
             <div>
-              <h2 id="shelf-trending-title" class="shelf-title">Trending This Week</h2>
-              <p class="shelf-sub">The most popular movies & TV shows across all platforms</p>
+              <h2 id="shelf-trending-title" class="shelf-title">Trending Now</h2>
+              <p class="shelf-sub">The most-watched movies & TV series this week</p>
             </div>
           </div>
 
@@ -217,7 +217,7 @@
           >
             <div class="shelf-poster-wrapper">
               <img 
-                :src="getImageUrl(item.poster_path)" 
+                :src="getImageUrl(item)" 
                 :alt="item.title || item.name" 
                 class="shelf-poster-img"
                 @error="onImageError"
@@ -237,14 +237,14 @@
         </div>
       </section>
 
-      <!-- SHELF 2: 🎬 Popular Feature Films -->
+      <!-- SHELF 2: Popular Movies -->
       <section class="shelf-section" aria-labelledby="shelf-movies-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
-            <span class="shelf-emoji">🎬</span>
+            <span class="shelf-indicator" aria-hidden="true"></span>
             <div>
-              <h2 id="shelf-movies-title" class="shelf-title">Popular Feature Films</h2>
-              <p class="shelf-sub">Blockbusters, theatrical releases, and audience favorites</p>
+              <h2 id="shelf-movies-title" class="shelf-title">Popular Movies</h2>
+              <p class="shelf-sub">Top blockbusters, theatrical releases, and audience picks</p>
             </div>
           </div>
 
@@ -282,7 +282,7 @@
           >
             <div class="shelf-poster-wrapper">
               <img 
-                :src="getImageUrl(item.poster_path)" 
+                :src="getImageUrl(item)" 
                 :alt="item.title" 
                 class="shelf-poster-img"
                 @error="onImageError"
@@ -300,14 +300,14 @@
         </div>
       </section>
 
-      <!-- SHELF 3: 📺 Binge-Worthy TV Series -->
+      <!-- SHELF 3: Binge-Worthy Series -->
       <section class="shelf-section" aria-labelledby="shelf-tv-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
-            <span class="shelf-emoji">📺</span>
+            <span class="shelf-indicator" aria-hidden="true"></span>
             <div>
-              <h2 id="shelf-tv-title" class="shelf-title">Binge-Worthy TV Series</h2>
-              <p class="shelf-sub">Top serial drama, thriller, and sci-fi series with active seasons</p>
+              <h2 id="shelf-tv-title" class="shelf-title">Binge-Worthy Series</h2>
+              <p class="shelf-sub">Top television dramas, thriller, and active seasons</p>
             </div>
           </div>
 
@@ -345,7 +345,7 @@
           >
             <div class="shelf-poster-wrapper">
               <img 
-                :src="getImageUrl(item.poster_path)" 
+                :src="getImageUrl(item)" 
                 :alt="item.name" 
                 class="shelf-poster-img"
                 @error="onImageError"
@@ -363,14 +363,14 @@
         </div>
       </section>
 
-      <!-- SHELF 4: ⭐ Top Rated Masterpieces -->
+      <!-- SHELF 4: Top Rated Masterpieces -->
       <section class="shelf-section" aria-labelledby="shelf-toprated-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
-            <span class="shelf-emoji">⭐</span>
+            <span class="shelf-indicator" aria-hidden="true"></span>
             <div>
-              <h2 id="shelf-toprated-title" class="shelf-title">Critically Acclaimed Masterpieces</h2>
-              <p class="shelf-sub">Highest rated cinema works and modern classics</p>
+              <h2 id="shelf-toprated-title" class="shelf-title">Top Rated Masterpieces</h2>
+              <p class="shelf-sub">Critically acclaimed cinema and modern classics</p>
             </div>
           </div>
 
@@ -408,7 +408,7 @@
           >
             <div class="shelf-poster-wrapper">
               <img 
-                :src="getImageUrl(item.poster_path)" 
+                :src="getImageUrl(item)" 
                 :alt="item.title || item.name" 
                 class="shelf-poster-img"
                 @error="onImageError"
@@ -468,7 +468,7 @@
           <div class="detail-left-col">
             <div class="detail-poster-wrap">
               <img 
-                :src="getImageUrl(activeItem?.poster_path)" 
+                :src="getImageUrl(activeItem)" 
                 :alt="activeItem?.title || activeItem?.name" 
                 class="detail-poster-img"
                 @error="onImageError"
@@ -829,28 +829,70 @@ const clearSearch = () => {
   searchResults.value = []
 }
 
-const getImageUrl = (path: string) => {
-  if (!path) return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
-  return `https://image.tmdb.org/t/p/w500${path}`
+const getImageUrl = (itemOrPath: any) => {
+  let path = ''
+  if (typeof itemOrPath === 'object' && itemOrPath !== null) {
+    path = itemOrPath.local_poster_path || 
+           itemOrPath.poster_path || 
+           itemOrPath.local_backdrop_path || 
+           itemOrPath.backdrop_path || 
+           ''
+  } else if (typeof itemOrPath === 'string') {
+    path = itemOrPath
+  }
+
+  if (!path || path === 'null' || path === 'undefined') {
+    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return useApiUrl(path)
+  }
+  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
 }
 
 const getBackdropStyle = (media: any) => {
-  const path = media?.backdrop_path || media?.poster_path
-  if (!path) return { background: '#0a0a0c' }
-  return { backgroundImage: `url(https://image.tmdb.org/t/p/w1280${path})` }
+  if (!media) return { background: '#0a0a0c' }
+  const path = media?.backdrop_path || media?.local_backdrop_path || media?.poster_path || media?.local_poster_path
+  if (!path || path === 'null' || path === 'undefined') {
+    return { backgroundImage: `url(https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1280&q=80)` }
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return { backgroundImage: `url(${path})` }
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return { backgroundImage: `url(${useApiUrl(path)})` }
+  }
+  return { backgroundImage: `url(https://image.tmdb.org/t/p/w1280${path.startsWith('/') ? path : '/' + path})` }
 }
 
 const getEpisodeStillUrl = (path: string) => {
-  if (!path) return 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
-  return `https://image.tmdb.org/t/p/w500${path}`
+  if (!path || path === 'null' || path === 'undefined') {
+    return 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return useApiUrl(path)
+  }
+  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
 }
 
 const onImageError = (e: Event) => {
-  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  const target = e.target as HTMLImageElement
+  if (target && !target.src.includes('unsplash')) {
+    target.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  }
 }
 
 const onEpsImageError = (e: Event) => {
-  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  const target = e.target as HTMLImageElement
+  if (target && !target.src.includes('unsplash')) {
+    target.src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  }
 }
 
 const truncateText = (text: string, len: number) => {
@@ -906,7 +948,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
 }
 
 const openSaveModal = async (item: any) => {
-  activeItem.value = item
+  activeItem.value = { ...item }
   detailedInfo.value = null
   episodesList.value = []
   selectedSeason.value = 1
@@ -928,12 +970,15 @@ const openSaveModal = async (item: any) => {
   try {
     const detailRes: any = await $fetch(useApiUrl('/api/detail'), {
       params: {
-        id: item.id,
+        id: item.id || item.tmdb_id,
         type: item.media_type || 'movie'
       }
     })
-    detailedInfo.value = detailRes.data
-    form.value.total_episodes = detailedInfo.value?.total_episodes || 0
+    if (detailRes.data) {
+      detailedInfo.value = detailRes.data
+      activeItem.value = { ...activeItem.value, ...detailRes.data }
+      form.value.total_episodes = detailedInfo.value?.total_episodes || 0
+    }
 
     if (authStore.isAuth) {
       try {
@@ -1284,8 +1329,14 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   gap: 12px;
 }
 
-.shelf-emoji {
-  font-size: 1.5rem;
+.shelf-indicator {
+  display: inline-block;
+  width: 4px;
+  height: 24px;
+  background: var(--accent-red);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(229, 9, 20, 0.6);
+  flex-shrink: 0;
 }
 
 .shelf-title {

@@ -87,13 +87,30 @@ onMounted(async () => {
 })
 
 const getPosterUrl = (movie: any) => {
-  if (movie?.local_poster_path) return useApiUrl(movie.local_poster_path)
-  if (movie?.poster_path) return `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-  return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  let path = ''
+  if (typeof movie === 'object' && movie !== null) {
+    path = movie.local_poster_path || movie.poster_path || movie.local_backdrop_path || movie.backdrop_path || ''
+  } else if (typeof movie === 'string') {
+    path = movie
+  }
+
+  if (!path || path === 'null' || path === 'undefined') {
+    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
+    return useApiUrl(path)
+  }
+  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
 }
 
 const onImageError = (e: Event) => {
-  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  const target = e.target as HTMLImageElement
+  if (target && !target.src.includes('unsplash')) {
+    target.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  }
 }
 
 const formatYear = (dateStr?: string) => dateStr ? dateStr.substring(0, 4) : '—'
