@@ -81,8 +81,8 @@
             <h2>{{ item.movie?.title || 'Untitled' }}</h2>
             <p>{{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }} · {{ getStatusLabel(item.status) }}</p>
             <div class="card-footer-tags">
-              <strong v-if="item.rating" class="rating-tag">★ {{ item.rating }}/10</strong>
-              <strong v-if="item.favorite" class="favorite-tag">♥ Favorite</strong>
+              <strong v-if="item.rating" class="rating-tag">{{ item.rating }}/10</strong>
+              <strong v-if="item.favorite" class="favorite-tag">Favorite</strong>
             </div>
           </div>
         </article>
@@ -292,29 +292,39 @@ const { getPosterUrl, getAvatarUrl, onImageError, formatYear, getStatusLabel } =
   font-size: 0.88rem;
 }
 
+.public-hero {
+  border-radius: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+}
+
 .public-stats {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .public-stats div {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  min-width: 84px;
-  padding: 10px;
+  border-radius: 4px;
+  min-width: 80px;
+  padding: 8px 12px;
   text-align: center;
 }
 
 .public-stats strong {
   display: block;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: #ffffff;
 }
 
 .public-stats span {
-  color: var(--text-secondary);
-  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .tabs {
@@ -323,14 +333,14 @@ const { getPosterUrl, getAvatarUrl, onImageError, formatYear, getStatusLabel } =
 }
 
 .tab-btn {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 4px;
   color: var(--text-secondary);
   cursor: pointer;
   font-weight: 700;
-  font-size: 0.88rem;
-  padding: 8px 18px;
+  font-size: 0.84rem;
+  padding: 8px 16px;
   transition: all 0.2s ease;
 }
 

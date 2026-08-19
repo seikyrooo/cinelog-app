@@ -1112,13 +1112,13 @@ const getAirDateCountdown = (dateStr?: string) => {
   if (diffDays < 0) {
     return { label: `Aired (${dateStr})`, isToday: false, isSoon: false, isPast: true }
   } else if (diffDays === 0) {
-    return { label: '🔥 Airs Today!', isToday: true, isSoon: true, isPast: false }
+    return { label: 'AIRS TODAY', isToday: true, isSoon: true, isPast: false }
   } else if (diffDays === 1) {
-    return { label: '⚡ Tomorrow!', isToday: false, isSoon: true, isPast: false }
+    return { label: 'TOMORROW', isToday: false, isSoon: true, isPast: false }
   } else if (diffDays <= 7) {
     return { label: `In ${diffDays} days (${dateStr})`, isToday: false, isSoon: true, isPast: false }
   } else {
-    return { label: `Airs ${dateStr} (in ${diffDays} days)`, isToday: false, isSoon: false, isPast: false }
+    return { label: `Airs ${dateStr}`, isToday: false, isSoon: false, isPast: false }
   }
 }
 

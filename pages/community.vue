@@ -202,10 +202,10 @@ const { getAvatarUrl, formatYear } = useFormatters()
 
 .community-hero {
   padding: 32px 28px;
-  border-radius: 16px;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
 }
@@ -214,16 +214,16 @@ const { getAvatarUrl, formatYear } = useFormatters()
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(229, 9, 20, 0.12);
+  background: rgba(229, 9, 20, 0.15);
   border: 1px solid var(--border-red);
   color: #ff6b6b;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  padding: 4px 12px;
-  border-radius: 20px;
-  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .icon-svg {
@@ -235,13 +235,13 @@ const { getAvatarUrl, formatYear } = useFormatters()
   font-size: 1.85rem;
   font-weight: 800;
   color: #ffffff;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.03em;
 }
 
 .subtitle {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   margin: 0;
   max-width: 680px;
 }
@@ -267,19 +267,18 @@ const { getAvatarUrl, formatYear } = useFormatters()
 
 .search-input {
   width: 100%;
-  padding: 13px 44px 13px 44px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 44px;
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
+  border-radius: 4px;
   color: var(--text-primary);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
 .search-input:focus {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--accent-red);
-  box-shadow: 0 0 0 3px var(--accent-red-subtle);
   outline: none;
 }
 
@@ -300,23 +299,23 @@ const { getAvatarUrl, formatYear } = useFormatters()
 .community-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
 
 .user-card {
-  padding: 22px;
-  border-radius: 14px;
+  padding: 20px;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: var(--bg-surface);
+  gap: 14px;
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .user-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(229, 9, 20, 0.4);
+  transform: translateY(-2px);
+  border-color: var(--border-medium);
 }
 
 .user-card-header {
@@ -331,22 +330,17 @@ const { getAvatarUrl, formatYear } = useFormatters()
 }
 
 .user-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  background: rgba(229, 9, 20, 0.12);
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  background: rgba(229, 9, 20, 0.15);
   border: 1px solid var(--border-red);
   color: #ff6b6b;
   display: grid;
   place-items: center;
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   overflow: hidden;
-  transition: transform 0.18s ease;
-}
-
-.user-avatar:hover {
-  transform: scale(1.05);
 }
 
 .user-avatar img {
@@ -369,13 +363,13 @@ const { getAvatarUrl, formatYear } = useFormatters()
 }
 
 .user-name-link h3 {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 800;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.15s ease;
+  letter-spacing: -0.02em;
 }
 
 .user-name-link:hover h3 {
@@ -383,7 +377,7 @@ const { getAvatarUrl, formatYear } = useFormatters()
 }
 
 .user-joined {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
 }
 
@@ -394,20 +388,21 @@ const { getAvatarUrl, formatYear } = useFormatters()
 .self-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 3px 8px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .btn-follow-chip {
-  background: rgba(229, 9, 20, 0.14);
-  border: 1px solid var(--border-red);
-  color: #ff6b6b;
-  font-size: 0.8rem;
+  background: var(--accent-red);
+  border: none;
+  color: #ffffff;
+  font-size: 0.78rem;
   font-weight: 700;
   padding: 6px 14px;
-  border-radius: 20px;
+  border-radius: 3px;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
@@ -415,19 +410,18 @@ const { getAvatarUrl, formatYear } = useFormatters()
 }
 
 .btn-follow-chip:hover:not(:disabled) {
-  background: var(--accent-red);
-  color: #ffffff;
-  transform: translateY(-1px);
+  background: var(--accent-red-hover);
+  transform: scale(1.02);
 }
 
 .btn-follow-chip.following {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.4);
-  color: #4ade80;
+  background: rgba(70, 211, 105, 0.15);
+  border: 1px solid rgba(70, 211, 105, 0.4);
+  color: #46d369;
 }
 
 .user-bio {
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   color: var(--text-secondary);
   line-height: 1.45;
   margin: 0;
@@ -442,15 +436,15 @@ const { getAvatarUrl, formatYear } = useFormatters()
   align-items: center;
   gap: 8px;
   border-top: 1px solid var(--border-subtle);
-  padding-top: 14px;
+  padding-top: 12px;
 }
 
 .stat-pill {
   flex: 1;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 6px 8px;
+  border-radius: 4px;
+  padding: 5px 8px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -458,13 +452,16 @@ const { getAvatarUrl, formatYear } = useFormatters()
 }
 
 .stat-pill strong {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .stat-pill span {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 
@@ -475,11 +472,6 @@ const { getAvatarUrl, formatYear } = useFormatters()
   text-decoration: none;
   padding: 6px 8px;
   white-space: nowrap;
-  transition: opacity 0.15s ease;
-}
-
-.profile-arrow-btn:hover {
-  opacity: 0.8;
 }
 
 .community-state {

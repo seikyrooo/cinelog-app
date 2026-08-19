@@ -115,12 +115,15 @@ const handleLogout = () => {
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 12px 24px;
-  background: rgba(10, 10, 12, 0.92);
+  padding: 14px 28px;
+  background: rgba(20, 20, 20, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -132,15 +135,21 @@ const handleLogout = () => {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  font-size: 1.35rem;
-  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: 900;
   color: #ffffff;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+}
+
+.brand-name {
+  font-family: var(--font-heading);
+  letter-spacing: -0.04em;
+  font-weight: 900;
 }
 
 .brand-svg-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   color: var(--accent-red);
 }
 
@@ -154,17 +163,17 @@ const handleLogout = () => {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.88rem;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  transition: all 0.18s ease;
+  transition: all 0.2s ease;
 }
 
 .nav-svg-icon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .user-svg-icon {
@@ -179,8 +188,8 @@ const handleLogout = () => {
 
 .nav-item.active {
   color: #ffffff;
-  background: var(--accent-red-subtle);
-  border: 1px solid var(--border-red);
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .auth-actions {
@@ -190,13 +199,13 @@ const handleLogout = () => {
 }
 
 .user-badge {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: #ffffff;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 7px 14px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 6px 12px;
+  border-radius: 4px;
   border: 1px solid var(--border-subtle);
   display: inline-flex;
   align-items: center;
