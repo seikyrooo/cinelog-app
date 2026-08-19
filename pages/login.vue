@@ -27,6 +27,7 @@
           />
         </div>
 
+        <p v-if="successMessage" class="success-msg">🎉 {{ successMessage }}</p>
         <p v-if="errorMessage" class="error-msg">⚠️ {{ errorMessage }}</p>
 
         <button type="submit" class="btn-primary btn-full" :disabled="isLoading">
@@ -47,11 +48,13 @@ import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
+const successMessage = ref(route.query.registered ? 'Account created successfully! Please sign in below.' : '')
 
 const handleLogin = async () => {
   isLoading.value = true
@@ -138,6 +141,16 @@ const handleLogin = async () => {
   border-color: var(--accent-red) !important;
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 0 0 3px var(--accent-red-subtle) !important;
+}
+
+.success-msg {
+  color: #46d369;
+  font-size: 0.84rem;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(70, 211, 105, 0.1);
+  border: 1px solid rgba(70, 211, 105, 0.25);
+  border-radius: 6px;
 }
 
 .error-msg {

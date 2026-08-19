@@ -173,7 +173,7 @@
                   </button>
 
                   <button 
-                    @click.stop="deleteItem(item.id)" 
+                    @click.stop="promptDeleteItem(item)" 
                     class="circle-trash-btn"
                     title="Remove from Watchlist"
                     aria-label="Remove from Watchlist"
@@ -259,7 +259,7 @@
                 </button>
 
                 <button 
-                  @click.stop="deleteItem(item.id)" 
+                  @click.stop="promptDeleteItem(item)" 
                   class="circle-trash-btn"
                   title="Remove from Watchlist"
                   aria-label="Remove from Watchlist"
@@ -332,7 +332,7 @@
                 </div>
 
                 <button 
-                  @click.stop="deleteItem(item.id)" 
+                  @click.stop="promptDeleteItem(item)" 
                   class="circle-trash-btn"
                   title="Remove from Watchlist"
                   aria-label="Remove from Watchlist"
@@ -581,7 +581,7 @@
               </button>
 
               <button 
-                @click.stop="deleteItem(item.id)" 
+                @click.stop="promptDeleteItem(item)" 
                 class="movie-action-btn btn-trash"
                 title="Remove from Watchlist"
                 aria-label="Remove from Watchlist"
@@ -675,7 +675,7 @@
                 </button>
 
                 <button 
-                  @click="deleteItem(activeWatchlistContext.id)"
+                  @click="promptDeleteItem(activeWatchlistContext)"
                   class="icon-action-btn btn-danger-icon"
                   title="Remove from Watchlist (Resets Progress)"
                   aria-label="Remove from Watchlist"
@@ -835,6 +835,33 @@
         </form>
       </div>
     </div>
+
+    <!-- Custom In-Page Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div class="modal-content glass-panel confirm-delete-dialog animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="confirm-delete-title">
+        <div class="confirm-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </div>
+        <h3 id="confirm-delete-title" class="confirm-dialog-title">Remove from Watchlist?</h3>
+        <p class="confirm-dialog-desc">
+          Are you sure you want to remove <strong>{{ itemToDelete?.movie?.title || itemToDelete?.title || 'this title' }}</strong>? This will reset all your tracked progress and score.
+        </p>
+        <div class="confirm-dialog-actions">
+          <button type="button" @click="showDeleteModal = false" class="btn-secondary">
+            Cancel
+          </button>
+          <button type="button" class="btn-danger" :disabled="isDeleting" @click="confirmDeleteItem">
+            <span v-if="isDeleting">Removing...</span>
+            <span v-else>Yes, Remove</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -851,6 +878,10 @@ const watchlist = ref<any[]>([])
 const mediaTypeTab = ref('tv')
 const activeTvSubTab = ref('watchlist')
 const toastMessage = ref('')
+
+const showDeleteModal = ref(false)
+const itemToDelete = ref<any>(null)
+const isDeleting = ref(false)
 
 const showEditModal = ref(false)
 const editingItem = ref<any>(null)
@@ -1548,7 +1579,7 @@ const updateWatchlist = async () => {
     fetchWatchlist()
     showToast('Watchlist updated successfully!')
   } catch (err: any) {
-    alert(err?.data?.error || 'Failed to update watchlist.')
+    showToast(err?.data?.error || 'Failed to update watchlist.')
   }
 }
 
@@ -1575,17 +1606,29 @@ const toggleMovieWatched = async (item: any) => {
   }
 }
 
-const deleteItem = async (id: number) => {
-  if (!confirm('Remove this title from your watchlist? This will reset all progress.')) return
+const promptDeleteItem = (item: any) => {
+  if (!item) return
+  itemToDelete.value = item
+  showDeleteModal.value = true
+}
+
+const confirmDeleteItem = async () => {
+  if (!itemToDelete.value) return
+  isDeleting.value = true
   try {
+    const id = itemToDelete.value.id || itemToDelete.value
     await api.deleteLibraryItem(id)
+    showDeleteModal.value = false
+    itemToDelete.value = null
     showDetailModal.value = false
     showEditModal.value = false
     activeWatchlistContext.value = null
     fetchWatchlist()
     showToast('🗑️ Title removed from watchlist.')
   } catch (err: any) {
-    alert(err?.data?.error || 'Failed to remove from watchlist.')
+    showToast(err?.data?.error || 'Failed to remove from watchlist.')
+  } finally {
+    isDeleting.value = false
   }
 }
 </script>
@@ -2912,6 +2955,66 @@ const deleteItem = async (id: number) => {
 .text-sm {
   font-size: 0.78rem;
   padding: 6px 12px;
+}
+
+/* Custom In-Page Confirm Delete Modal */
+.confirm-delete-dialog {
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  padding: 32px 24px;
+  border-radius: 12px;
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+}
+
+.confirm-icon-box {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px auto;
+  border-radius: 50%;
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid rgba(229, 9, 20, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-red);
+}
+
+.confirm-icon-box svg {
+  width: 26px;
+  height: 26px;
+}
+
+.confirm-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.confirm-dialog-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.confirm-dialog-desc strong {
+  color: #ffffff;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-dialog-actions button {
+  min-width: 110px;
+  flex: 1;
 }
 
 /* Modal Overlay Fixed Overlay Styling */

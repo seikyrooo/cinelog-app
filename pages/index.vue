@@ -1068,7 +1068,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
     }
   } catch (err: any) {
     console.error(err)
-    alert(err?.data?.error || 'Failed to save to watchlist.')
+    showToast(err?.data?.error || 'Failed to save to watchlist.')
   } finally {
     isSaving.value = false
   }

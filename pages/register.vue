@@ -77,8 +77,7 @@ const handleRegister = async () => {
       }
     })
 
-    alert('🎉 Account created successfully! Please sign in.')
-    router.push('/login')
+    router.push({ path: '/login', query: { registered: 'true' } })
   } catch (err: any) {
     errorMessage.value = err?.data?.error || 'Registration failed. Please check your details and try again.'
   } finally {
