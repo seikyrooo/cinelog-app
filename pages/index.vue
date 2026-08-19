@@ -938,13 +938,40 @@ const formatYear = (dateStr: string) => {
   return dateStr.substring(0, 4)
 }
 
+const getGlobalEpisodeNumber = (seasonNumber: number, epsNumber: number) => {
+  const seasons = detailedInfo.value?.seasons || watchlistContext.value?.movie?.seasons || []
+  if (seasons && seasons.length > 0) {
+    let accumulated = 0
+    for (const s of seasons) {
+      if (s.season_number === 0 && seasonNumber !== 0) continue
+      if (s.season_number < seasonNumber) {
+        accumulated += s.episode_count || 0
+      }
+    }
+    return accumulated + epsNumber
+  }
+
+  const totalSeasons = detailedInfo.value?.total_seasons || watchlistContext.value?.movie?.total_seasons || seasonsCount.value || 1
+  const totalEps = detailedInfo.value?.total_episodes || watchlistContext.value?.movie?.total_episodes || 0
+  if (totalSeasons > 1 && totalEps > 0) {
+    const avgPerSeason = Math.ceil(totalEps / totalSeasons)
+    return ((seasonNumber - 1) * avgPerSeason) + epsNumber
+  }
+
+  return epsNumber
+}
+
 const isEpisodeWatched = (epsNumber: number) => {
   if (!watchlistContext.value) return false
-  const currSeason = watchlistContext.value.season_watched || 1
   const watchedCount = watchlistContext.value.episodes_watched || 0
-  if (selectedSeason.value < currSeason) return true
-  if (selectedSeason.value === currSeason) return epsNumber <= watchedCount
-  return false
+  const totalEps = watchlistContext.value.total_episodes || watchlistContext.value.movie?.total_episodes || detailedInfo.value?.total_episodes || 0
+  
+  if (watchlistContext.value.status === 'completed' || (totalEps > 0 && watchedCount >= totalEps)) {
+    return true
+  }
+
+  const globalEps = getGlobalEpisodeNumber(selectedSeason.value, epsNumber)
+  return globalEps <= watchedCount
 }
 
 const toggleEpisodeWatched = async (epsNumber: number) => {
@@ -954,7 +981,10 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
     return
   }
 
-  const targetCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
+  const globalEps = getGlobalEpisodeNumber(selectedSeason.value, epsNumber)
+  const isWatched = isEpisodeWatched(epsNumber)
+  const targetCount = isWatched ? Math.max(0, globalEps - 1) : globalEps
+
   form.value.season_watched = selectedSeason.value
   form.value.episodes_watched = targetCount
 
@@ -971,7 +1001,11 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
         }
       })
       watchlistContext.value = res.data
-      showToast(`Progress logged: S${selectedSeason.value} E${targetCount}`)
+      if (res.data?.status === 'completed') {
+        showToast('🎉 Series Completed! All episodes watched.')
+      } else {
+        showToast(`Progress logged: S${selectedSeason.value} E${epsNumber} (${targetCount} eps)`)
+      }
     } catch (err) {
       console.error(err)
     }

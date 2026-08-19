@@ -111,6 +111,21 @@
                     {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
                   </span>
                 </div>
+
+                <!-- Interactive Quick Rating Bar -->
+                <div class="card-rating-quick-bar" @click.stop>
+                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
+                  <div class="quick-stars">
+                    <span 
+                      v-for="star in 10" 
+                      :key="star"
+                      @click="updateItemRating(item, star)"
+                      :class="['mini-star', { active: star <= (item.rating || 0) }]"
+                      :title="'Rate ' + star + ' / 10'"
+                    >★</span>
+                  </div>
+                  <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                </div>
               </div>
 
               <!-- Circle Checkmark Button (Increment Episode) -->
@@ -218,6 +233,21 @@
                 </div>
 
                 <p class="eps-title-text">All episodes watched 100%</p>
+
+                <!-- Interactive Rating Bar for Completed Show -->
+                <div class="card-rating-quick-bar" @click.stop>
+                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Rating:' : 'Rate Series:' }}</span>
+                  <div class="quick-stars">
+                    <span 
+                      v-for="star in 10" 
+                      :key="star"
+                      @click="updateItemRating(item, star)"
+                      :class="['mini-star', { active: star <= (item.rating || 0) }]"
+                      :title="'Rate ' + star + ' / 10'"
+                    >★</span>
+                  </div>
+                  <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                </div>
               </div>
 
               <div class="circle-check-btn completed">
@@ -377,18 +407,41 @@
               @error="onImageError"
             />
 
-            <!-- Favorite Toggle Action Button (Icon Only) -->
-            <div class="quick-action-icon-row" v-if="activeWatchlistContext">
-              <button 
-                @click="toggleFavoriteStatus(activeWatchlistContext)"
-                :class="['icon-action-btn', 'btn-secondary', { active: activeWatchlistContext.favorite }]"
-                :title="activeWatchlistContext.favorite ? 'Favorited' : 'Add to Favorites'"
-                aria-label="Toggle Favorite"
-              >
-                <svg class="action-svg" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2.2">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-              </button>
+            <!-- Quick Rating & Favorite Action Bar -->
+            <div class="quick-add-bar glass-card" v-if="activeWatchlistContext">
+              <div class="rating-input-row">
+                <div class="rating-header-flex">
+                  <label class="rating-prompt-label">Your Rating:</label>
+                  <span class="rating-score-highlight" v-if="activeWatchlistContext.rating > 0">
+                    ★ {{ activeWatchlistContext.rating }} / 10
+                  </span>
+                  <span class="rating-score-highlight muted" v-else>
+                    Click star to rate
+                  </span>
+                </div>
+                <div class="star-rating-selector">
+                  <span 
+                    v-for="star in 10" 
+                    :key="star"
+                    @click="updateItemRating(activeWatchlistContext, star)"
+                    :class="['star-icon', { active: star <= (activeWatchlistContext.rating || 0) }]"
+                    :title="'Rate ' + star + ' / 10'"
+                  >★</span>
+                </div>
+              </div>
+
+              <div class="quick-action-icon-row">
+                <button 
+                  @click="toggleFavoriteStatus(activeWatchlistContext)"
+                  :class="['icon-action-btn', 'btn-secondary', { active: activeWatchlistContext.favorite }]"
+                  :title="activeWatchlistContext.favorite ? 'Favorited' : 'Add to Favorites'"
+                  aria-label="Toggle Favorite"
+                >
+                  <svg class="action-svg" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2.2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div class="meta-info-box glass-card">
@@ -832,40 +885,72 @@ const fetchSeasonEpisodes = async (seasonNum: number) => {
   }
 }
 
+const getGlobalEpisodeNumber = (seasonNumber: number, epsNumber: number) => {
+  const seasons = activeDetailMedia.value?.seasons || activeWatchlistContext.value?.movie?.seasons || []
+  if (seasons && seasons.length > 0) {
+    let accumulated = 0
+    for (const s of seasons) {
+      if (s.season_number === 0 && seasonNumber !== 0) continue
+      if (s.season_number < seasonNumber) {
+        accumulated += s.episode_count || 0
+      }
+    }
+    return accumulated + epsNumber
+  }
+
+  // Multi-season heuristic fallback
+  const totalSeasons = activeDetailMedia.value?.total_seasons || activeWatchlistContext.value?.movie?.total_seasons || seasonsCount.value || 1
+  const totalEps = activeDetailMedia.value?.total_episodes || activeWatchlistContext.value?.movie?.total_episodes || 0
+  if (totalSeasons > 1 && totalEps > 0) {
+    const avgPerSeason = Math.ceil(totalEps / totalSeasons)
+    return ((seasonNumber - 1) * avgPerSeason) + epsNumber
+  }
+
+  return epsNumber
+}
+
 const isEpisodeWatched = (epsNumber: number) => {
   if (!activeWatchlistContext.value) return false
   const watchedEps = activeWatchlistContext.value.episodes_watched || 0
-  const currentSeason = activeWatchlistContext.value.season_watched || 1
+  const totalEps = activeWatchlistContext.value.total_episodes || activeWatchlistContext.value.movie?.total_episodes || 0
   
-  if (selectedSeason.value < currentSeason) return true
-  if (selectedSeason.value === currentSeason) return epsNumber <= watchedEps
-  return false
+  if (activeWatchlistContext.value.status === 'completed' || (totalEps > 0 && watchedEps >= totalEps)) {
+    return true
+  }
+
+  const globalEps = getGlobalEpisodeNumber(selectedSeason.value, epsNumber)
+  return globalEps <= watchedEps
 }
 
 const toggleEpisodeWatched = async (epsNumber: number) => {
+  const globalEps = getGlobalEpisodeNumber(selectedSeason.value, epsNumber)
+  const isWatched = isEpisodeWatched(epsNumber)
+  const targetEpsCount = isWatched ? Math.max(0, globalEps - 1) : globalEps
+  const totalEps = activeWatchlistContext.value?.total_episodes || activeWatchlistContext.value?.movie?.total_episodes || activeDetailMedia.value?.total_episodes || 0
+
   if (!activeWatchlistContext.value) {
     try {
       const res: any = await api.addLibraryItem({
-          tmdb_id: activeDetailMedia.value.id || activeDetailMedia.value.tmdb_id,
-          media_type: activeDetailMedia.value.media_type || 'tv',
-          title: activeDetailMedia.value.title,
-          overview: activeDetailMedia.value.overview,
-          poster_path: activeDetailMedia.value.poster_path,
-          backdrop_path: activeDetailMedia.value.backdrop_path,
-          release_date: activeDetailMedia.value.release_date,
-          vote_average: activeDetailMedia.value.vote_average,
-          director: activeDetailMedia.value.director,
-          cast: activeDetailMedia.value.cast,
-          total_seasons: activeDetailMedia.value.total_seasons,
-          total_episodes: activeDetailMedia.value.total_episodes,
-          status: 'watching',
-          season_watched: selectedSeason.value,
-          episodes_watched: epsNumber
+        tmdb_id: activeDetailMedia.value.id || activeDetailMedia.value.tmdb_id,
+        media_type: activeDetailMedia.value.media_type || 'tv',
+        title: activeDetailMedia.value.title || activeDetailMedia.value.name,
+        overview: activeDetailMedia.value.overview,
+        poster_path: activeDetailMedia.value.poster_path,
+        backdrop_path: activeDetailMedia.value.backdrop_path,
+        release_date: activeDetailMedia.value.release_date || activeDetailMedia.value.first_air_date,
+        vote_average: activeDetailMedia.value.vote_average,
+        director: activeDetailMedia.value.director,
+        cast: activeDetailMedia.value.cast,
+        total_seasons: activeDetailMedia.value.total_seasons || seasonsCount.value,
+        total_episodes: activeDetailMedia.value.total_episodes,
+        status: (totalEps > 0 && targetEpsCount >= totalEps) ? 'completed' : 'watching',
+        season_watched: selectedSeason.value,
+        episodes_watched: targetEpsCount
       })
       if (res.data) {
         activeWatchlistContext.value = res.data
         fetchWatchlist()
-        showToast(`Saved: Season ${selectedSeason.value} Episode ${epsNumber}`)
+        showToast(`Saved: S${padZero(selectedSeason.value)} E${padZero(epsNumber)} (${targetEpsCount} eps watched)`)
       }
     } catch (err) {
       console.error(err)
@@ -873,12 +958,10 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
     return
   }
 
-  const targetEpsCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
-
   try {
     const res: any = await api.setLibraryProgress(activeWatchlistContext.value.id, {
-        season_watched: selectedSeason.value,
-        episodes_watched: Math.max(0, targetEpsCount)
+      season_watched: selectedSeason.value,
+      episodes_watched: targetEpsCount
     })
 
     if (res.data) {
@@ -888,13 +971,37 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Completed! Moved to Completed History')
+        showToast('🎉 Series Completed! Moved to Completed History.')
       } else {
-        showToast(`Progress logged: S${res.data.season_watched} E${res.data.episodes_watched}`)
+        showToast(`Progress: S${padZero(selectedSeason.value)} E${padZero(epsNumber)} (${res.data.episodes_watched} eps)`)
       }
     }
   } catch (err) {
     console.error(err)
+  }
+}
+
+const updateItemRating = async (item: any, rating: number) => {
+  if (!item || !item.id) return
+  item.rating = rating
+  try {
+    const res: any = await api.updateLibraryItem(item.id, {
+      rating: rating,
+      status: item.status || 'watching',
+      favorite: item.favorite,
+      notes: item.notes || '',
+      episodes_watched: item.episodes_watched || 0,
+      season_watched: item.season_watched || 1
+    })
+    if (res.data) {
+      item.rating = res.data.rating
+      if (activeWatchlistContext.value && activeWatchlistContext.value.id === item.id) {
+        activeWatchlistContext.value.rating = res.data.rating
+      }
+      showToast(`⭐ Rated ${rating} / 10!`)
+    }
+  } catch (err) {
+    console.error('Failed to update rating:', err)
   }
 }
 
@@ -1107,6 +1214,86 @@ const deleteItem = async (id: number) => {
 .check-svg {
   width: 20px;
   height: 20px;
+}
+
+.quick-add-bar {
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rating-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.rating-prompt-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.rating-score-highlight {
+  font-size: 0.84rem;
+  color: var(--accent-star);
+  font-weight: 700;
+}
+
+.rating-score-highlight.muted {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.card-rating-quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rating-prompt-text {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.quick-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.mini-star {
+  font-size: 0.92rem;
+  color: #3f3f46;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.mini-star:hover {
+  transform: scale(1.25);
+  color: var(--accent-star);
+}
+
+.mini-star.active {
+  color: var(--accent-star);
+}
+
+.quick-rating-num {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent-star);
+  margin-left: 2px;
 }
 
 .quick-action-icon-row {
