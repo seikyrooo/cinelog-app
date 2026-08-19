@@ -490,26 +490,31 @@
                 </div>
               </div>
 
-              <div class="quick-buttons-row">
+              <div class="quick-action-icon-row">
                 <button 
                   @click="saveToWatchlist('watching')" 
-                  class="btn-primary flex-1"
+                  :class="['icon-action-btn', 'btn-primary', { active: watchlistContext }]"
                   :disabled="isSaving"
+                  :title="watchlistContext ? 'Saved in Watchlist' : 'Add to Watchlist'"
+                  aria-label="Add to Watchlist"
                 >
-                  <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg v-if="watchlistContext" class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <svg v-else class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span>{{ isSaving ? 'Saving...' : 'Add to Watchlist' }}</span>
                 </button>
                 <button 
                   @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
-                  :class="['btn-secondary', { active: form.favorite }]"
+                  :class="['icon-action-btn', 'btn-secondary', { active: form.favorite }]"
+                  :title="form.favorite ? 'Favorited' : 'Add to Favorites'"
+                  aria-label="Toggle Favorite"
                 >
-                  <svg class="icon-inline" viewBox="0 0 24 24" :fill="form.favorite ? 'var(--accent-red)' : 'none'" :stroke="form.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2">
+                  <svg class="action-svg" viewBox="0 0 24 24" :fill="form.favorite ? 'var(--accent-red)' : 'none'" :stroke="form.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2.2">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                   </svg>
-                  <span>{{ form.favorite ? 'Favorite' : '+ Favorite' }}</span>
                 </button>
               </div>
             </div>
@@ -591,15 +596,20 @@
                     <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 120) }}</p>
                   </div>
 
-                  <!-- Watched Toggle Button -->
+                  <!-- Watched Toggle Icon Button -->
                   <button 
                     @click="toggleEpisodeWatched(eps.episode_number)"
-                    :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                    :class="['eps-check-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                    :title="isEpisodeWatched(eps.episode_number) ? 'Mark unwatched' : 'Mark watched'"
+                    :aria-label="'Toggle episode ' + eps.episode_number + ' watched'"
                   >
-                    <svg v-if="isEpisodeWatched(eps.episode_number)" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <svg v-if="isEpisodeWatched(eps.episode_number)" class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Watched' : '+ Watch' }}</span>
+                    <svg v-else class="plus-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -625,15 +635,15 @@ const isSearchMode = ref(false)
 const searchResults = ref<any[]>([])
 const toastMessage = ref('')
 
-// Curated instant initial feeds so recommendations appear immediately without blank flash
+// Curated instant initial feeds with verified TMDB CDN paths
 const DEFAULT_TRENDING = [
   {
     id: 66732,
     title: 'Stranger Things',
     name: 'Stranger Things',
     media_type: 'tv',
-    overview: 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.',
-    poster_path: '/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
+    overview: 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl.',
+    poster_path: '/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg',
     backdrop_path: '/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
     vote_average: 8.6,
     first_air_date: '2016-07-15'
@@ -645,7 +655,7 @@ const DEFAULT_TRENDING = [
     media_type: 'movie',
     overview: 'The story of J. Robert Oppenheimer’s role in the development of the atomic bomb during World War II.',
     poster_path: '/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-    backdrop_path: '/rLb2cw0iw31jUM9Aqgfv4DpZQCe.jpg',
+    backdrop_path: '/neeNHeXjMF5fXoCJRsOmkNGC7q.jpg',
     vote_average: 8.1,
     release_date: '2023-07-19'
   },
@@ -655,8 +665,8 @@ const DEFAULT_TRENDING = [
     name: 'The Last of Us',
     media_type: 'tv',
     overview: 'Twenty years after modern civilization has been destroyed, Joel, a hardened survivor, is hired to smuggle Ellie, a 14-year-old girl, out of an oppressive quarantine zone.',
-    poster_path: '/uKvVjHNqB5VmOrdxqAt2V7JMrne.jpg',
-    backdrop_path: '/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg',
+    poster_path: '/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg',
+    backdrop_path: '/lY2DhbA7Hy44fAKddr06UrXWWaQ.jpg',
     vote_average: 8.6,
     first_air_date: '2023-01-15'
   },
@@ -666,8 +676,8 @@ const DEFAULT_TRENDING = [
     name: 'Dune: Part Two',
     media_type: 'movie',
     overview: 'Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a path of revenge against the conspirators who destroyed his family.',
-    poster_path: '/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
-    backdrop_path: '/xOMo8BRK7PfcJv9JCnx7s520QIq.jpg',
+    poster_path: '/6izwz7rsy95ARzTR3poZ8H6c5pp.jpg',
+    backdrop_path: '/eZ239CUp1d6OryZEBPnO2n87gMG.jpg',
     vote_average: 8.2,
     release_date: '2024-02-27'
   },
@@ -676,10 +686,10 @@ const DEFAULT_TRENDING = [
     title: 'Arcane',
     name: 'Arcane',
     media_type: 'tv',
-    overview: 'Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and incompatible convictions.',
-    poster_path: '/abf8tHznhSvl9BAElD23QzpEGQI.jpg',
-    backdrop_path: '/fqv8v6AycXKsivp1T5yKtLbGXce.jpg',
-    vote_average: 8.7,
+    overview: 'Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and clashing convictions.',
+    poster_path: '/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg',
+    backdrop_path: '/q8eejQcg1bAqImEV8jh8RtBD4uH.jpg',
+    vote_average: 8.8,
     first_air_date: '2021-11-06'
   },
   {
@@ -688,8 +698,8 @@ const DEFAULT_TRENDING = [
     name: 'Interstellar',
     media_type: 'movie',
     overview: 'The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.',
-    poster_path: '/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-    backdrop_path: '/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+    poster_path: '/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg',
+    backdrop_path: '/5XNQBqnBwPA9yT0jZ0p3s8bbLh0.jpg',
     vote_average: 8.4,
     release_date: '2014-11-05'
   },
@@ -699,8 +709,8 @@ const DEFAULT_TRENDING = [
     name: 'The Boys',
     media_type: 'tv',
     overview: 'A fun and irreverent take on what happens when superheroes, who are as popular as celebrities, as influential as politicians and as revered as gods, abuse their superpowers rather than use them for good.',
-    poster_path: '/2zmTngzbOHuqNyAmfnQzqC9p8x0.jpg',
-    backdrop_path: '/n6bUvigpRFqSwmPp1m2YADdbRBc.jpg',
+    poster_path: '/in1R2dDc421JxsoRWaIIAqVI2KE.jpg',
+    backdrop_path: '/n6vVs6z8obNbExdD3QHTr4Utu1Z.jpg',
     vote_average: 8.5,
     first_air_date: '2019-07-26'
   },
@@ -710,7 +720,7 @@ const DEFAULT_TRENDING = [
     name: 'Inception',
     media_type: 'movie',
     overview: 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: "inception".',
-    poster_path: '/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg',
+    poster_path: '/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg',
     backdrop_path: '/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',
     vote_average: 8.4,
     release_date: '2010-07-15'
@@ -1872,9 +1882,60 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   font-weight: 700;
 }
 
-.quick-buttons-row {
+.quick-action-icon-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
+}
+
+.icon-action-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+}
+
+.icon-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.icon-action-btn.btn-primary {
+  background: var(--accent-red);
+  color: #ffffff;
+  border-color: var(--accent-red);
+  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.35);
+}
+
+.icon-action-btn.btn-primary:hover {
+  background: var(--accent-red-hover);
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+}
+
+.icon-action-btn.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.icon-action-btn.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.icon-action-btn.btn-secondary.active {
+  background: rgba(229, 9, 20, 0.15);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.action-svg {
+  width: 20px;
+  height: 20px;
 }
 
 .seasons-section {
@@ -2014,26 +2075,40 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   line-height: 1.35;
 }
 
-.eps-toggle-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  display: inline-flex;
+.eps-check-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.eps-toggle-btn.active {
-  background: var(--accent-success);
+.eps-check-btn:hover {
+  border-color: var(--accent-red);
   color: #ffffff;
-  border-color: var(--accent-success);
+  transform: scale(1.08);
+  background: rgba(229, 9, 20, 0.15);
+}
+
+.eps-check-btn.active {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(229, 9, 20, 0.45);
+}
+
+.eps-check-btn .check-svg,
+.eps-check-btn .plus-svg {
+  width: 18px;
+  height: 18px;
 }
 
 .loading-state {

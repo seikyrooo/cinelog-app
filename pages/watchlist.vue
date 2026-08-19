@@ -359,17 +359,19 @@
               @error="onImageError"
             />
 
-            <!-- Favorite Toggle Action Button -->
-            <button 
-              v-if="activeWatchlistContext"
-              @click="toggleFavoriteStatus(activeWatchlistContext)"
-              :class="['fav-toggle-btn', { active: activeWatchlistContext.favorite }]"
-            >
-              <svg class="icon-inline" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-              <span>{{ activeWatchlistContext.favorite ? 'Remove Favorite' : '+ Favorite' }}</span>
-            </button>
+            <!-- Favorite Toggle Action Button (Icon Only) -->
+            <div class="quick-action-icon-row" v-if="activeWatchlistContext">
+              <button 
+                @click="toggleFavoriteStatus(activeWatchlistContext)"
+                :class="['icon-action-btn', 'btn-secondary', { active: activeWatchlistContext.favorite }]"
+                :title="activeWatchlistContext.favorite ? 'Favorited' : 'Add to Favorites'"
+                aria-label="Toggle Favorite"
+              >
+                <svg class="action-svg" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2.2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </button>
+            </div>
 
             <div class="meta-info-box glass-card">
               <p v-if="activeDetailMedia?.director || activeWatchlistContext?.movie?.director">
@@ -442,15 +444,20 @@
                     <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 120) }}</p>
                   </div>
 
-                  <!-- Watched Checkmark Toggle Button -->
+                  <!-- Watched Checkmark Toggle Icon Button -->
                   <button 
                     @click="toggleEpisodeWatched(eps.episode_number)"
-                    :class="['eps-toggle-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                    :class="['eps-check-btn', { active: isEpisodeWatched(eps.episode_number) }]"
+                    :title="isEpisodeWatched(eps.episode_number) ? 'Mark unwatched' : 'Mark watched'"
+                    :aria-label="'Toggle episode ' + eps.episode_number + ' watched'"
                   >
-                    <svg v-if="isEpisodeWatched(eps.episode_number)" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <svg v-if="isEpisodeWatched(eps.episode_number)" class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Watched' : '+ Watch' }}</span>
+                    <svg v-else class="plus-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -1038,27 +1045,60 @@ const deleteItem = async (id: number) => {
   height: 20px;
 }
 
-.fav-toggle-btn {
+.quick-action-icon-row {
+  display: flex;
+  gap: 10px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  color: #ffffff;
-  padding: 10px;
+}
+
+.icon-action-btn {
+  flex: 1;
+  height: 42px;
   border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  border: 1px solid var(--border-subtle);
 }
 
-.fav-toggle-btn.active {
-  background: var(--accent-red-subtle);
+.icon-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.icon-action-btn.btn-primary {
+  background: var(--accent-red);
   color: #ffffff;
-  border-color: var(--border-red);
+  border-color: var(--accent-red);
+  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.35);
+}
+
+.icon-action-btn.btn-primary:hover {
+  background: var(--accent-red-hover);
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+}
+
+.icon-action-btn.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.icon-action-btn.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.icon-action-btn.btn-secondary.active {
+  background: rgba(229, 9, 20, 0.15);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.action-svg {
+  width: 20px;
+  height: 20px;
 }
 
 .tvtime-container {
@@ -1733,26 +1773,40 @@ const deleteItem = async (id: number) => {
   line-height: 1.35;
 }
 
-.eps-toggle-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  display: inline-flex;
+.eps-check-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.eps-toggle-btn.active {
-  background: var(--accent-success);
+.eps-check-btn:hover {
+  border-color: var(--accent-red);
   color: #ffffff;
-  border-color: var(--accent-success);
+  transform: scale(1.08);
+  background: rgba(229, 9, 20, 0.15);
+}
+
+.eps-check-btn.active {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(229, 9, 20, 0.45);
+}
+
+.eps-check-btn .check-svg,
+.eps-check-btn .plus-svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* EDIT MODAL */
