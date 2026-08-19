@@ -58,8 +58,9 @@
     <!-- Results Grid -->
     <div v-else class="community-grid">
       <article v-for="user in users" :key="user.id" class="user-card glass-card">
+        <!-- Card Header: Avatar, Name, Follow -->
         <div class="user-card-header">
-          <NuxtLink :to="`/users/${user.username}`" class="user-avatar-link">
+          <NuxtLink :to="`/users/${user.username}`" class="user-avatar-link" :title="`View @${user.username}`">
             <div class="user-avatar">
               <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" @error="onAvatarError" loading="lazy" decoding="async" />
               <span v-else>{{ user.username.slice(0, 2).toUpperCase() }}</span>
@@ -92,10 +93,13 @@
           </div>
         </div>
 
-        <p class="user-bio">{{ user.bio || 'Film lover on CineLog.' }}</p>
+        <!-- Bio text -->
+        <p class="user-bio" :class="{ 'empty-bio': !user.bio }">
+          {{ user.bio || 'Film lover tracking cinema on CineLog.' }}
+        </p>
 
-        <!-- Stats row -->
-        <div class="user-stats-footer">
+        <!-- Stats 3-Grid -->
+        <div class="user-stats-grid">
           <div class="stat-pill">
             <strong>{{ user.watched_count }}</strong>
             <span>Logged</span>
@@ -108,10 +112,16 @@
             <strong>{{ user.following_count }}</strong>
             <span>Following</span>
           </div>
-          <NuxtLink :to="`/users/${user.username}`" class="profile-arrow-btn" title="View Profile">
-            <span>View Profile ↗</span>
-          </NuxtLink>
         </div>
+
+        <!-- Action Button -->
+        <NuxtLink :to="`/users/${user.username}`" class="btn-view-profile">
+          <span>View Public Profile</span>
+          <svg class="arrow-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </NuxtLink>
       </article>
     </div>
   </div>
@@ -310,24 +320,30 @@ const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
 
 .community-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
 }
 
 .user-card {
   padding: 20px;
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  transition: all 0.2s ease;
+  background: rgba(22, 22, 22, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .user-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-medium);
+  transform: translateY(-3px);
+  border-color: rgba(229, 9, 20, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(229, 9, 20, 0.08);
 }
 
 .user-card-header {
@@ -342,17 +358,23 @@ const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
 }
 
 .user-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 4px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
   background: rgba(229, 9, 20, 0.15);
-  border: 1px solid var(--border-red);
+  border: 2px solid rgba(229, 9, 20, 0.3);
   color: #ff6b6b;
   display: grid;
   place-items: center;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.user-card:hover .user-avatar {
+  border-color: var(--accent-red);
+  transform: scale(1.04);
 }
 
 .user-avatar img {
@@ -375,13 +397,14 @@ const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
 }
 
 .user-name-link h3 {
-  font-size: 1.02rem;
+  font-size: 1.05rem;
   font-weight: 800;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: -0.02em;
+  transition: color 0.2s ease;
 }
 
 .user-name-link:hover h3 {
@@ -400,21 +423,22 @@ const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
 .self-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 3px;
+  padding: 4px 10px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .btn-follow-chip {
   background: var(--accent-red);
-  border: none;
+  border: 1px solid var(--accent-red);
   color: #ffffff;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 6px 14px;
-  border-radius: 3px;
+  border-radius: 20px;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
@@ -422,49 +446,56 @@ const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
 }
 
 .btn-follow-chip:hover:not(:disabled) {
-  background: var(--accent-red-hover);
-  transform: scale(1.02);
+  background: #b80710;
+  border-color: #b80710;
+  transform: scale(1.03);
 }
 
 .btn-follow-chip.following {
-  background: rgba(70, 211, 105, 0.15);
-  border: 1px solid rgba(70, 211, 105, 0.4);
-  color: #46d369;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
 }
 
 .user-bio {
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   color: var(--text-secondary);
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 0;
+  min-height: 2.6em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.user-stats-footer {
-  display: flex;
-  align-items: center;
+.user-bio.empty-bio {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.user-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .stat-pill {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 6px 4px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .stat-pill strong {
-  font-size: 0.92rem;
+  font-size: 0.96rem;
   font-weight: 800;
   color: #ffffff;
 }
@@ -473,17 +504,43 @@ const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
 }
 
-.profile-arrow-btn {
-  color: var(--accent-red);
-  font-size: 0.78rem;
+.btn-view-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #e5e5e5;
+  font-size: 0.82rem;
   font-weight: 700;
   text-decoration: none;
-  padding: 6px 8px;
-  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.arrow-svg-icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.btn-view-profile:hover {
+  background: rgba(229, 9, 20, 0.12);
+  border-color: rgba(229, 9, 20, 0.4);
+  color: #ffffff;
+}
+
+.btn-view-profile:hover .arrow-svg-icon {
+  transform: translateX(3px);
+  color: var(--accent-red);
 }
 
 .community-state {
