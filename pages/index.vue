@@ -830,27 +830,50 @@ const clearSearch = () => {
 }
 
 const getImageUrl = (itemOrPath: any) => {
-  let path = ''
+  let poster = ''
+  let local = ''
+  let backdrop = ''
+
   if (typeof itemOrPath === 'object' && itemOrPath !== null) {
-    path = itemOrPath.local_poster_path || 
-           itemOrPath.poster_path || 
-           itemOrPath.local_backdrop_path || 
-           itemOrPath.backdrop_path || 
-           ''
+    const movie = itemOrPath.movie ? itemOrPath.movie : itemOrPath
+    poster = movie.poster_path || ''
+    local = movie.local_poster_path || ''
+    backdrop = movie.backdrop_path || movie.local_backdrop_path || ''
   } else if (typeof itemOrPath === 'string') {
-    path = itemOrPath
+    poster = itemOrPath
   }
 
-  if (!path || path === 'null' || path === 'undefined') {
-    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  // 1. Direct TMDB CDN / External URL (100% reliable)
+  if (poster && poster !== 'null' && poster !== 'undefined') {
+    if (poster.startsWith('http://') || poster.startsWith('https://')) {
+      return poster
+    }
+    if (poster.startsWith('/uploads/') || poster.startsWith('uploads/')) {
+      return useApiUrl(poster)
+    }
+    return `https://image.tmdb.org/t/p/w500${poster.startsWith('/') ? poster : '/' + poster}`
   }
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path
+
+  // 2. Local Upload fallback
+  if (local && local !== 'null' && local !== 'undefined') {
+    if (local.startsWith('http://') || local.startsWith('https://')) {
+      return local
+    }
+    return useApiUrl(local)
   }
-  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
-    return useApiUrl(path)
+
+  // 3. Backdrop fallback
+  if (backdrop && backdrop !== 'null' && backdrop !== 'undefined') {
+    if (backdrop.startsWith('http://') || backdrop.startsWith('https://')) {
+      return backdrop
+    }
+    if (backdrop.startsWith('/uploads/') || backdrop.startsWith('uploads/')) {
+      return useApiUrl(backdrop)
+    }
+    return `https://image.tmdb.org/t/p/w500${backdrop.startsWith('/') ? backdrop : '/' + backdrop}`
   }
-  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
+
+  return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
 }
 
 const getBackdropStyle = (media: any) => {
