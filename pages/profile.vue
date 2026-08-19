@@ -7,9 +7,8 @@
       </div>
 
       <div class="profile-heading">
-        <p class="eyebrow">Profile Saya</p>
         <h1>{{ authStore.user?.username || 'CineLog User' }}</h1>
-        <p class="muted">Atur bio, avatar URL, dan visibilitas profile publik kamu.</p>
+        <p class="muted">Kelola bio, avatar profil, dan visibilitas akun publik Anda.</p>
       </div>
     </div>
 
@@ -19,7 +18,7 @@
     <form class="profile-form glass-card" @submit.prevent="saveProfile">
       <label class="field-group">
         <span>Bio</span>
-        <textarea v-model="form.bio" rows="5" maxlength="280" placeholder="Contoh: Pecinta sci-fi, slow-burn drama, dan series misteri."></textarea>
+        <textarea v-model="form.bio" rows="4" maxlength="280" placeholder="Contoh: Penggemar genre Sci-Fi, Psychological Thriller, dan Serial Drama."></textarea>
         <small>{{ form.bio.length }}/280 karakter</small>
       </label>
 
@@ -31,21 +30,21 @@
       <label class="privacy-row">
         <input v-model="form.is_public" type="checkbox" />
         <span>
-          <strong>Profile publik</strong>
-          <small>Orang lain bisa melihat bio, favorit publik, dan rating publik kamu.</small>
+          <strong>Profil Publik</strong>
+          <small>Pengguna lain dapat melihat bio, tontonan favorit, dan rating yang Anda bagikan secara publik.</small>
         </span>
       </label>
 
       <div class="actions-row">
         <button class="btn-primary" type="submit" :disabled="isSaving">
-          {{ isSaving ? 'Menyimpan...' : 'Simpan Profile' }}
+          {{ isSaving ? 'Menyimpan...' : 'Simpan Profil' }}
         </button>
         <NuxtLink
           v-if="authStore.user?.username && form.is_public"
           class="btn-secondary"
           :to="`/users/${authStore.user.username}`"
         >
-          Lihat Public Profile
+          Buka Profil Publik
         </NuxtLink>
       </div>
     </form>
@@ -106,9 +105,9 @@ const saveProfile = async () => {
       is_public: form.is_public
     })
     authStore.setUser(res.data)
-    message.value = 'Profile berhasil diperbarui.'
+    message.value = 'Profil berhasil disimpan.'
   } catch (err: any) {
-    error.value = err?.data?.error || 'Gagal memperbarui profile.'
+    error.value = err?.data?.error || 'Gagal menyimpan profil.'
   } finally {
     isSaving.value = false
   }
@@ -119,11 +118,16 @@ const saveProfile = async () => {
 .profile-page {
   display: grid;
   gap: 20px;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .profile-hero,
 .profile-form {
   padding: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
 }
 
 .profile-hero {
@@ -133,17 +137,17 @@ const saveProfile = async () => {
 }
 
 .profile-avatar {
-  width: 84px;
-  height: 84px;
-  border-radius: 22px;
-  background: rgba(245, 158, 11, 0.14);
-  border: 1px solid rgba(245, 158, 11, 0.28);
-  color: #fbbf24;
+  width: 76px;
+  height: 76px;
+  border-radius: 14px;
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid var(--border-red);
+  color: #ff6b6b;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  font-weight: 900;
-  font-size: 1.6rem;
+  font-weight: 800;
+  font-size: 1.5rem;
   overflow: hidden;
 }
 
@@ -153,23 +157,17 @@ const saveProfile = async () => {
   object-fit: cover;
 }
 
-.eyebrow {
-  color: var(--accent-gold);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .profile-heading h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin: 4px 0 6px;
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+  color: #ffffff;
 }
 
 .muted,
 .field-group small,
 .privacy-row small {
   color: var(--text-secondary);
+  font-size: 0.84rem;
 }
 
 .profile-form,
@@ -182,31 +180,36 @@ const saveProfile = async () => {
 
 .field-group span,
 .privacy-row strong {
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #ffffff;
 }
 
 .field-group input,
 .field-group textarea {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   color: var(--text-primary);
   font: inherit;
-  padding: 12px 14px;
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
 }
 
 .field-group input:focus,
 .field-group textarea:focus {
-  border-color: rgba(245, 158, 11, 0.65);
-  outline: 2px solid rgba(245, 158, 11, 0.2);
+  border-color: var(--accent-red) !important;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 3px var(--accent-red-subtle) !important;
 }
 
 .privacy-row {
   align-items: flex-start;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
   display: flex;
   flex-direction: row;
   gap: 12px;
@@ -215,36 +218,38 @@ const saveProfile = async () => {
 
 .privacy-row input {
   margin-top: 3px;
+  accent-color: var(--accent-red);
 }
 
 .actions-row {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .notice {
-  border-radius: 12px;
-  font-weight: 700;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
   padding: 12px 14px;
 }
 
 .notice.success {
-  background: rgba(16, 185, 129, 0.14);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #6ee7b7;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
 }
 
 .notice.error {
-  background: rgba(239, 68, 68, 0.14);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid rgba(229, 9, 20, 0.3);
+  color: #ff6b6b;
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 @media (max-width: 640px) {

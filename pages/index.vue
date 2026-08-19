@@ -14,12 +14,7 @@
       <div class="featured-gradient-overlay">
         <div class="featured-content">
           <div class="featured-badges">
-            <span class="badge badge-tv">
-              <svg class="icon-inline-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-              Pilihan Malam Ini
-            </span>
+            <span class="badge badge-tv">Pilihan Utama</span>
             <span class="hero-rating-badge">
               <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -27,49 +22,29 @@
               {{ featuredShow.vote_average?.toFixed(1) || '9.0' }} / 10.0
             </span>
           </div>
-          <p class="featured-kicker">Featured from TMDB</p>
           <h2 class="featured-title">{{ featuredShow.title || featuredShow.name }}</h2>
-          <p class="featured-overview">{{ truncateText(featuredShow.overview, 140) }}</p>
+          <p class="featured-overview">{{ truncateText(featuredShow.overview, 160) }}</p>
           <div class="featured-actions">
             <button @click="openSaveModal(featuredShow)" class="btn-primary">
               <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
-              <span>Buka dossier tontonan</span>
+              <span>Lihat Detail & Watchlist</span>
             </button>
           </div>
-        </div>
-        <div class="featured-side-note" aria-hidden="true">
-          <span class="side-note-label">CineLog Pick</span>
-          <strong>{{ formatYear(featuredShow.release_date || featuredShow.first_air_date) || 'Now' }}</strong>
         </div>
       </div>
     </section>
 
+    <!-- Search Section -->
     <section class="hero-section" aria-labelledby="explore-title">
       <div class="hero-copy">
-        <span class="eyebrow">Search desk · TMDB powered</span>
-        <h1 id="explore-title" class="hero-title">Temukan tontonan, simpan progres, lanjut tanpa nebak episode.</h1>
-        <p class="hero-subtitle">CineLog dibuat seperti meja kurator pribadi: cari judul, cek cast dan season, lalu tandai episode yang sudah kamu tonton dari satu tempat.</p>
-      </div>
-
-      <div class="hero-metrics" aria-label="Fitur utama CineLog">
-        <div class="metric-card">
-          <strong>TMDB</strong>
-          <span>Search source</span>
-        </div>
-        <div class="metric-card">
-          <strong>Episode</strong>
-          <span>Progress tracking</span>
-        </div>
-        <div class="metric-card">
-          <strong>Watchlist</strong>
-          <span>Personal library</span>
-        </div>
+        <h1 id="explore-title" class="hero-title">Temukan Film & Serial TV Favorit</h1>
+        <p class="hero-subtitle">Cari judul, cek daftar pemain, pantau season, dan catat setiap episode yang sudah Anda tonton.</p>
       </div>
 
       <!-- Search Box -->
-      <div class="search-box glass-panel" role="search" aria-label="Cari film dan TV show">
+      <div class="search-box glass-card" role="search" aria-label="Cari film dan TV show">
         <svg class="search-leading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -78,7 +53,7 @@
           v-model="searchQuery" 
           @keyup.enter="handleSearch"
           type="text" 
-          placeholder="Contoh: The Bear, Dune, One Piece..." 
+          placeholder="Ketik judul... (Contoh: Stranger Things, Oppenheimer, Naruto)" 
           class="search-input"
           aria-label="Judul film atau TV show"
         />
@@ -95,7 +70,7 @@
           </button>
         </div>
 
-        <button @click="handleSearch" class="btn-primary">
+        <button @click="handleSearch" class="btn-primary search-action-btn">
           <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -108,67 +83,61 @@
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-state">
       <div class="spinner"></div>
-      <p>Mencari judul dari TMDB...</p>
+      <p>Mencari data dari TMDB...</p>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="results.length === 0 && searched" class="empty-state glass-card" role="status">
-      <span class="empty-icon">⌕</span>
-      <h2>Tidak ada judul yang cocok</h2>
-      <p>Hasil untuk "{{ searchQuery }}" belum ketemu. Coba pakai judul asli, tahun rilis, atau ubah filter Movie/TV.</p>
+      <h2>Judul Tidak Ditemukan</h2>
+      <p>Tidak ada hasil untuk "{{ searchQuery }}". Silakan periksa ejaan atau ubah filter tipe media.</p>
     </div>
 
     <!-- Results Grid -->
     <section v-else-if="results.length > 0" class="results-section" aria-labelledby="results-title">
       <div class="results-header">
         <div>
-          <span class="eyebrow">Search results</span>
-          <h2 id="results-title">{{ results.length }} judul ditemukan</h2>
+          <h2 id="results-title">{{ results.length }} Judul Ditemukan</h2>
+          <p class="results-sub">Klik kartu untuk membuka detail, melihat season, dan menyimpan ke watchlist.</p>
         </div>
-        <p>Tap kartu untuk melihat detail, rating TMDB, cast, season, dan episode.</p>
       </div>
       <div class="results-grid">
-      <div 
-        v-for="item in results" 
-        :key="item.id" 
-        class="glass-card media-card clickable"
-        @click="openSaveModal(item)"
-        role="button"
-        tabindex="0"
-        @keyup.enter="openSaveModal(item)"
-      >
-        <div class="poster-wrapper">
-          <img 
-            :src="getImageUrl(item.poster_path)" 
-            :alt="item.title || item.name"
-            class="poster-img"
-            @error="onImageError"
-          />
-          <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'type-badge']">
-            {{ item.media_type === 'tv' ? 'TV Show' : 'Movie' }}
-          </span>
-          <span v-if="item.vote_average" class="rating-badge">
-            <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-            </svg>
-            {{ item.vote_average.toFixed(1) }} / 10.0
-          </span>
-        </div>
+        <div 
+          v-for="item in results" 
+          :key="item.id" 
+          class="glass-card media-card clickable"
+          @click="openSaveModal(item)"
+          role="button"
+          tabindex="0"
+          @keyup.enter="openSaveModal(item)"
+        >
+          <div class="poster-wrapper">
+            <img 
+              :src="getImageUrl(item.poster_path)" 
+              :alt="item.title || item.name"
+              class="poster-img"
+              @error="onImageError"
+            />
+            <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'type-badge']">
+              {{ item.media_type === 'tv' ? 'TV' : 'Movie' }}
+            </span>
+            <span v-if="item.vote_average" class="rating-badge">
+              <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              {{ item.vote_average.toFixed(1) }}
+            </span>
+          </div>
 
-        <div class="card-info">
-          <h3 class="media-title">{{ item.title || item.name }}</h3>
-          <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
-          <p class="overview">{{ truncateText(item.overview, 110) }}</p>
+          <div class="card-info">
+            <h3 class="media-title">{{ item.title || item.name }}</h3>
+            <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
+            <p class="overview">{{ truncateText(item.overview, 95) }}</p>
 
-          <button class="btn-primary btn-full">
-            <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <span>Buka detail</span>
-          </button>
+            <button class="btn-secondary btn-full btn-card-action">
+              <span>Detail & Watchlist</span>
+            </button>
+          </div>
         </div>
-      </div>
       </div>
     </section>
 
@@ -211,14 +180,14 @@
             <img 
               :src="getImageUrl(activeItem?.poster_path)" 
               :alt="activeItem?.title || activeItem?.name"
-              class="detail-poster-img glass-card"
+              class="detail-poster-img"
               @error="onImageError"
             />
 
             <!-- Quick Action Bar -->
             <div class="quick-add-bar glass-card">
               <div class="rating-input-row">
-                <label>Beri Rating (Skala 1 - 10):</label>
+                <label>Rating Anda (1 - 10):</label>
                 <div class="star-rating-selector">
                   <span 
                     v-for="star in 10" 
@@ -226,7 +195,7 @@
                     @click="form.rating = star"
                     :class="['star-icon', { active: star <= form.rating }]"
                   >★</span>
-                  <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10.0' : '' }}</span>
+                  <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10' : '' }}</span>
                 </div>
               </div>
 
@@ -246,10 +215,10 @@
                   @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
                   :class="['btn-secondary', { active: form.favorite }]"
                 >
-                  <svg class="icon-inline" viewBox="0 0 24 24" :fill="form.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                  <svg class="icon-inline" viewBox="0 0 24 24" :fill="form.favorite ? 'var(--accent-red)' : 'none'" :stroke="form.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                   </svg>
-                  <span>{{ form.favorite ? 'Hapus Favorit' : '+ Favorit' }}</span>
+                  <span>{{ form.favorite ? 'Favorit' : '+ Favorit' }}</span>
                 </button>
               </div>
             </div>
@@ -277,8 +246,8 @@
 
           <!-- Right Column: Overview, Seasons Selector, & Spacious Episode Grid -->
           <div class="detail-right-col">
-            <h4 class="section-subtitle">Ringkasan Sinopsis</h4>
-            <p class="overview-text">{{ activeItem?.overview }}</p>
+            <h4 class="section-subtitle">Sinopsis Cerita</h4>
+            <p class="overview-text">{{ activeItem?.overview || 'Belum ada ringkasan sinopsis untuk judul ini.' }}</p>
 
             <!-- If TV Show: Season Selector & Episodes List -->
             <div v-if="activeItem?.media_type === 'tv' || !activeItem?.media_type" class="seasons-section">
@@ -358,34 +327,33 @@ import { useAuthStore } from '~/stores/auth'
 const authStore = useAuthStore()
 const router = useRouter()
 
-const searchQuery = ref('Breaking Bad')
+const searchQuery = ref('')
 const selectedType = ref('all')
+const results = ref<any[]>([])
 const isLoading = ref(false)
 const searched = ref(false)
-const results = ref<any[]>([])
-const featuredShow = ref<any>(null)
 const toastMessage = ref('')
 
 const mediaTypes = [
   { label: 'Semua', value: 'all' },
-  { label: 'Movies', value: 'movie' },
-  { label: 'TV Shows', value: 'tv' }
+  { label: 'Movie', value: 'movie' },
+  { label: 'TV Series', value: 'tv' }
 ]
 
+const featuredShow = ref<any>(null)
 const showModal = ref(false)
 const activeItem = ref<any>(null)
-const detailedInfo = ref<any>(null)
-const isFetchingDetail = ref(false)
 const isSaving = ref(false)
-
+const isFetchingDetail = ref(false)
+const detailedInfo = ref<any>(null)
 const selectedSeason = ref(1)
-const isLoadingEpisodes = ref(false)
 const episodesList = ref<any[]>([])
+const isLoadingEpisodes = ref(false)
 const watchlistContext = ref<any>(null)
 
 const form = ref({
   status: 'watching',
-  rating: 8.0,
+  rating: 0,
   favorite: false,
   notes: '',
   season_watched: 1,
@@ -400,18 +368,30 @@ const seasonsCount = computed(() => {
   return detailedInfo.value?.total_seasons || 1
 })
 
+onMounted(async () => {
+  try {
+    const res: any = await $fetch(useApiUrl('/api/search'), {
+      params: { q: 'Breaking Bad', type: 'tv' }
+    })
+    if (res.data && res.data.length > 0) {
+      featuredShow.value = res.data[0]
+    }
+  } catch (err) {
+    console.error(err)
+  }
+})
+
 const showToast = (msg: string) => {
   toastMessage.value = msg
   setTimeout(() => {
     toastMessage.value = ''
-  }, 3000)
+  }, 3500)
 }
 
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) return
   isLoading.value = true
   searched.value = true
-
   try {
     const res: any = await $fetch(useApiUrl('/api/search'), {
       params: {
@@ -420,19 +400,13 @@ const handleSearch = async () => {
       }
     })
     results.value = res.data || []
-    if (results.value.length > 0 && !featuredShow.value) {
-      featuredShow.value = results.value[0]
-    }
   } catch (err) {
     console.error(err)
+    results.value = []
   } finally {
     isLoading.value = false
   }
 }
-
-onMounted(() => {
-  handleSearch()
-})
 
 const getImageUrl = (path: string) => {
   if (!path) return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
@@ -441,8 +415,8 @@ const getImageUrl = (path: string) => {
 
 const getBackdropStyle = (media: any) => {
   const path = media?.backdrop_path || media?.poster_path
-  if (!path) return { background: '#1e293b' }
-  return { backgroundImage: `url(https://image.tmdb.org/t/p/w780${path})` }
+  if (!path) return { background: '#121216' }
+  return { backgroundImage: `url(https://image.tmdb.org/t/p/w1280${path})` }
 }
 
 const getEpisodeStillUrl = (path: string) => {
@@ -451,11 +425,16 @@ const getEpisodeStillUrl = (path: string) => {
 }
 
 const onImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
 }
 
 const onEpsImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+}
+
+const truncateText = (text: string, len: number) => {
+  if (!text) return ''
+  return text.length > len ? text.substring(0, len) + '...' : text
 }
 
 const formatYear = (dateStr: string) => {
@@ -463,99 +442,12 @@ const formatYear = (dateStr: string) => {
   return dateStr.substring(0, 4)
 }
 
-const truncateText = (text: string, len: number) => {
-  if (!text) return 'Belum ada ringkasan.'
-  return text.length > len ? text.substring(0, len) + '...' : text
-}
-
-const openSaveModal = async (item: any) => {
-  activeItem.value = item
-  detailedInfo.value = null
-  selectedSeason.value = 1
-  episodesList.value = []
-  watchlistContext.value = null
-  isFetchingDetail.value = true
-
-  form.value = {
-    status: item.media_type === 'tv' ? 'watching' : 'completed',
-    rating: item.vote_average ? Math.min(10, Math.max(1, Math.round(item.vote_average))) : 8.0,
-    favorite: false,
-    notes: '',
-    season_watched: 1,
-    episodes_watched: 0,
-    total_episodes: 0
-  }
-  showModal.value = true
-
-  // Check if item is already in user watchlist
-  if (authStore.isAuth) {
-    try {
-      const checkRes: any = await $fetch(useApiUrl(`/api/user/watchlist/check/${item.id}`), {
-        headers: { Authorization: `Bearer ${authStore.token}` },
-        params: { type: item.media_type || 'movie' }
-      })
-      if (checkRes.in_watchlist && checkRes.data) {
-        watchlistContext.value = checkRes.data
-        form.value.rating = checkRes.data.rating || form.value.rating
-        form.value.favorite = checkRes.data.favorite
-        form.value.season_watched = checkRes.data.season_watched || 1
-        form.value.episodes_watched = checkRes.data.episodes_watched || 0
-      }
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  // Fetch full detail from API
-  try {
-    const res: any = await $fetch(useApiUrl('/api/detail'), {
-      params: {
-        id: item.id,
-        type: item.media_type || 'movie'
-      }
-    })
-    if (res.data) {
-      detailedInfo.value = res.data
-      form.value.total_episodes = res.data.total_episodes || 0
-    }
-  } catch (err) {
-    console.error(err)
-  } finally {
-    isFetchingDetail.value = false
-  }
-
-  if (item.media_type === 'tv' || !item.media_type) {
-    fetchSeasonEpisodes(1)
-  }
-}
-
-const fetchSeasonEpisodes = async (seasonNum: number) => {
-  if (!activeItem.value) return
-  selectedSeason.value = Math.max(1, Math.min(seasonNum, seasonsCount.value))
-  isLoadingEpisodes.value = true
-
-  try {
-    const res: any = await $fetch(useApiUrl('/api/tv/season'), {
-      params: {
-        id: activeItem.value.id,
-        season: selectedSeason.value
-      }
-    })
-    episodesList.value = res.data || []
-  } catch (err) {
-    console.error(err)
-  } finally {
-    isLoadingEpisodes.value = false
-  }
-}
-
 const isEpisodeWatched = (epsNumber: number) => {
   if (!watchlistContext.value) return false
-  const watchedEps = watchlistContext.value.episodes_watched || 0
-  const currentSeason = watchlistContext.value.season_watched || 1
-  
-  if (selectedSeason.value < currentSeason) return true
-  if (selectedSeason.value === currentSeason) return epsNumber <= watchedEps
+  const currSeason = watchlistContext.value.season_watched || 1
+  const watchedCount = watchlistContext.value.episodes_watched || 0
+  if (selectedSeason.value < currSeason) return true
+  if (selectedSeason.value === currSeason) return epsNumber <= watchedCount
   return false
 }
 
@@ -566,37 +458,113 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
     return
   }
 
-  if (!watchlistContext.value) {
-    await saveToWatchlist('watching', epsNumber)
-    return
-  }
+  const targetCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
+  form.value.season_watched = selectedSeason.value
+  form.value.episodes_watched = targetCount
 
-  const targetEpsCount = isEpisodeWatched(epsNumber) ? epsNumber - 1 : epsNumber
-
-  try {
-    const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${watchlistContext.value.id}/set-progress`), {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: {
-        season_watched: selectedSeason.value,
-        episodes_watched: Math.max(0, targetEpsCount)
-      }
-    })
-
-    if (res.data) {
-      watchlistContext.value.season_watched = res.data.season_watched
-      watchlistContext.value.episodes_watched = res.data.episodes_watched
-      watchlistContext.value.status = res.data.status
-      showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
+  if (watchlistContext.value?.id) {
+    try {
+      const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${watchlistContext.value.id}/set-progress`), {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${authStore.token}`
+        },
+        body: {
+          season_watched: selectedSeason.value,
+          episodes_watched: targetCount
+        }
+      })
+      watchlistContext.value = res.data
+      showToast(`Progres diperbarui: S${selectedSeason.value} Eps ${targetCount}`)
+    } catch (err) {
+      console.error(err)
     }
-  } catch (err) {
-    console.error(err)
+  } else {
+    await saveToWatchlist('watching', targetCount)
   }
 }
 
-const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number) => {
+const openSaveModal = async (item: any) => {
+  activeItem.value = item
+  detailedInfo.value = null
+  episodesList.value = []
+  selectedSeason.value = 1
+  watchlistContext.value = null
+
+  form.value = {
+    status: 'watching',
+    rating: 0,
+    favorite: false,
+    notes: '',
+    season_watched: 1,
+    episodes_watched: 0,
+    total_episodes: 0
+  }
+
+  showModal.value = true
+  isFetchingDetail.value = true
+
+  try {
+    const detailRes: any = await $fetch(useApiUrl('/api/detail'), {
+      params: {
+        id: item.id,
+        type: item.media_type || 'movie'
+      }
+    })
+    detailedInfo.value = detailRes.data
+    form.value.total_episodes = detailedInfo.value?.total_episodes || 0
+
+    if (authStore.isAuth) {
+      try {
+        const checkRes: any = await $fetch(useApiUrl(`/api/user/watchlist/check/${item.id}`), {
+          params: { type: item.media_type || 'movie' },
+          headers: { Authorization: `Bearer ${authStore.token}` }
+        })
+        if (checkRes.in_watchlist && checkRes.data) {
+          watchlistContext.value = checkRes.data
+          form.value.status = checkRes.data.status
+          form.value.rating = checkRes.data.rating || 0
+          form.value.favorite = checkRes.data.favorite || false
+          form.value.notes = checkRes.data.notes || ''
+          form.value.season_watched = checkRes.data.season_watched || 1
+          form.value.episodes_watched = checkRes.data.episodes_watched || 0
+          selectedSeason.value = checkRes.data.season_watched || 1
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    if (item.media_type === 'tv' || !item.media_type) {
+      await fetchSeasonEpisodes(selectedSeason.value)
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    isFetchingDetail.value = false
+  }
+}
+
+const fetchSeasonEpisodes = async (seasonNum: number) => {
+  selectedSeason.value = seasonNum
+  isLoadingEpisodes.value = true
+  try {
+    const res: any = await $fetch(useApiUrl('/api/tv/season'), {
+      params: {
+        id: activeItem.value.id,
+        season: seasonNum
+      }
+    })
+    episodesList.value = res.data || []
+  } catch (err) {
+    console.error(err)
+    episodesList.value = []
+  } finally {
+    isLoadingEpisodes.value = false
+  }
+}
+
+const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) => {
   if (!authStore.isAuth) {
     showToast('Silakan login terlebih dahulu.')
     router.push('/login')
@@ -657,21 +625,21 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   top: 80px;
   right: 24px;
   z-index: 10000;
-  background: #10b981;
+  background: var(--accent-red);
   color: #ffffff;
   padding: 12px 20px;
-  border-radius: 14px;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 0.88rem;
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .toast-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .icon-inline {
@@ -679,34 +647,29 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   height: 16px;
 }
 
-.icon-inline-sm {
-  width: 14px;
-  height: 14px;
-}
-
 .icon-star-gold {
-  width: 14px;
-  height: 14px;
-  color: #fbbf24;
+  width: 13px;
+  height: 13px;
+  color: var(--accent-star);
 }
 
 .featured-hero-banner {
   position: relative;
   min-height: 320px;
-  border-radius: 26px;
+  border-radius: 16px;
   overflow: hidden;
   background-size: cover;
   background-position: center;
-  margin-bottom: 36px;
-  border-color: rgba(245, 158, 11, 0.22);
+  margin-bottom: 32px;
+  border: 1px solid var(--border-subtle);
 }
 
 .featured-gradient-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(7, 9, 14, 0.95) 0%, rgba(7, 9, 14, 0.74) 48%, rgba(7, 9, 14, 0.15) 100%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.92) 100%);
+    linear-gradient(90deg, rgba(10, 10, 12, 0.96) 0%, rgba(10, 10, 12, 0.75) 50%, rgba(10, 10, 12, 0.2) 100%),
+    linear-gradient(180deg, rgba(18, 18, 22, 0.1) 0%, rgba(18, 18, 22, 0.95) 100%);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -717,16 +680,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 640px;
-}
-
-.featured-kicker,
-.eyebrow {
-  color: var(--accent-gold);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  max-width: 620px;
 }
 
 .featured-badges {
@@ -736,140 +690,82 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .featured-title {
-  font-size: clamp(2rem, 4vw, 3.7rem);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
   font-weight: 900;
-  color: #fff;
-  line-height: 0.98;
-  max-width: 12ch;
+  color: #ffffff;
+  line-height: 1.05;
 }
 
 .featured-overview {
   color: var(--text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.65;
-  max-width: 58ch;
-  margin-top: 6px;
-}
-
-.featured-side-note {
-  align-self: flex-start;
-  min-width: 132px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(7, 9, 14, 0.48);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(14px);
-  text-align: right;
-}
-
-.side-note-label {
-  display: block;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 4px;
-}
-
-.featured-side-note strong {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  color: #fff;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin-top: 4px;
 }
 
 .hero-section {
-  margin-bottom: 36px;
+  margin-bottom: 32px;
   display: grid;
-  gap: 22px;
-}
-
-.hero-copy {
-  max-width: 780px;
+  gap: 18px;
 }
 
 .hero-title {
-  font-size: clamp(2.15rem, 5vw, 4.65rem);
-  font-weight: 900;
-  line-height: 0.98;
-  letter-spacing: -0.055em;
-  margin-top: 10px;
-  margin-bottom: 16px;
-  max-width: 12ch;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+  color: #ffffff;
 }
 
 .hero-subtitle {
   color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.75;
-  max-width: 68ch;
-  margin-bottom: 0;
-}
-
-.hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  max-width: 720px;
-}
-
-.metric-card {
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.metric-card strong,
-.metric-card span {
-  display: block;
-}
-
-.metric-card strong {
-  font-family: var(--font-heading);
-  font-size: 1rem;
-}
-
-.metric-card span {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  margin-top: 2px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 64ch;
 }
 
 .search-box {
   width: 100%;
-  padding: 12px;
-  border-radius: 20px;
+  padding: 8px 12px;
+  border-radius: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  border-color: rgba(245, 158, 11, 0.18);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--border-red);
+  box-shadow: 0 0 0 3px var(--accent-red-subtle);
 }
 
 .search-leading-icon {
-  width: 20px;
-  height: 20px;
-  color: var(--accent-gold);
-  margin-left: 6px;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  margin-left: 4px;
 }
 
 .search-input {
   flex: 1;
-  min-width: 240px;
+  min-width: 220px;
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 0.95rem;
-  padding: 8px 14px;
+  color: #ffffff;
+  font-size: 0.92rem;
+  padding: 8px 10px;
   outline: none;
 }
 
 .filter-type {
   display: flex;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 4px;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px;
+  border-radius: 8px;
 }
 
 .type-btn {
@@ -877,16 +773,16 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   border: none;
   color: var(--text-secondary);
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .type-btn.active {
-  background: #f59e0b;
-  color: #111827;
+  background: var(--accent-red);
+  color: #ffffff;
 }
 
 .results-section {
@@ -894,28 +790,21 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   gap: 18px;
 }
 
-.results-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: end;
-}
-
 .results-header h2 {
-  font-size: clamp(1.55rem, 3vw, 2.35rem);
-  margin-top: 6px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
-.results-header p {
+.results-sub {
   color: var(--text-muted);
-  max-width: 390px;
-  line-height: 1.55;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
+  margin-top: 2px;
 }
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 18px;
 }
 
@@ -923,8 +812,16 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-radius: 18px;
-  cursor: pointer;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.media-card:hover {
+  border-color: var(--border-red);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.8);
 }
 
 .poster-wrapper {
@@ -932,7 +829,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   width: 100%;
   padding-top: 148%;
   overflow: hidden;
-  background: #151d2a;
+  background: #15151a;
 }
 
 .poster-img {
@@ -946,116 +843,117 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .media-card:hover .poster-img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 .type-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 8px;
+  left: 8px;
 }
 
 .rating-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(8px);
-  color: #fbbf24;
+  top: 8px;
+  right: 8px;
+  background: rgba(10, 10, 12, 0.88);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
   font-weight: 700;
-  font-size: 0.75rem;
-  padding: 4px 8px;
-  border-radius: 8px;
+  font-size: 0.72rem;
+  padding: 3px 6px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  border: 1px solid var(--border-subtle);
 }
 
 .card-info {
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   flex: 1;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(7, 9, 14, 0.98));
+  background: var(--bg-surface);
 }
 
 .media-title {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 2px;
-  color: #fff;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .release-date {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin-bottom: 6px;
 }
 
 .overview {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   line-height: 1.4;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   flex: 1;
 }
 
-.btn-full {
-  width: 100%;
-  justify-content: center;
+.btn-card-action {
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
 .empty-state {
-  max-width: 560px;
-  margin: 24px auto;
+  max-width: 500px;
+  margin: 32px auto;
   padding: 32px;
-}
-
-.empty-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--accent-gold);
-  font-size: 2rem;
-  margin-bottom: 14px;
+  text-align: center;
+  background: var(--bg-surface);
 }
 
 .empty-state h2 {
-  margin-bottom: 8px;
+  font-size: 1.3rem;
+  margin-bottom: 6px;
+  color: #ffffff;
 }
 
-/* WIDE & SPACIOUS DETAIL MODAL (Wide 2-Column Layout) */
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+/* MODAL DETAIL STYLING */
 .detail-modal-content.wide-modal {
   position: relative;
   width: 92vw;
-  max-width: 1040px;
+  max-width: 1000px;
   max-height: 90vh;
   overflow-y: auto;
   padding: 0;
-  border-radius: 28px;
+  border-radius: 16px;
   overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95);
 }
 
 .close-btn-fixed {
   position: absolute;
-  top: 18px;
-  right: 20px;
+  top: 16px;
+  right: 18px;
   z-index: 40;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  width: 40px;
-  height: 40px;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1064,12 +962,12 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .close-btn-fixed:hover {
-  background: rgba(239, 68, 68, 0.9);
-  transform: scale(1.08);
+  background: var(--accent-red);
+  border-color: var(--accent-red);
 }
 
 .hero-backdrop-banner {
-  height: 250px;
+  height: 220px;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -1078,7 +976,7 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 .hero-backdrop-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.2) 0%, rgba(10, 10, 12, 0.95) 90%, var(--bg-surface) 100%);
   display: flex;
   align-items: flex-end;
   padding: 24px;
@@ -1087,61 +985,47 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 .banner-badges {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hero-media-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hero-rating-badge {
-  color: #fbbf24;
-  font-weight: 800;
-  font-size: 0.9rem;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.84rem;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hero-media-title {
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 900;
-  color: #fff;
+  color: #ffffff;
   line-height: 1.15;
 }
 
 .hero-media-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
 .detail-body.wide-grid {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 240px 1fr;
   gap: 24px;
   padding: 24px;
 }
 
 @media (max-width: 768px) {
   .featured-gradient-overlay {
-    padding: 24px;
+    padding: 20px;
   }
-
-  .featured-side-note {
-    display: none;
-  }
-
-  .hero-metrics {
-    grid-template-columns: 1fr;
-  }
-
-  .results-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .detail-body.wide-grid {
     grid-template-columns: 1fr;
   }
@@ -1150,14 +1034,15 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 .detail-left-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .detail-poster-img {
   width: 100%;
-  border-radius: 16px;
+  border-radius: 10px;
   object-fit: cover;
   aspect-ratio: 2 / 3;
+  border: 1px solid var(--border-subtle);
 }
 
 .detail-right-col {
@@ -1166,32 +1051,34 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .meta-info-box {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .highlight-text {
-  color: #fbbf24;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .overview-text {
-  font-size: 0.92rem;
-  color: #cbd5e1;
-  line-height: 1.65;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
   margin-bottom: 20px;
 }
 
 .quick-add-bar {
-  padding: 16px;
-  border-radius: 16px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
 }
 
 .rating-input-row {
@@ -1199,40 +1086,40 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 }
 
 .rating-input-row label {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  font-weight: 700;
+  font-weight: 600;
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .star-rating-selector {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .star-icon {
-  font-size: 1.2rem;
-  color: #475569;
+  font-size: 1.15rem;
+  color: #3f3f46;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
 .star-icon.active {
-  color: #fbbf24;
+  color: var(--accent-star);
 }
 
 .rating-number {
-  margin-left: 8px;
-  font-size: 0.85rem;
-  color: #fbbf24;
+  margin-left: 6px;
+  font-size: 0.8rem;
+  color: var(--accent-star);
   font-weight: 700;
 }
 
 .quick-buttons-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .seasons-section {
@@ -1243,81 +1130,85 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .section-subtitle {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
 }
 
 .watched-counter-badge {
-  font-size: 0.8rem;
-  color: #fbbf24;
-  font-weight: 800;
-  background: rgba(251, 191, 36, 0.12);
-  padding: 4px 12px;
-  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--accent-red);
+  font-weight: 700;
+  background: var(--accent-red-subtle);
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-red);
 }
 
 .season-chips {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 8px;
-  margin-bottom: 16px;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
 }
 
 .season-chip {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .season-chip.active {
-  background: var(--accent-gold);
-  color: #0f172a;
-  font-weight: 800;
+  background: var(--accent-red);
+  color: #ffffff;
+  border-color: var(--accent-red);
 }
 
 .episodes-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   max-height: 380px;
   overflow-y: auto;
 }
 
 .episode-item {
   display: flex;
-  gap: 16px;
-  padding: 14px;
+  gap: 14px;
+  padding: 12px;
   align-items: center;
   transition: all 0.2s;
-  border-radius: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
 }
 
 .episode-item.watched {
-  border-color: rgba(74, 222, 128, 0.35);
-  background: rgba(74, 222, 128, 0.06);
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.05);
 }
 
 .eps-banner-wrapper {
   position: relative;
-  width: 130px;
-  height: 74px;
-  border-radius: 10px;
+  width: 110px;
+  height: 62px;
+  border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #151d2a;
+  background: #18181e;
 }
 
 .eps-still-img {
@@ -1328,15 +1219,14 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
 
 .eps-num-badge {
   position: absolute;
-  bottom: 4px;
-  left: 4px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
+  bottom: 3px;
+  left: 3px;
+  background: rgba(10, 10, 12, 0.9);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 
 .eps-info {
@@ -1347,52 +1237,52 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .eps-name {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .eps-date {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .eps-overview {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .eps-toggle-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 0.82rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.78rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .eps-toggle-btn.active {
-  background: #22c55e;
-  color: #fff;
-  border-color: #22c55e;
+  background: var(--accent-success);
+  color: #ffffff;
+  border-color: var(--accent-success);
 }
 
-.loading-state, .empty-state {
+.loading-state {
   text-align: center;
-  padding: 60px;
+  padding: 40px;
   color: var(--text-secondary);
 }
 
@@ -1401,7 +1291,6 @@ const saveToWatchlist = async (statusOverride = 'watching', epsOverride?: number
   padding: 6px 12px;
 }
 
-/* Modal Overlay Fixed Overlay Styling */
 .modal-overlay {
   position: fixed !important;
   inset: 0 !important;

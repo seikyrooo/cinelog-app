@@ -1,8 +1,8 @@
 <template>
   <section class="public-profile-page">
-    <div v-if="isLoading" class="public-state glass-card" aria-busy="true">Memuat public profile...</div>
+    <div v-if="isLoading" class="public-state glass-card" aria-busy="true">Memuat profil publik...</div>
     <div v-else-if="error" class="public-state glass-card" role="alert">
-      <h1>Profile tidak tersedia</h1>
+      <h1>Profil Tidak Tersedia</h1>
       <p>{{ error }}</p>
     </div>
     <template v-else-if="profile">
@@ -12,7 +12,6 @@
           <span v-else>{{ profile.user.username.slice(0, 2).toUpperCase() }}</span>
         </div>
         <div class="public-copy">
-          <p class="eyebrow">Public Profile</p>
           <h1>@{{ profile.user.username }}</h1>
           <p>{{ profile.user.bio || 'Belum ada bio.' }}</p>
         </div>
@@ -22,7 +21,7 @@
         </div>
       </header>
 
-      <div class="tabs" role="tablist" aria-label="Konten profile publik">
+      <div class="tabs" role="tablist" aria-label="Konten profil publik">
         <button :class="['tab-btn', { active: activeTab === 'favorites' }]" type="button" @click="activeTab = 'favorites'">
           Favorit Publik
         </button>
@@ -44,8 +43,8 @@
             </span>
             <h2>{{ item.movie?.title || 'Untitled' }}</h2>
             <p>{{ formatYear(item.movie?.release_date) }} · {{ getStatusLabel(item.status) }}</p>
-            <strong v-if="item.rating">★ {{ item.rating }}/10</strong>
-            <strong v-else-if="item.favorite">★ Favorit</strong>
+            <strong v-if="item.rating" class="rating-tag">★ {{ item.rating }}/10</strong>
+            <strong v-else-if="item.favorite" class="favorite-tag">♥ Favorit</strong>
           </div>
         </article>
       </div>
@@ -81,7 +80,7 @@ onMounted(async () => {
     favorites.value = favoritesRes.data || []
     ratings.value = ratingsRes.data || []
   } catch (err: any) {
-    error.value = err?.data?.error || 'Profile user tidak ditemukan atau bersifat private.'
+    error.value = err?.data?.error || 'Profil pengguna tidak ditemukan atau bersifat privat.'
   } finally {
     isLoading.value = false
   }
@@ -101,11 +100,11 @@ const formatYear = (dateStr?: string) => dateStr ? dateStr.substring(0, 4) : '�
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'watching': return 'Watching'
-    case 'completed': return 'Completed'
-    case 'on_hold': return 'On Hold'
-    case 'dropped': return 'Dropped'
-    default: return 'Plan to Watch'
+    case 'watching': return 'Sedang Ditonton'
+    case 'completed': return 'Selesai'
+    case 'on_hold': return 'Tertunda'
+    case 'dropped': return 'Diberhentikan'
+    default: return 'Rencana Nonton'
   }
 }
 </script>
@@ -113,27 +112,30 @@ const getStatusLabel = (status: string) => {
 <style scoped>
 .public-profile-page {
   display: grid;
-  gap: 20px;
+  gap: 24px;
 }
 
 .public-hero {
   align-items: center;
   display: grid;
-  gap: 20px;
+  gap: 24px;
   grid-template-columns: auto 1fr auto;
   padding: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
 }
 
 .public-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 24px;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  color: #67e8f9;
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid var(--border-red);
+  color: #ff6b6b;
   display: grid;
-  font-size: 1.8rem;
-  font-weight: 900;
+  font-size: 1.6rem;
+  font-weight: 800;
   overflow: hidden;
   place-items: center;
 }
@@ -145,79 +147,89 @@ const getStatusLabel = (status: string) => {
   width: 100%;
 }
 
-.eyebrow {
-  color: var(--accent-cyan);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .public-copy h1 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  margin: 4px 0 8px;
+  font-size: 1.8rem;
+  margin: 0 0 4px;
+  color: #ffffff;
 }
 
 .public-copy p,
 .public-card-body p,
 .public-state p {
   color: var(--text-secondary);
+  font-size: 0.88rem;
 }
 
 .public-stats {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .public-stats div {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  min-width: 92px;
-  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  min-width: 84px;
+  padding: 10px;
   text-align: center;
 }
 
 .public-stats strong {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  color: #ffffff;
 }
 
 .public-stats span {
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .tabs {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tab-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   color: var(--text-secondary);
   cursor: pointer;
-  font-weight: 800;
-  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 8px 18px;
+  transition: all 0.2s ease;
 }
 
-.tab-btn.active,
-.tab-btn:hover {
-  background: rgba(56, 189, 248, 0.14);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #e0f2fe;
+.tab-btn.active {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+  color: #ffffff;
+}
+
+.tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .public-grid {
   display: grid;
   gap: 18px;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
 }
 
 .public-card {
   overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  transition: all 0.25s ease;
+}
+
+.public-card:hover {
+  border-color: var(--border-red);
+  transform: translateY(-4px);
 }
 
 .public-card img {
@@ -227,21 +239,33 @@ const getStatusLabel = (status: string) => {
 
 .public-card-body {
   display: grid;
-  gap: 8px;
-  padding: 14px;
+  gap: 6px;
+  padding: 12px;
 }
 
 .public-card-body h2 {
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 1.3;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.public-card-body strong {
-  color: #fbbf24;
+.rating-tag {
+  color: var(--accent-star);
+  font-size: 0.85rem;
+}
+
+.favorite-tag {
+  color: var(--accent-red);
+  font-size: 0.85rem;
 }
 
 .public-state {
-  padding: 24px;
+  padding: 32px;
+  text-align: center;
+  border-radius: 8px;
 }
 
 @media (max-width: 760px) {

@@ -89,20 +89,24 @@ const handleLogin = async () => {
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
-  padding: 36px;
-  border-radius: 24px;
+  max-width: 400px;
+  padding: 32px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
 }
 
 .auth-title {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  color: #ffffff;
 }
 
 .auth-subtitle {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   margin-bottom: 24px;
 }
 
@@ -112,7 +116,7 @@ const handleLogin = async () => {
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   margin-bottom: 6px;
   font-weight: 600;
@@ -120,31 +124,38 @@ const handleLogin = async () => {
 
 .form-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
   color: #fff;
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
   font-family: inherit;
+  font-size: 0.9rem;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .form-input:focus {
-  border-color: var(--accent-purple);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-red) !important;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px var(--accent-red-subtle) !important;
 }
 
 .error-msg {
-  color: var(--accent-red);
-  font-size: 0.85rem;
+  color: #ff6b6b;
+  font-size: 0.84rem;
   margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(229, 9, 20, 0.1);
+  border: 1px solid rgba(229, 9, 20, 0.25);
+  border-radius: 6px;
 }
 
 .btn-full {
   width: 100%;
   justify-content: center;
   padding: 12px;
+  margin-top: 6px;
 }
 
 .auth-footer {
@@ -155,8 +166,12 @@ const handleLogin = async () => {
 }
 
 .auth-footer a {
-  color: var(--accent-gold);
+  color: var(--accent-red);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
 }
 </style>

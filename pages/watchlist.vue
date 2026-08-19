@@ -11,7 +11,7 @@
 
     <!-- Main Top Mode: Shows vs Movies -->
     <div class="top-nav-bar">
-      <div class="mode-switcher glass-panel">
+      <div class="mode-switcher glass-card">
         <button 
           @click="mediaTypeTab = 'tv'; fetchWatchlist()"
           :class="['mode-tab', { active: mediaTypeTab === 'tv' }]"
@@ -57,7 +57,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
         <div class="spinner"></div>
-        <p>Memuat TV Time Watchlist...</p>
+        <p>Memuat daftar watchlist...</p>
       </div>
 
       <!-- WATCH LIST TAB -->
@@ -98,7 +98,7 @@
                 </div>
 
                 <p class="eps-title-text clickable" @click="openDetailModal(item)">
-                  <span class="eps-label">Next Episode:</span> <strong>{{ getNextEpsName(item) }}</strong>
+                  <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
                 </p>
 
                 <div class="card-badges-row">
@@ -110,11 +110,11 @@
                 </div>
               </div>
 
-              <!-- Big Circle Checkmark Button (Increment Episode) -->
+              <!-- Circle Checkmark Button (Increment Episode) -->
               <button 
                 @click="incrementEpisode(item)" 
                 class="circle-check-btn"
-                title="Klik untuk tandai episode ini selesai ditonton"
+                title="Tandai episode ini selesai"
               >
                 <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
@@ -127,7 +127,7 @@
         <!-- SECTION 2: HAVENT WATCHED FOR A WHILE (Inactive / On Hold) -->
         <div v-if="haventWatchedList.length > 0" class="section-group">
           <div class="section-pill-header">
-            <span class="pill-badge idle-badge">HAVENT WATCHED FOR A WHILE</span>
+            <span class="pill-badge idle-badge">TERTUNDA</span>
           </div>
 
           <div class="shows-stack">
@@ -170,10 +170,10 @@
           </div>
         </div>
 
-        <!-- SECTION 3: WATCHED HISTORY (Completed Shows & History) -->
+        <!-- SECTION 3: WATCHED HISTORY (Completed Shows) -->
         <div v-if="watchedHistoryList.length > 0" class="section-group">
           <div class="section-pill-header">
-            <span class="pill-badge history-badge">WATCHED HISTORY</span>
+            <span class="pill-badge history-badge">RIWAYAT TAMAT</span>
           </div>
 
           <div class="shows-stack">
@@ -217,7 +217,7 @@
         <!-- Empty State -->
         <div v-if="watchlist.length === 0" class="empty-state glass-card">
           <h3>Watchlist TV Series Kosong</h3>
-          <p>Cari & tambahkan TV show favorit kamu dari menu Explore.</p>
+          <p>Cari dan tambahkan TV show favorit Anda dari menu Eksplor.</p>
           <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Cari TV Series</NuxtLink>
         </div>
       </div>
@@ -227,7 +227,7 @@
         <div v-if="upcomingList.length > 0" class="shows-stack">
           <div 
             v-for="item in upcomingList" 
-            :key="item.id"
+            :key="item.id" 
             class="tvtime-card glass-card upcoming-card"
           >
             <img 
@@ -254,7 +254,7 @@
               </div>
 
               <p class="eps-title-text" v-if="item.movie.next_episode_name">
-                Judul Eps: "{{ item.movie.next_episode_name }}"
+                Judul Episode: "{{ item.movie.next_episode_name }}"
               </p>
             </div>
           </div>
@@ -262,7 +262,7 @@
 
         <div v-else class="empty-state glass-card">
           <h3>Belum Ada Episode Mendatang</h3>
-          <p>Series di watchlist kamu belum memiliki jadwal tayang episode baru.</p>
+          <p>Series di watchlist Anda belum memiliki jadwal rilis episode baru.</p>
         </div>
       </div>
     </div>
@@ -275,7 +275,7 @@
       </div>
 
       <div v-else-if="watchlist.length === 0" class="empty-state glass-card">
-        <h3>Belum Ada Film Ditemukan</h3>
+        <h3>Belum Ada Film di Watchlist</h3>
         <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Cari Film</NuxtLink>
       </div>
 
@@ -302,7 +302,7 @@
             <div class="details-top">
               <span class="movie-year">{{ formatYear(item.movie.release_date) }}</span>
               <span class="user-rating" v-if="item.rating > 0">
-                ★ <strong>{{ item.rating }}</strong> / 10.0
+                ★ <strong>{{ item.rating }}</strong> / 10
               </span>
             </div>
 
@@ -355,7 +355,7 @@
             <img 
               :src="getPosterUrl(activeDetailMedia || activeWatchlistContext?.movie)" 
               :alt="activeDetailMedia?.title"
-              class="detail-poster-img glass-card"
+              class="detail-poster-img"
               @error="onImageError"
             />
 
@@ -365,10 +365,10 @@
               @click="toggleFavoriteStatus(activeWatchlistContext)"
               :class="['fav-toggle-btn', { active: activeWatchlistContext.favorite }]"
             >
-              <svg class="icon-inline" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+              <svg class="icon-inline" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
-              <span>{{ activeWatchlistContext.favorite ? 'Hapus dari Favorit' : 'Tambah ke Favorit' }}</span>
+              <span>{{ activeWatchlistContext.favorite ? 'Hapus dari Favorit' : '+ Favorit' }}</span>
             </button>
 
             <div class="meta-info-box glass-card">
@@ -388,8 +388,8 @@
 
           <!-- Right Column: Overview, Seasons Selector, & Spacious Episode Grid -->
           <div class="detail-right-col">
-            <h4 class="section-subtitle">Ringkasan Sinopsis</h4>
-            <p class="overview-text">{{ activeDetailMedia?.overview || activeWatchlistContext?.movie?.overview }}</p>
+            <h4 class="section-subtitle">Sinopsis Cerita</h4>
+            <p class="overview-text">{{ activeDetailMedia?.overview || activeWatchlistContext?.movie?.overview || 'Belum ada ringkasan sinopsis.' }}</p>
 
             <!-- If TV Show: Season Selector & Interactive Episode Cards -->
             <div v-if="isTvShowContext" class="seasons-section">
@@ -462,7 +462,7 @@
 
     <!-- Modal Edit Watchlist Item -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
-      <div class="modal-content glass-panel animate-fade-in">
+      <div class="modal-content glass-panel edit-modal-box animate-fade-in">
         <button @click="showEditModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
         <h2 class="modal-title">Edit Watchlist</h2>
         <p class="modal-subtitle">{{ editingItem?.movie?.title }}</p>
@@ -480,7 +480,7 @@
           </div>
 
           <div class="form-group">
-            <label>Rating Kamu (Skala 1 - 10)</label>
+            <label>Rating Anda (1 - 10)</label>
             <div class="star-rating-selector">
               <span 
                 v-for="star in 10" 
@@ -488,7 +488,7 @@
                 @click="editForm.rating = star"
                 :class="['star-icon', { active: star <= editForm.rating }]"
               >★</span>
-              <span class="rating-number">{{ editForm.rating > 0 ? editForm.rating + ' / 10.0' : 'Belum dinilai' }}</span>
+              <span class="rating-number">{{ editForm.rating > 0 ? editForm.rating + ' / 10' : 'Belum dinilai' }}</span>
             </div>
           </div>
 
@@ -500,13 +500,13 @@
           </div>
 
           <div class="form-group">
-            <label>Catatan / Review Singkat</label>
-            <textarea v-model="editForm.notes" class="form-input text-area"></textarea>
+            <label>Catatan Pribadi</label>
+            <textarea v-model="editForm.notes" rows="3" class="form-input text-area"></textarea>
           </div>
 
           <div class="modal-actions">
             <button type="button" @click="showEditModal = false" class="btn-secondary">Batal</button>
-            <button type="submit" class="btn-primary">Update</button>
+            <button type="submit" class="btn-primary">Simpan Perubahan</button>
           </div>
         </form>
       </div>
@@ -551,11 +551,13 @@ const showToast = (msg: string) => {
   toastMessage.value = msg
   setTimeout(() => {
     toastMessage.value = ''
-  }, 3000)
+  }, 3500)
 }
 
 const isTvShowContext = computed(() => {
-  return activeDetailMedia.value?.media_type === 'tv' || activeWatchlistContext.value?.movie?.media_type === 'tv'
+  return activeDetailMedia.value?.media_type === 'tv' || 
+         activeWatchlistContext.value?.movie?.media_type === 'tv' || 
+         mediaTypeTab.value === 'tv'
 })
 
 const seasonsCount = computed(() => {
@@ -644,8 +646,8 @@ const getNextEpsName = (item: any) => {
 
 const getBackdropStyle = (media: any) => {
   const path = media?.backdrop_path || media?.poster_path
-  if (!path) return { background: '#1e293b' }
-  const url = path.startsWith('/uploads') ? useApiUrl(path) : `https://image.tmdb.org/t/p/w780${path}`
+  if (!path) return { background: '#121216' }
+  const url = path.startsWith('/uploads') ? useApiUrl(path) : `https://image.tmdb.org/t/p/w1280${path}`
   return { backgroundImage: `url(${url})` }
 }
 
@@ -658,41 +660,39 @@ const openDetailModal = async (contextItem: any) => {
   let movieObj = contextItem.movie ? contextItem.movie : contextItem
   activeWatchlistContext.value = contextItem.movie ? contextItem : null
   activeDetailMedia.value = movieObj
-  selectedSeason.value = contextItem.season_watched || 1
-  episodesList.value = []
   showDetailModal.value = true
+  selectedSeason.value = activeWatchlistContext.value?.season_watched || 1
 
-  try {
-    const res: any = await $fetch(useApiUrl('/api/detail'), {
-      params: {
-        id: movieObj.tmdb_id || movieObj.id,
-        type: movieObj.media_type || 'tv'
+  if (activeDetailMedia.value?.id || activeDetailMedia.value?.tmdb_id) {
+    try {
+      const detailRes: any = await $fetch(useApiUrl('/api/detail'), {
+        params: {
+          id: activeDetailMedia.value.tmdb_id || activeDetailMedia.value.id,
+          type: activeDetailMedia.value.media_type || mediaTypeTab.value
+        }
+      })
+      if (detailRes.data) {
+        activeDetailMedia.value = { ...activeDetailMedia.value, ...detailRes.data }
       }
-    })
-    if (res.data) {
-      activeDetailMedia.value = res.data
+    } catch (e) {
+      console.error(e)
     }
-  } catch (err) {
-    console.error(err)
-  }
 
-  if (isTvShowContext.value) {
-    fetchSeasonEpisodes(selectedSeason.value)
+    if (isTvShowContext.value) {
+      await fetchSeasonEpisodes(selectedSeason.value)
+    }
   }
 }
 
 const fetchSeasonEpisodes = async (seasonNum: number) => {
-  const tmdbId = activeDetailMedia.value?.id || activeDetailMedia.value?.tmdb_id || activeWatchlistContext.value?.movie?.tmdb_id
-  if (!tmdbId) return
-
-  selectedSeason.value = Math.max(1, Math.min(seasonNum, seasonsCount.value))
+  selectedSeason.value = seasonNum
   isLoadingEpisodes.value = true
-
   try {
+    const tmdbId = activeDetailMedia.value?.tmdb_id || activeDetailMedia.value?.id
     const res: any = await $fetch(useApiUrl('/api/tv/season'), {
       params: {
         id: tmdbId,
-        season: selectedSeason.value
+        season: seasonNum
       }
     })
     episodesList.value = res.data || []
@@ -759,9 +759,9 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Tamat! Series berpindah ke Watched History')
+        showToast('🎉 Tamat! Series berpindah ke Riwayat Tamat')
       } else {
-        showToast(`Progres diperbarui: Season ${res.data.season_watched} Episode ${res.data.episodes_watched}`)
+        showToast(`Progres diperbarui: S${res.data.season_watched} E${res.data.episodes_watched}`)
       }
     }
   } catch (err) {
@@ -805,11 +805,11 @@ const getPosterUrl = (movie: any) => {
 }
 
 const onImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
+  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
 }
 
 const onEpsImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
+  ;(e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
 }
 
 const formatYear = (dateStr: string) => {
@@ -832,11 +832,11 @@ const getStatusBadgeClass = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'watching': return 'Watching'
-    case 'completed': return 'Completed'
-    case 'on_hold': return 'On Hold'
-    case 'dropped': return 'Dropped'
-    default: return 'Plan to Watch'
+    case 'watching': return 'Sedang Nonton'
+    case 'completed': return 'Selesai'
+    case 'on_hold': return 'Tertunda'
+    case 'dropped': return 'Diberhentikan'
+    default: return 'Rencana Nonton'
   }
 }
 
@@ -849,7 +849,7 @@ const incrementEpisode = async (item: any) => {
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Tamat! Series ini telah berpindah ke Watched History')
+        showToast('🎉 Tamat! Series ini telah berpindah ke Riwayat Tamat')
       } else {
         showToast(`+1 Episode! Total ${item.episodes_watched} eps ditonton`)
       }
@@ -886,7 +886,7 @@ const updateWatchlist = async () => {
 }
 
 const deleteItem = async (id: number) => {
-  if (!confirm('Hapus item ini dari watchlist kamu?')) return
+  if (!confirm('Hapus item ini dari watchlist Anda?')) return
   try {
     await api.deleteLibraryItem(id)
     fetchWatchlist()
@@ -903,21 +903,21 @@ const deleteItem = async (id: number) => {
   top: 80px;
   right: 24px;
   z-index: 10000;
-  background: #10b981;
+  background: var(--accent-red);
   color: #ffffff;
   padding: 12px 20px;
-  border-radius: 14px;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 0.88rem;
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .toast-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .icon-inline {
@@ -926,17 +926,17 @@ const deleteItem = async (id: number) => {
 }
 
 .check-svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
 
 .fav-toggle-btn {
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--glass-border);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -948,13 +948,13 @@ const deleteItem = async (id: number) => {
 }
 
 .fav-toggle-btn.active {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.4);
+  background: var(--accent-red-subtle);
+  color: #ffffff;
+  border-color: var(--border-red);
 }
 
 .tvtime-container {
-  max-width: 800px;
+  max-width: 860px;
   margin: 0 auto;
 }
 
@@ -967,10 +967,12 @@ const deleteItem = async (id: number) => {
 .mode-switcher {
   display: flex;
   padding: 4px;
-  border-radius: 14px;
+  border-radius: 10px;
   gap: 6px;
   width: 100%;
   max-width: 320px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
 }
 
 .mode-tab {
@@ -978,27 +980,27 @@ const deleteItem = async (id: number) => {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 10px;
-  border-radius: 10px;
+  padding: 9px;
+  border-radius: 6px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
 }
 
 .mode-tab.active {
-  background: var(--accent-purple);
-  color: #fff;
+  background: var(--accent-red);
+  color: #ffffff;
 }
 
 /* Sub Tab Bar: WATCH LIST vs UPCOMING */
 .sub-tab-bar {
   display: flex;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 24px;
 }
 
@@ -1008,30 +1010,29 @@ const deleteItem = async (id: number) => {
   border: none;
   color: var(--text-muted);
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   padding: 12px;
   cursor: pointer;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   position: relative;
-  transition: color 0.2s;
+  transition: color 0.18s;
 }
 
 .sub-tab-btn.active {
-  color: #fff;
+  color: #ffffff;
 }
 
 .sub-tab-btn.active::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: -1px;
   left: 0;
   right: 0;
-  height: 3px;
-  background: #fff;
-  border-radius: 2px;
+  height: 2px;
+  background: var(--accent-red);
 }
 
-/* Sections & Pill Badges matching TV Time Screenshot */
+/* Sections & Pill Badges */
 .section-group {
   margin-bottom: 24px;
 }
@@ -1042,27 +1043,27 @@ const deleteItem = async (id: number) => {
 
 .pill-badge {
   display: inline-block;
-  padding: 4px 14px;
-  border-radius: 20px;
+  padding: 3px 12px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .watch-next-badge {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--accent-red);
+  color: #ffffff;
 }
 
 .history-badge {
-  background: #334155;
-  color: #cbd5e1;
+  background: #27272a;
+  color: #a1a1aa;
 }
 
 .idle-badge {
-  background: #475569;
-  color: #f1f5f9;
+  background: #3f3f46;
+  color: #e4e4e7;
 }
 
 /* TV Time Card Layout */
@@ -1076,17 +1077,22 @@ const deleteItem = async (id: number) => {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px;
-  border-radius: 16px;
-  background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.tvtime-card:hover {
+  border-color: var(--border-red);
 }
 
 .tvtime-poster {
-  width: 90px;
-  height: 125px;
+  width: 80px;
+  height: 115px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
@@ -1099,15 +1105,20 @@ const deleteItem = async (id: number) => {
 .show-title-tag {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  padding: 2px 10px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ffffff;
   width: fit-content;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.show-title-tag:hover {
+  border-color: var(--border-red);
+  color: var(--accent-red);
 }
 
 .eps-headline {
@@ -1118,29 +1129,30 @@ const deleteItem = async (id: number) => {
 }
 
 .season-eps-code {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: #fff;
+  color: #ffffff;
 }
 
 .remaining-count-pill {
-  font-size: 0.75rem;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
+  font-size: 0.74rem;
+  color: #ff8585;
+  background: var(--accent-red-subtle);
+  border: 1px solid var(--border-red);
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-weight: 700;
 }
 
 .eps-title-text {
-  font-size: 0.88rem;
-  color: #cbd5e1;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
   margin-bottom: 8px;
   font-weight: 500;
 }
 
 .eps-label {
-  color: #fbbf24;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
@@ -1152,30 +1164,32 @@ const deleteItem = async (id: number) => {
 }
 
 .badge-premiere {
-  background: #fff;
-  color: #000;
+  background: var(--accent-red);
+  color: #ffffff;
   font-weight: 800;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .badge-fav {
-  background: var(--accent-gold);
-  color: #0f172a;
-  font-weight: 800;
-  font-size: 0.68rem;
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--accent-star);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  font-weight: 700;
+  font-size: 0.65rem;
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .badge-completed-tag {
-  background: #22c55e;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 800;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  font-size: 0.68rem;
+  font-weight: 700;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .badge-total-info {
@@ -1184,12 +1198,12 @@ const deleteItem = async (id: number) => {
 }
 
 .circle-check-btn {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: #ffffff;
-  border: none;
-  color: #000000;
+  background: #27272a;
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1200,43 +1214,58 @@ const deleteItem = async (id: number) => {
 }
 
 .circle-check-btn:hover {
-  background: #22c55e;
+  background: var(--accent-red);
   color: #ffffff;
-  transform: scale(1.1);
+  border-color: var(--accent-red);
+  transform: scale(1.06);
 }
 
 .circle-check-btn.completed {
-  background: #22c55e;
+  background: var(--accent-success);
   color: #ffffff;
+  border-color: var(--accent-success);
 }
 
 .upcoming-date-box {
-  color: #38bdf8;
-  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-size: 0.84rem;
   margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.upcoming-date-box strong {
+  color: var(--accent-red);
+}
+
 /* Movies Grid Layout */
 .movies-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px;
 }
 
 .movie-item-card {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.movie-item-card:hover {
+  border-color: var(--border-red);
+  transform: translateY(-3px);
 }
 
 .card-poster {
   position: relative;
   width: 100%;
   padding-top: 140%;
-  background: #151d2a;
+  background: #15151a;
 }
 
 .poster-img {
@@ -1250,24 +1279,26 @@ const deleteItem = async (id: number) => {
 
 .status-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 8px;
+  left: 8px;
 }
 
 .fav-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--accent-gold);
-  color: #0f172a;
+  top: 8px;
+  right: 8px;
+  background: rgba(10, 10, 12, 0.88);
+  backdrop-filter: blur(6px);
+  color: var(--accent-star);
   font-weight: 700;
-  font-size: 0.75rem;
-  padding: 3px 8px;
-  border-radius: 6px;
+  font-size: 0.72rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
 }
 
 .card-details {
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1281,31 +1312,34 @@ const deleteItem = async (id: number) => {
 }
 
 .movie-year {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
 .user-rating {
-  font-size: 0.82rem;
-  color: #fbbf24;
+  font-size: 0.8rem;
+  color: var(--accent-star);
 }
 
 .movie-title {
-  font-size: 1.05rem;
-  color: #fff;
+  font-size: 0.95rem;
+  color: #ffffff;
   font-weight: 700;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .director-text {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .card-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-top: auto;
 }
 
@@ -1313,31 +1347,34 @@ const deleteItem = async (id: number) => {
   flex: 1;
 }
 
-/* WIDE & SPACIOUS DETAIL MODAL (Wide 2-Column Layout) */
+/* WIDE & SPACIOUS DETAIL MODAL */
 .detail-modal-content.wide-modal {
   position: relative;
   width: 92vw;
-  max-width: 1040px;
+  max-width: 1000px;
   max-height: 90vh;
   overflow-y: auto;
   padding: 0;
-  border-radius: 28px;
+  border-radius: 16px;
   overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95);
 }
 
 .close-btn-fixed {
   position: absolute;
-  top: 18px;
-  right: 20px;
+  top: 16px;
+  right: 18px;
   z-index: 40;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  width: 40px;
-  height: 40px;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1346,12 +1383,12 @@ const deleteItem = async (id: number) => {
 }
 
 .close-btn-fixed:hover {
-  background: rgba(239, 68, 68, 0.9);
-  transform: scale(1.08);
+  background: var(--accent-red);
+  border-color: var(--accent-red);
 }
 
 .hero-backdrop-banner {
-  height: 250px;
+  height: 220px;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -1360,7 +1397,7 @@ const deleteItem = async (id: number) => {
 .hero-backdrop-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.95) 85%, #0f172a 100%);
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.2) 0%, rgba(10, 10, 12, 0.95) 90%, var(--bg-surface) 100%);
   display: flex;
   align-items: flex-end;
   padding: 24px;
@@ -1369,36 +1406,36 @@ const deleteItem = async (id: number) => {
 .banner-badges {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hero-media-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hero-rating-badge {
-  color: #fbbf24;
-  font-weight: 800;
-  font-size: 0.9rem;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.84rem;
 }
 
 .hero-media-title {
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 900;
-  color: #fff;
+  color: #ffffff;
   line-height: 1.15;
 }
 
 .hero-media-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
 .detail-body.wide-grid {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 240px 1fr;
   gap: 24px;
   padding: 24px;
 }
@@ -1412,14 +1449,15 @@ const deleteItem = async (id: number) => {
 .detail-left-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .detail-poster-img {
   width: 100%;
-  border-radius: 16px;
+  border-radius: 10px;
   object-fit: cover;
   aspect-ratio: 2 / 3;
+  border: 1px solid var(--border-subtle);
 }
 
 .detail-right-col {
@@ -1428,26 +1466,26 @@ const deleteItem = async (id: number) => {
 }
 
 .meta-info-box {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .highlight-text {
-  color: #fbbf24;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .overview-text {
-  font-size: 0.92rem;
-  color: #cbd5e1;
-  line-height: 1.65;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
   margin-bottom: 20px;
 }
 
@@ -1459,81 +1497,85 @@ const deleteItem = async (id: number) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .section-subtitle {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
 }
 
 .watched-counter-badge {
-  font-size: 0.8rem;
-  color: #fbbf24;
-  font-weight: 800;
-  background: rgba(251, 191, 36, 0.12);
-  padding: 4px 12px;
-  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--accent-red);
+  font-weight: 700;
+  background: var(--accent-red-subtle);
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-red);
 }
 
 .season-chips {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 8px;
-  margin-bottom: 16px;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
 }
 
 .season-chip {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .season-chip.active {
-  background: var(--accent-gold);
-  color: #0f172a;
-  font-weight: 800;
+  background: var(--accent-red);
+  color: #ffffff;
+  border-color: var(--accent-red);
 }
 
 .episodes-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   max-height: 380px;
   overflow-y: auto;
 }
 
 .episode-item {
   display: flex;
-  gap: 16px;
-  padding: 14px;
+  gap: 14px;
+  padding: 12px;
   align-items: center;
   transition: all 0.2s;
-  border-radius: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
 }
 
 .episode-item.watched {
-  border-color: rgba(74, 222, 128, 0.35);
-  background: rgba(74, 222, 128, 0.06);
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.05);
 }
 
 .eps-banner-wrapper {
   position: relative;
-  width: 130px;
-  height: 74px;
-  border-radius: 10px;
+  width: 110px;
+  height: 62px;
+  border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #151d2a;
+  background: #18181e;
 }
 
 .eps-still-img {
@@ -1544,15 +1586,14 @@ const deleteItem = async (id: number) => {
 
 .eps-num-badge {
   position: absolute;
-  bottom: 4px;
-  left: 4px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
+  bottom: 3px;
+  left: 3px;
+  background: rgba(10, 10, 12, 0.9);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 
 .eps-info {
@@ -1563,52 +1604,151 @@ const deleteItem = async (id: number) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .eps-name {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .eps-date {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .eps-overview {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .eps-toggle-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 0.82rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.78rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .eps-toggle-btn.active {
-  background: #22c55e;
-  color: #fff;
-  border-color: #22c55e;
+  background: var(--accent-success);
+  color: #ffffff;
+  border-color: var(--accent-success);
+}
+
+/* EDIT MODAL */
+.edit-modal-box {
+  width: 90vw;
+  max-width: 440px;
+  padding: 28px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.form-input.text-area {
+  resize: vertical;
+}
+
+.checkbox-group {
+  margin-top: -4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  accent-color: var(--accent-red);
+}
+
+.star-rating-selector {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.star-icon {
+  font-size: 1.15rem;
+  color: #3f3f46;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.star-icon.active {
+  color: var(--accent-star);
+}
+
+.rating-number {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  color: var(--accent-star);
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .loading-state, .empty-state {
   text-align: center;
-  padding: 60px;
+  padding: 48px;
   color: var(--text-secondary);
 }
 
