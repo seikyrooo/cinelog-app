@@ -60,7 +60,7 @@
       <article v-for="user in users" :key="user.id" class="user-card glass-card">
         <!-- Card Header: Avatar, Name, Follow -->
         <div class="user-card-header">
-          <NuxtLink :to="`/users/${user.username}`" class="user-avatar-link" :title="`View @${user.username}`">
+          <NuxtLink :to="`/users/${encodeURIComponent(user.username)}`" class="user-avatar-link" :title="`View @${user.username}`">
             <div class="user-avatar">
               <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" @error="onAvatarError" loading="lazy" decoding="async" />
               <span v-else>{{ user.username.slice(0, 2).toUpperCase() }}</span>
@@ -68,7 +68,7 @@
           </NuxtLink>
 
           <div class="user-meta-info">
-            <NuxtLink :to="`/users/${user.username}`" class="user-name-link">
+            <NuxtLink :to="`/users/${encodeURIComponent(user.username)}`" class="user-name-link">
               <h3>@{{ user.username }}</h3>
             </NuxtLink>
             <span class="user-joined">Member since {{ formatYear(user.created_at) }}</span>
@@ -115,7 +115,7 @@
         </div>
 
         <!-- Action Button -->
-        <NuxtLink :to="`/users/${user.username}`" class="btn-view-profile">
+        <NuxtLink :to="`/users/${encodeURIComponent(user.username)}`" class="btn-view-profile">
           <span>View Public Profile</span>
           <svg class="arrow-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>

@@ -116,12 +116,12 @@
         </div>
         <div v-else class="followers-grid">
           <article v-for="user in currentFollowUsers" :key="user.id" class="follower-card glass-card">
-            <NuxtLink :to="`/users/${user.username}`" class="follower-avatar">
+            <NuxtLink :to="`/users/${encodeURIComponent(user.username)}`" class="follower-avatar">
               <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" loading="lazy" decoding="async" />
               <span v-else>{{ user.username.slice(0, 2).toUpperCase() }}</span>
             </NuxtLink>
             <div class="follower-meta">
-              <NuxtLink :to="`/users/${user.username}`" class="follower-username">
+              <NuxtLink :to="`/users/${encodeURIComponent(user.username)}`" class="follower-username">
                 <h4>@{{ user.username }}</h4>
               </NuxtLink>
               <p class="follower-bio">{{ user.bio || 'Film lover on CineLog.' }}</p>
@@ -152,7 +152,14 @@ const route = useRoute()
 const api = useApi()
 const authStore = useAuthStore()
 
-const username = computed(() => String(route.params.username || ''))
+const username = computed(() => {
+  const raw = String(route.params.username || '')
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw
+  }
+})
 const profile = ref<PublicProfile | null>(null)
 const favorites = ref<any[]>([])
 const ratings = ref<any[]>([])
