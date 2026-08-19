@@ -84,6 +84,7 @@ export const useFormatters = () => {
 
   return {
     getPosterUrl,
+    getImageUrl: getPosterUrl,
     getBackdropUrl,
     getAvatarUrl,
     onImageError,

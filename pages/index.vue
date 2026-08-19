@@ -839,7 +839,7 @@ const clearSearch = () => {
   searchResults.value = []
 }
 
-const { getPosterUrl, getBackdropUrl, onImageError, padZero, formatYear } = useFormatters()
+const { getPosterUrl, getImageUrl, getBackdropUrl, onImageError, padZero, formatYear } = useFormatters()
 
 const getPoster = (itemOrPath: any) => getPosterUrl(itemOrPath)
 
