@@ -76,8 +76,8 @@
               class="tvtime-card glass-card"
             >
               <img 
-                :src="getPosterUrl(item.movie)" 
-                :alt="item.movie.title"
+                :src="getPosterUrl(item)" 
+                :alt="item.movie?.title || item.title"
                 class="tvtime-poster clickable"
                 @click="openDetailModal(item)"
                 @error="onImageError"
@@ -137,8 +137,8 @@
               class="tvtime-card glass-card idle-card"
             >
               <img 
-                :src="getPosterUrl(item.movie)" 
-                :alt="item.movie.title"
+                :src="getPosterUrl(item)" 
+                :alt="item.movie?.title || item.title"
                 class="tvtime-poster clickable"
                 @click="openDetailModal(item)"
                 @error="onImageError"
@@ -183,8 +183,8 @@
               class="tvtime-card glass-card completed-card"
             >
               <img 
-                :src="getPosterUrl(item.movie)" 
-                :alt="item.movie.title"
+                :src="getPosterUrl(item)" 
+                :alt="item.movie?.title || item.title"
                 class="tvtime-poster clickable"
                 @click="openDetailModal(item)"
                 @error="onImageError"
@@ -192,7 +192,7 @@
 
               <div class="tvtime-card-body">
                 <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <span>{{ item.movie.title.toUpperCase() }}</span> &gt;
+                  <span>{{ (item.movie?.title || item.title || '').toUpperCase() }}</span> &gt;
                 </div>
 
                 <div class="eps-headline">
@@ -231,8 +231,8 @@
             class="tvtime-card glass-card upcoming-card"
           >
             <img 
-              :src="getPosterUrl(item.movie)" 
-              :alt="item.movie.title"
+              :src="getPosterUrl(item)" 
+              :alt="item.movie?.title || item.title"
               class="tvtime-poster clickable"
               @click="openDetailModal(item)"
               @error="onImageError"
@@ -240,7 +240,7 @@
 
             <div class="tvtime-card-body">
               <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                <span>{{ item.movie.title.toUpperCase() }}</span> &gt;
+                <span>{{ (item.movie?.title || item.title || '').toUpperCase() }}</span> &gt;
               </div>
 
               <div class="upcoming-date-box">
@@ -250,11 +250,11 @@
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                <span>Airs: <strong>{{ item.movie.next_air_date }}</strong></span>
+                <span>Airs: <strong>{{ item.movie?.next_air_date }}</strong></span>
               </div>
 
-              <p class="eps-title-text" v-if="item.movie.next_episode_name">
-                Episode: "{{ item.movie.next_episode_name }}"
+              <p class="eps-title-text" v-if="item.movie?.next_episode_name">
+                Episode: "{{ item.movie?.next_episode_name }}"
               </p>
             </div>
           </div>
@@ -287,8 +287,8 @@
         >
           <div class="card-poster clickable" @click="openDetailModal(item)">
             <img 
-              :src="getPosterUrl(item.movie)" 
-              :alt="item.movie.title"
+              :src="getPosterUrl(item)" 
+              :alt="item.movie?.title || item.title"
               class="poster-img"
               @error="onImageError"
             />
@@ -611,10 +611,42 @@ const fetchWatchlist = async () => {
 
     const res: any = await api.getLibrary(params)
     watchlist.value = res.data || []
+    
+    // Auto-enrich any items that might have missing posters in the database
+    enrichMissingMetadata()
   } catch (err) {
     console.error(err)
   } finally {
     isLoading.value = false
+  }
+}
+
+const enrichMissingMetadata = async () => {
+  for (const item of watchlist.value) {
+    const m = item.movie || item
+    const hasPoster = m.poster_path && m.poster_path !== ''
+    const tmdbId = m.tmdb_id || m.id
+    if (!hasPoster && tmdbId) {
+      try {
+        const detailRes: any = await $fetch(useApiUrl('/api/detail'), {
+          params: {
+            id: tmdbId,
+            type: m.media_type || mediaTypeTab.value || 'movie'
+          }
+        })
+        if (detailRes?.data?.poster_path) {
+          if (item.movie) {
+            item.movie.poster_path = detailRes.data.poster_path
+            item.movie.backdrop_path = detailRes.data.backdrop_path || item.movie.backdrop_path
+          } else {
+            item.poster_path = detailRes.data.poster_path
+            item.backdrop_path = detailRes.data.backdrop_path || item.backdrop_path
+          }
+        }
+      } catch {
+        // silent
+      }
+    }
   }
 }
 
@@ -675,20 +707,37 @@ const getEpisodeStillUrl = (path: string) => {
 const openDetailModal = async (contextItem: any) => {
   let movieObj = contextItem.movie ? contextItem.movie : contextItem
   activeWatchlistContext.value = contextItem.movie ? contextItem : null
-  activeDetailMedia.value = movieObj
+  activeDetailMedia.value = { ...movieObj }
   showDetailModal.value = true
   selectedSeason.value = activeWatchlistContext.value?.season_watched || 1
 
-  if (activeDetailMedia.value?.id || activeDetailMedia.value?.tmdb_id) {
+  const tmdbId = activeDetailMedia.value?.tmdb_id || activeDetailMedia.value?.id
+  const mediaType = activeDetailMedia.value?.media_type || mediaTypeTab.value || 'movie'
+
+  if (tmdbId) {
     try {
       const detailRes: any = await $fetch(useApiUrl('/api/detail'), {
         params: {
-          id: activeDetailMedia.value.tmdb_id || activeDetailMedia.value.id,
-          type: activeDetailMedia.value.media_type || mediaTypeTab.value
+          id: tmdbId,
+          type: mediaType
         }
       })
-      if (detailRes.data) {
+      if (detailRes?.data) {
+        // 1. Update modal object
         activeDetailMedia.value = { ...activeDetailMedia.value, ...detailRes.data }
+
+        // 2. Reactively update the dashboard card poster & details in real-time
+        if (contextItem && contextItem.movie) {
+          contextItem.movie.poster_path = detailRes.data.poster_path || contextItem.movie.poster_path
+          contextItem.movie.backdrop_path = detailRes.data.backdrop_path || contextItem.movie.backdrop_path
+          contextItem.movie.overview = detailRes.data.overview || contextItem.movie.overview
+          contextItem.movie.director = detailRes.data.director || contextItem.movie.director
+        }
+        const match = watchlist.value.find(w => w.id === contextItem.id || (w.movie && (w.movie.id === movieObj.id || w.movie.tmdb_id === tmdbId)))
+        if (match && match.movie) {
+          match.movie.poster_path = detailRes.data.poster_path || match.movie.poster_path
+          match.movie.backdrop_path = detailRes.data.backdrop_path || match.movie.backdrop_path
+        }
       }
     } catch (e) {
       console.error(e)
