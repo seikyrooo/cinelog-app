@@ -120,8 +120,8 @@ const uploadAvatarFile = async (file: File) => {
     error.value = 'Please select a valid image file (JPG, PNG, WEBP, GIF).'
     return
   }
-  if (file.size > 5 * 1024 * 1024) {
-    error.value = 'Image size must be less than 5MB.'
+  if (file.size > 10 * 1024 * 1024) {
+    error.value = 'Image size must be less than 10MB.'
     return
   }
 
@@ -141,8 +141,8 @@ const uploadAvatarFile = async (file: File) => {
       message.value = 'Avatar uploaded successfully!'
     }
   } catch (err: any) {
-    console.error(err)
-    error.value = err?.data?.error || 'Failed to upload avatar image.'
+    console.error('Avatar upload error:', err)
+    error.value = err?.data?.error || err?.response?._data?.error || err?.message || 'Failed to upload avatar image.'
   } finally {
     isUploadingAvatar.value = false
   }
