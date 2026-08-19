@@ -141,22 +141,35 @@ export const useApi = () => {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    try {
-      return await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/me/avatar'), {
-        method: 'POST',
-        headers,
-        body: formData
-      })
-    } catch (err: any) {
-      if (err?.status === 404 || err?.statusCode === 404 || err?.response?.status === 404) {
-        return await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/user/avatar'), {
+    const endpoints = [
+      '/api/me/avatar',
+      '/api/user/avatar',
+      '/api/avatar',
+      '/me/avatar',
+      '/user/avatar',
+      '/avatar'
+    ]
+
+    let lastError: any = null
+    for (const ep of endpoints) {
+      try {
+        const res = await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl(ep), {
           method: 'POST',
           headers,
           body: formData
         })
+        if (res?.data) {
+          return res
+        }
+      } catch (err: any) {
+        lastError = err
+        const is404 = err?.status === 404 || err?.statusCode === 404 || err?.response?.status === 404
+        if (!is404) {
+          throw err
+        }
       }
-      throw err
     }
+    throw lastError || new Error('Avatar upload failed: endpoint not reachable.')
   }
 
   const getRadar = () => $fetch<{ success: boolean; data: any[] }>(useApiUrl('/api/me/radar'), {
