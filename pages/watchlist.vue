@@ -73,88 +73,118 @@
             <div 
               v-for="item in watchNextList" 
               :key="item.id"
-              class="tvtime-card glass-card"
+              class="swipe-action-wrapper"
+              :class="{ 'swipe-active': activeSwipeItemId === item.id }"
             >
-              <img 
-                :src="getPosterUrl(item)" 
-                :alt="item.movie?.title || item.title"
-                class="tvtime-poster clickable"
-                @click="openDetailModal(item)"
-                @error="onImageError"
-              />
-
-              <div class="tvtime-card-body">
-                <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="9 18 15 12 9 6"></polyline>
+              <!-- Background Action Reveal Layer (Swipe Right) -->
+              <div 
+                class="swipe-action-reveal"
+                :style="{
+                  opacity: activeSwipeItemId === item.id ? Math.min(1, swipeOffset / 50) : 0,
+                  transform: `scale(${activeSwipeItemId === item.id ? Math.min(1, 0.75 + (swipeOffset / 250)) : 0.8})`
+                }"
+              >
+                <div class="swipe-reveal-content">
+                  <svg class="swipe-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                </div>
-
-                <div class="eps-headline">
-                  <span class="season-eps-code">
-                    {{ getEpisodeProgressCode(item) }}
-                  </span>
-                  <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                    +{{ getRemainingEps(item) }} eps left
-                  </span>
-                </div>
-
-                <p class="eps-title-text clickable" @click="openDetailModal(item)">
-                  <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
-                </p>
-
-                <div class="card-badges-row">
-                  <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
-                  <span v-if="item.favorite" class="badge-fav">★ FAVORITE</span>
-                  <span class="badge-total-info" v-if="getTotalEps(item) > 0">
-                    {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
-                  </span>
-                </div>
-
-                <!-- Interactive Quick Rating Bar -->
-                <div class="card-rating-quick-bar" @click.stop>
-                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
-                  <div class="quick-stars">
-                    <span 
-                      v-for="star in 10" 
-                      :key="star"
-                      @click="updateItemRating(item, star)"
-                      :class="['mini-star', { active: star <= (item.rating || 0) }]"
-                      :title="'Rate ' + star + ' / 10'"
-                    >★</span>
-                  </div>
-                  <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                  <span class="swipe-text">Watched</span>
                 </div>
               </div>
 
-              <!-- Side Actions (Increment Episode + Remove) -->
-              <div class="card-side-actions">
-                <button 
-                  @click="incrementEpisode(item)" 
-                  :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
-                  :disabled="getRemainingEps(item) === 0"
-                  title="Mark this episode watched"
-                  aria-label="Mark episode watched"
-                >
-                  <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </button>
+              <!-- Foreground Card (Draggable) -->
+              <div 
+                class="tvtime-card glass-card"
+                :style="getCardSwipeStyle(item.id)"
+                @touchstart="onTouchStart($event, item)"
+                @touchmove="onTouchMove($event, item)"
+                @touchend="onTouchEnd($event, item)"
+                @pointerdown="onPointerDown($event, item)"
+                @pointermove="onPointerMove($event, item)"
+                @pointerup="onPointerUp($event, item)"
+                @pointercancel="onPointerCancel($event, item)"
+              >
+                <img 
+                  :src="getPosterUrl(item)" 
+                  :alt="item.movie?.title || item.title"
+                  class="tvtime-poster clickable"
+                  @click="openDetailModal(item)"
+                  @error="onImageError"
+                />
 
-                <button 
-                  @click.stop="deleteItem(item.id)" 
-                  class="circle-trash-btn"
-                  title="Remove from Watchlist"
-                  aria-label="Remove from Watchlist"
-                >
-                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                  </svg>
-                </button>
+                <div class="tvtime-card-body">
+                  <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                    <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </div>
+
+                  <div class="eps-headline">
+                    <span class="season-eps-code">
+                      {{ getEpisodeProgressCode(item) }}
+                    </span>
+                    <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
+                      +{{ getRemainingEps(item) }} eps left
+                    </span>
+                  </div>
+
+                  <p class="eps-title-text clickable" @click="openDetailModal(item)">
+                    <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
+                  </p>
+
+                  <div class="card-badges-row">
+                    <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
+                    <span v-if="item.favorite" class="badge-fav">★ FAVORITE</span>
+                    <span class="badge-total-info" v-if="getTotalEps(item) > 0">
+                      {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
+                    </span>
+                  </div>
+
+                  <!-- Interactive Quick Rating Bar -->
+                  <div class="card-rating-quick-bar" @click.stop>
+                    <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
+                    <div class="quick-stars">
+                      <span 
+                        v-for="star in 10" 
+                        :key="star"
+                        @click="updateItemRating(item, star)"
+                        :class="['mini-star', { active: star <= (item.rating || 0) }]"
+                        :title="'Rate ' + star + ' / 10'"
+                      >★</span>
+                    </div>
+                    <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                  </div>
+                </div>
+
+                <!-- Side Actions (Increment Episode + Remove) -->
+                <div class="card-side-actions">
+                  <button 
+                    @click="incrementEpisode(item)" 
+                    :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
+                    :disabled="getRemainingEps(item) === 0"
+                    title="Mark this episode watched"
+                    aria-label="Mark episode watched"
+                  >
+                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+
+                  <button 
+                    @click.stop="deleteItem(item.id)" 
+                    class="circle-trash-btn"
+                    title="Remove from Watchlist"
+                    aria-label="Remove from Watchlist"
+                  >
+                    <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -170,62 +200,92 @@
             <div 
               v-for="item in haventWatchedList" 
               :key="item.id" 
-              class="tvtime-card glass-card idle-card"
+              class="swipe-action-wrapper"
+              :class="{ 'swipe-active': activeSwipeItemId === item.id }"
             >
-              <img 
-                :src="getPosterUrl(item)" 
-                :alt="item.movie?.title || item.title"
-                class="tvtime-poster clickable"
-                @click="openDetailModal(item)"
-                @error="onImageError"
-              />
-
-              <div class="tvtime-card-body">
-                <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-
-                <div class="eps-headline">
-                  <span class="season-eps-code">
-                    {{ getEpisodeProgressCode(item) }}
-                  </span>
-                  <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                    +{{ getRemainingEps(item) }} eps left
-                  </span>
-                </div>
-
-                <p class="eps-title-text">Paused watching</p>
-              </div>
-
-              <div class="card-side-actions">
-                <button 
-                  @click="incrementEpisode(item)" 
-                  :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
-                  :disabled="getRemainingEps(item) === 0"
-                  title="Mark this episode watched"
-                  aria-label="Mark episode watched"
-                >
-                  <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+              <!-- Background Action Reveal Layer (Swipe Right) -->
+              <div 
+                class="swipe-action-reveal"
+                :style="{
+                  opacity: activeSwipeItemId === item.id ? Math.min(1, swipeOffset / 50) : 0,
+                  transform: `scale(${activeSwipeItemId === item.id ? Math.min(1, 0.75 + (swipeOffset / 250)) : 0.8})`
+                }"
+              >
+                <div class="swipe-reveal-content">
+                  <svg class="swipe-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                </button>
+                  <span class="swipe-text">Watched</span>
+                </div>
+              </div>
 
-                <button 
-                  @click.stop="deleteItem(item.id)" 
-                  class="circle-trash-btn"
-                  title="Remove from Watchlist"
-                  aria-label="Remove from Watchlist"
-                >
-                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                  </svg>
-                </button>
+              <!-- Foreground Card (Draggable) -->
+              <div 
+                class="tvtime-card glass-card idle-card"
+                :style="getCardSwipeStyle(item.id)"
+                @touchstart="onTouchStart($event, item)"
+                @touchmove="onTouchMove($event, item)"
+                @touchend="onTouchEnd($event, item)"
+                @pointerdown="onPointerDown($event, item)"
+                @pointermove="onPointerMove($event, item)"
+                @pointerup="onPointerUp($event, item)"
+                @pointercancel="onPointerCancel($event, item)"
+              >
+                <img 
+                  :src="getPosterUrl(item)" 
+                  :alt="item.movie?.title || item.title"
+                  class="tvtime-poster clickable"
+                  @click="openDetailModal(item)"
+                  @error="onImageError"
+                />
+
+                <div class="tvtime-card-body">
+                  <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                    <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </div>
+
+                  <div class="eps-headline">
+                    <span class="season-eps-code">
+                      {{ getEpisodeProgressCode(item) }}
+                    </span>
+                    <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
+                      +{{ getRemainingEps(item) }} eps left
+                    </span>
+                  </div>
+
+                  <p class="eps-title-text">Paused watching</p>
+                </div>
+
+                <div class="card-side-actions">
+                  <button 
+                    @click="incrementEpisode(item)" 
+                    :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
+                    :disabled="getRemainingEps(item) === 0"
+                    title="Mark this episode watched"
+                    aria-label="Mark episode watched"
+                  >
+                    <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+
+                  <button 
+                    @click.stop="deleteItem(item.id)" 
+                    class="circle-trash-btn"
+                    title="Remove from Watchlist"
+                    aria-label="Remove from Watchlist"
+                  >
+                    <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -731,6 +791,147 @@ const activeWatchlistContext = ref<any>(null)
 const selectedSeason = ref(1)
 const isLoadingEpisodes = ref(false)
 const episodesList = ref<any[]>([])
+
+// Swipe-to-Watched Gesture State & Handlers
+const activeSwipeItemId = ref<number | null>(null)
+const swipeOffset = ref(0)
+const isSwiping = ref(false)
+let startX = 0
+let startY = 0
+let isHorizontalGesture = false
+let currentSwipingItem: any = null
+const SWIPE_THRESHOLD = 85
+
+const getCardSwipeStyle = (itemId: number) => {
+  if (activeSwipeItemId.value === itemId && swipeOffset.value > 0) {
+    return {
+      transform: `translateX(${swipeOffset.value}px)`,
+      transition: isSwiping.value ? 'none' : 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)'
+    }
+  }
+  return {
+    transform: 'translateX(0px)',
+    transition: 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)'
+  }
+}
+
+const handleSwipeStart = (clientX: number, clientY: number, item: any, target: HTMLElement | null) => {
+  if (!target) return false
+  if (target.closest('button') || target.closest('.quick-stars') || target.closest('.mini-star') || target.closest('.card-side-actions') || target.closest('.show-title-tag') || target.closest('.clickable')) {
+    return false
+  }
+  if (getRemainingEps(item) === 0 && item.status === 'completed') {
+    return false
+  }
+  startX = clientX
+  startY = clientY
+  currentSwipingItem = item
+  isHorizontalGesture = false
+  isSwiping.value = true
+  return true
+}
+
+const handleSwipeMove = (clientX: number, clientY: number) => {
+  if (!isSwiping.value || !currentSwipingItem) return
+  const deltaX = clientX - startX
+  const deltaY = clientY - startY
+
+  if (!isHorizontalGesture) {
+    if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+      if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+        isHorizontalGesture = true
+        activeSwipeItemId.value = currentSwipingItem.id
+      } else {
+        handleSwipeCancel()
+        return
+      }
+    }
+  }
+
+  if (isHorizontalGesture && deltaX > 0) {
+    if (deltaX > SWIPE_THRESHOLD) {
+      swipeOffset.value = SWIPE_THRESHOLD + (deltaX - SWIPE_THRESHOLD) * 0.35
+    } else {
+      swipeOffset.value = deltaX
+    }
+  }
+}
+
+const handleSwipeEnd = () => {
+  if (!isSwiping.value || !currentSwipingItem) {
+    handleSwipeCancel()
+    return
+  }
+
+  const triggeredItem = currentSwipingItem
+  const offset = swipeOffset.value
+  isSwiping.value = false
+
+  if (offset >= SWIPE_THRESHOLD) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(40) } catch (_) {}
+    }
+    swipeOffset.value = 160
+    setTimeout(() => {
+      incrementEpisode(triggeredItem)
+      setTimeout(() => {
+        handleSwipeCancel()
+      }, 150)
+    }, 120)
+  } else {
+    swipeOffset.value = 0
+    setTimeout(() => {
+      activeSwipeItemId.value = null
+      currentSwipingItem = null
+    }, 250)
+  }
+}
+
+const handleSwipeCancel = () => {
+  isSwiping.value = false
+  swipeOffset.value = 0
+  activeSwipeItemId.value = null
+  currentSwipingItem = null
+  isHorizontalGesture = false
+}
+
+const onTouchStart = (e: TouchEvent, item: any) => {
+  const touch = e.touches[0]
+  handleSwipeStart(touch.clientX, touch.clientY, item, e.target as HTMLElement)
+}
+
+const onTouchMove = (e: TouchEvent, item: any) => {
+  if (!isSwiping.value) return
+  const touch = e.touches[0]
+  handleSwipeMove(touch.clientX, touch.clientY)
+  if (isHorizontalGesture) {
+    e.preventDefault()
+  }
+}
+
+const onTouchEnd = () => {
+  handleSwipeEnd()
+}
+
+const onPointerDown = (e: PointerEvent, item: any) => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return
+  const ok = handleSwipeStart(e.clientX, e.clientY, item, e.target as HTMLElement)
+  if (ok) {
+    (e.currentTarget as HTMLElement)?.setPointerCapture?.(e.pointerId)
+  }
+}
+
+const onPointerMove = (e: PointerEvent) => {
+  handleSwipeMove(e.clientX, e.clientY)
+}
+
+const onPointerUp = () => {
+  handleSwipeEnd()
+}
+
+const onPointerCancel = () => {
+  handleSwipeCancel()
+}
 
 const showToast = (msg: string) => {
   toastMessage.value = msg
@@ -1605,7 +1806,52 @@ const deleteItem = async (id: number) => {
   gap: 12px;
 }
 
+/* Swipe-to-Watched Action Styling */
+.swipe-action-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  touch-action: pan-y;
+}
+
+.swipe-action-reveal {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #15803d 0%, #22c55e 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding-left: 28px;
+  color: #ffffff;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.1s ease, transform 0.15s ease;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.swipe-reveal-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.swipe-check-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.swipe-text {
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 .tvtime-card {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -1613,7 +1859,8 @@ const deleteItem = async (id: number) => {
   border-radius: 10px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  transition: all 0.2s ease;
+  user-select: none;
+  touch-action: pan-y;
 }
 
 .tvtime-card:hover {
