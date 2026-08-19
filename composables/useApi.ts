@@ -130,11 +130,24 @@ export const useApi = () => {
     headers: authHeaders()
   })
 
-  const uploadAvatar = (formData: FormData) => $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/me/avatar'), {
-    method: 'POST',
-    headers: authHeaders(),
-    body: formData
-  })
+  const uploadAvatar = async (formData: FormData) => {
+    try {
+      return await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/me/avatar'), {
+        method: 'POST',
+        headers: authHeaders(),
+        body: formData
+      })
+    } catch (err: any) {
+      if (err?.status === 404 || err?.statusCode === 404 || err?.response?.status === 404) {
+        return await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/user/avatar'), {
+          method: 'POST',
+          headers: authHeaders(),
+          body: formData
+        })
+      }
+      throw err
+    }
+  }
 
   const getRadar = () => $fetch<{ success: boolean; data: any[] }>(useApiUrl('/api/me/radar'), {
     headers: authHeaders()
