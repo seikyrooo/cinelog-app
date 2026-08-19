@@ -274,10 +274,10 @@
           </div>
         </div>
 
-        <!-- SECTION 3: COMPLETED / TAMAT -->
+        <!-- SECTION 3: COMPLETED -->
         <div v-if="watchedHistoryList.length > 0" class="section-group">
           <div class="section-pill-header">
-            <span class="pill-badge completed-history-badge">COMPLETED HISTORY (TAMAT)</span>
+            <span class="pill-badge completed-history-badge">COMPLETED</span>
           </div>
 
           <div class="shows-stack">
@@ -303,14 +303,10 @@
                 </div>
 
                 <div class="eps-headline">
-                  <span class="season-eps-code completed-code">
-                    ✓ All {{ getTotalEps(item) }} Episodes Watched
+                  <span class="badge badge-completed">
+                    All {{ getTotalEps(item) }} Episodes Watched
                   </span>
                 </div>
-
-                <p class="history-completed-text">
-                  Series Completed.
-                </p>
 
                 <!-- Interactive Quick Rating Bar -->
                 <div class="card-rating-quick-bar" @click.stop>
@@ -535,14 +531,15 @@
             <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
               {{ getStatusLabel(item.status) }}
             </span>
-            <span v-if="item.favorite" class="fav-badge">★ Favorite</span>
+            <span v-if="item.favorite" class="favorite-tag">Favorite</span>
           </div>
 
           <div class="card-details">
             <div class="details-top">
               <span class="movie-year">{{ formatYear(item.movie?.release_date || item.release_date) }}</span>
-              <span class="user-rating" v-if="item.rating > 0">
-                ★ <strong>{{ item.rating }}</strong> / 10
+              <span class="user-rating-pill" v-if="item.rating > 0">
+                <span class="star-icon">★</span>
+                <span class="rating-val">{{ item.rating }}/10</span>
               </span>
             </div>
 

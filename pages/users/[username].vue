@@ -81,8 +81,11 @@
             <h2>{{ item.movie?.title || 'Untitled' }}</h2>
             <p>{{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }} · {{ getStatusLabel(item.status) }}</p>
             <div class="card-footer-tags">
-              <strong v-if="item.rating" class="rating-tag">{{ item.rating }}/10</strong>
-              <strong v-if="item.favorite" class="favorite-tag">Favorite</strong>
+              <span v-if="item.rating" class="user-rating-pill">
+                <span class="star-icon">★</span>
+                <span class="rating-val">{{ item.rating }}/10</span>
+              </span>
+              <span v-if="item.favorite" class="favorite-tag">Favorite</span>
             </div>
           </div>
         </article>
