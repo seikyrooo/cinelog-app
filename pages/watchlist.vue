@@ -85,12 +85,15 @@
 
               <div class="tvtime-card-body">
                 <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <span>{{ item.movie.title.toUpperCase() }}</span> &gt;
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
                 </div>
 
                 <div class="eps-headline">
                   <span class="season-eps-code">
-                    S{{ padZero(item.season_watched || 1) }} | E{{ padZero((item.episodes_watched || 0) + 1) }}
+                    {{ getEpisodeProgressCode(item) }}
                   </span>
                   <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
                     +{{ getRemainingEps(item) }} eps left
@@ -113,7 +116,8 @@
               <!-- Circle Checkmark Button (Increment Episode) -->
               <button 
                 @click="incrementEpisode(item)" 
-                class="circle-check-btn"
+                :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
+                :disabled="getRemainingEps(item) === 0"
                 title="Mark this episode watched"
               >
                 <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
@@ -133,7 +137,7 @@
           <div class="shows-stack">
             <div 
               v-for="item in haventWatchedList" 
-              :key="item.id"
+              :key="item.id" 
               class="tvtime-card glass-card idle-card"
             >
               <img 
@@ -146,12 +150,15 @@
 
               <div class="tvtime-card-body">
                 <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <span>{{ item.movie.title.toUpperCase() }}</span> &gt;
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
                 </div>
 
                 <div class="eps-headline">
                   <span class="season-eps-code">
-                    S{{ padZero(item.season_watched || 1) }} | E{{ padZero((item.episodes_watched || 0) + 1) }}
+                    {{ getEpisodeProgressCode(item) }}
                   </span>
                   <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
                     +{{ getRemainingEps(item) }} eps left
@@ -161,7 +168,12 @@
                 <p class="eps-title-text">Paused watching</p>
               </div>
 
-              <button @click="incrementEpisode(item)" class="circle-check-btn" title="Mark this episode watched">
+              <button 
+                @click="incrementEpisode(item)" 
+                :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
+                :disabled="getRemainingEps(item) === 0"
+                title="Mark this episode watched"
+              >
                 <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
@@ -179,7 +191,7 @@
           <div class="shows-stack">
             <div 
               v-for="item in watchedHistoryList" 
-              :key="item.id"
+              :key="item.id" 
               class="tvtime-card glass-card completed-card"
             >
               <img 
@@ -192,12 +204,15 @@
 
               <div class="tvtime-card-body">
                 <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <span>{{ (item.movie?.title || item.title || '').toUpperCase() }}</span> &gt;
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
                 </div>
 
                 <div class="eps-headline">
                   <span class="season-eps-code">
-                    S{{ padZero(item.season_watched || 1) }} | E{{ padZero(item.episodes_watched || getTotalEps(item)) }}
+                    S{{ padZero(item.movie?.total_seasons || item.season_watched || 1) }} | ALL CAUGHT UP
                   </span>
                   <span class="badge-completed-tag">COMPLETED ({{ item.episodes_watched || getTotalEps(item) }} eps)</span>
                 </div>
@@ -240,7 +255,10 @@
 
             <div class="tvtime-card-body">
               <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                <span>{{ (item.movie?.title || item.title || '').toUpperCase() }}</span> &gt;
+                <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
               </div>
 
               <div class="upcoming-date-box">
@@ -677,9 +695,48 @@ const getRemainingEps = (item: any) => {
   return Math.max(0, total - watched)
 }
 
+const getEpisodeProgressCode = (item: any) => {
+  const totalWatched = item.episodes_watched || 0
+  const nextWatched = totalWatched + 1
+  const totalEps = getTotalEps(item)
+
+  if (item.status === 'completed' || (totalEps > 0 && totalWatched >= totalEps)) {
+    return `S${padZero(item.movie?.total_seasons || item.season_watched || 1)} | All Caught Up`
+  }
+
+  // If detailed seasons info is available
+  const seasons = item.movie?.seasons || item.seasons || []
+  if (seasons && seasons.length > 0) {
+    let accumulated = 0
+    for (const s of seasons) {
+      const count = s.episode_count || 0
+      if (nextWatched <= accumulated + count) {
+        const episodeInSeason = nextWatched - accumulated
+        return `S${padZero(s.season_number || 1)} | E${padZero(episodeInSeason)}`
+      }
+      accumulated += count
+    }
+  }
+
+  // Heuristic for multi-season TV shows
+  const totalSeasons = item.movie?.total_seasons || 1
+  if (totalSeasons > 1 && totalEps > 0) {
+    const avgPerSeason = Math.ceil(totalEps / totalSeasons)
+    const currentSeason = Math.min(totalSeasons, Math.floor(totalWatched / avgPerSeason) + 1)
+    const currentEpsInSeason = (totalWatched % avgPerSeason) + 1
+    return `S${padZero(currentSeason)} | E${padZero(currentEpsInSeason)}`
+  }
+
+  // Single season fallback
+  return `S${padZero(item.season_watched || 1)} | E${padZero(nextWatched)}`
+}
+
 const getNextEpsName = (item: any) => {
   if (item.movie?.next_episode_name) return item.movie.next_episode_name
-  const nextNum = (item.episodes_watched || 0) + 1
+  const totalWatched = item.episodes_watched || 0
+  const totalEps = getTotalEps(item)
+  if (totalEps > 0 && totalWatched >= totalEps) return 'Season Completed'
+  const nextNum = totalWatched + 1
   return `Episode ${nextNum}`
 }
 
@@ -956,17 +1013,24 @@ const getStatusLabel = (status: string) => {
 }
 
 const incrementEpisode = async (item: any) => {
+  const total = getTotalEps(item)
+  if (item.status === 'completed' || (total > 0 && item.episodes_watched >= total)) {
+    showToast('🎉 All episodes already watched! Show is in Completed History.')
+    return
+  }
+
   try {
     const res: any = await api.incrementLibraryProgress(item.id)
     if (res.data) {
       item.episodes_watched = res.data.episodes_watched
+      item.season_watched = res.data.season_watched
       item.status = res.data.status
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Completed! Moved to Completed History')
+        showToast('🎉 Series Completed! Moved to Completed History')
       } else {
-        showToast(`+1 Episode! Total ${item.episodes_watched} eps watched`)
+        showToast(`+1 Episode logged! (${getEpisodeProgressCode(item)})`)
       }
     }
   } catch (err) {
@@ -1253,20 +1317,37 @@ const deleteItem = async (id: number) => {
 .show-title-tag {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #ffffff;
+  gap: 6px;
   width: fit-content;
   margin-bottom: 6px;
+  cursor: pointer;
 }
 
-.show-title-tag:hover {
-  border-color: var(--border-red);
+.show-card-title {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  transition: color 0.15s ease;
+  margin: 0;
+}
+
+.show-title-tag:hover .show-card-title {
   color: var(--accent-red);
+}
+
+.chevron-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.show-title-tag:hover .chevron-icon {
+  color: var(--accent-red);
+  transform: translateX(3px);
 }
 
 .eps-headline {
@@ -1361,17 +1442,20 @@ const deleteItem = async (id: number) => {
   margin-left: 8px;
 }
 
-.circle-check-btn:hover {
+.circle-check-btn:hover:not(:disabled) {
   background: var(--accent-red);
   color: #ffffff;
   border-color: var(--accent-red);
   transform: scale(1.06);
 }
 
-.circle-check-btn.completed {
+.circle-check-btn.completed,
+.circle-check-btn:disabled {
   background: var(--accent-success);
   color: #ffffff;
   border-color: var(--accent-success);
+  cursor: default;
+  transform: none;
 }
 
 .upcoming-date-box {
