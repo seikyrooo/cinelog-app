@@ -26,6 +26,23 @@ export type PublicProfile = {
   user: ApiUser & { created_at?: string }
   favorite_count: number
   rating_count: number
+  followers_count?: number
+  following_count?: number
+  is_following?: boolean
+  is_self?: boolean
+}
+
+export type CommunityUser = {
+  id: number
+  username: string
+  bio?: string
+  avatar_url?: string
+  followers_count: number
+  following_count: number
+  watched_count: number
+  is_following: boolean
+  is_self: boolean
+  created_at: string
 }
 
 export const useApi = () => {
@@ -82,11 +99,26 @@ export const useApi = () => {
     body: payload
   })
 
-  const getPublicProfile = (username: string) => $fetch<{ success: boolean; data: PublicProfile }>(useApiUrl(`/api/users/${encodeURIComponent(username)}`))
+  const getPublicProfile = (username: string) => $fetch<{ success: boolean; data: PublicProfile }>(useApiUrl(`/api/users/${encodeURIComponent(username)}`), {
+    headers: authHeaders()
+  })
 
   const getPublicFavorites = (username: string) => $fetch<{ success: boolean; data: any[] }>(useApiUrl(`/api/users/${encodeURIComponent(username)}/favorites`))
 
   const getPublicRatings = (username: string) => $fetch<{ success: boolean; data: any[] }>(useApiUrl(`/api/users/${encodeURIComponent(username)}/ratings`))
+
+  const searchUsers = (query?: string) => $fetch<{ success: boolean; data: CommunityUser[] }>(useApiUrl('/api/users/search'), {
+    headers: authHeaders(),
+    params: query ? { q: query } : undefined
+  })
+
+  const getUserFollowers = (username: string) => $fetch<{ success: boolean; data: CommunityUser[] }>(useApiUrl(`/api/users/${encodeURIComponent(username)}/followers`), {
+    headers: authHeaders()
+  })
+
+  const getUserFollowing = (username: string) => $fetch<{ success: boolean; data: CommunityUser[] }>(useApiUrl(`/api/users/${encodeURIComponent(username)}/following`), {
+    headers: authHeaders()
+  })
 
   const followUser = (id: number | string) => $fetch<{ message: string; data: any }>(useApiUrl(`/api/me/follow/${id}`), {
     method: 'POST',
@@ -130,6 +162,9 @@ export const useApi = () => {
     getPublicProfile,
     getPublicFavorites,
     getPublicRatings,
+    searchUsers,
+    getUserFollowers,
+    getUserFollowing,
     followUser,
     unfollowUser
   }

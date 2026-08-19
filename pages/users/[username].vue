@@ -29,13 +29,21 @@
           <p class="bio-text">{{ profile.user.bio || 'No bio provided yet.' }}</p>
         </div>
         <div class="public-stats" aria-label="Public statistics">
-          <div class="stat-card">
+          <div class="stat-card clickable" @click="activeTab = 'favorites'">
             <strong>{{ profile.favorite_count }}</strong>
             <span>Favorites</span>
           </div>
-          <div class="stat-card">
+          <div class="stat-card clickable" @click="activeTab = 'ratings'">
             <strong>{{ profile.rating_count }}</strong>
             <span>Ratings</span>
+          </div>
+          <div class="stat-card clickable" @click="selectFollowTab('followers')">
+            <strong>{{ profile.followers_count ?? followers.length }}</strong>
+            <span>Followers</span>
+          </div>
+          <div class="stat-card clickable" @click="selectFollowTab('following')">
+            <strong>{{ profile.following_count ?? following.length }}</strong>
+            <span>Following</span>
           </div>
         </div>
       </header>
@@ -47,13 +55,21 @@
         <button :class="['tab-btn', { active: activeTab === 'ratings' }]" type="button" @click="activeTab = 'ratings'">
           Public Ratings ({{ ratings.length }})
         </button>
+        <button :class="['tab-btn', { active: activeTab === 'followers' }]" type="button" @click="selectFollowTab('followers')">
+          Followers ({{ profile.followers_count ?? followers.length }})
+        </button>
+        <button :class="['tab-btn', { active: activeTab === 'following' }]" type="button" @click="selectFollowTab('following')">
+          Following ({{ profile.following_count ?? following.length }})
+        </button>
       </div>
 
-      <div v-if="activeItems.length === 0" class="public-state glass-card">
+      <!-- State: Empty Media -->
+      <div v-if="(activeTab === 'favorites' || activeTab === 'ratings') && activeItems.length === 0" class="public-state glass-card">
         No public {{ activeTab === 'favorites' ? 'favorites' : 'ratings' }} shared yet.
       </div>
 
-      <div v-else class="public-grid">
+      <!-- Media Grid -->
+      <div v-else-if="activeTab === 'favorites' || activeTab === 'ratings'" class="public-grid">
         <article v-for="item in activeItems" :key="item.id" class="public-card glass-card">
           <div class="public-card-poster">
             <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Media poster'" @error="onImageError" />
@@ -71,6 +87,41 @@
           </div>
         </article>
       </div>
+
+      <!-- Followers / Following List -->
+      <div v-else-if="activeTab === 'followers' || activeTab === 'following'" class="followers-tab-content">
+        <div v-if="isLoadingFollows" class="public-state glass-card">
+          <div class="spinner"></div>
+          <p>Loading {{ activeTab }}...</p>
+        </div>
+        <div v-else-if="currentFollowUsers.length === 0" class="public-state glass-card">
+          <p>No {{ activeTab }} to display yet.</p>
+        </div>
+        <div v-else class="followers-grid">
+          <article v-for="user in currentFollowUsers" :key="user.id" class="follower-card glass-card">
+            <NuxtLink :to="`/users/${user.username}`" class="follower-avatar">
+              <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" />
+              <span v-else>{{ user.username.slice(0, 2).toUpperCase() }}</span>
+            </NuxtLink>
+            <div class="follower-meta">
+              <NuxtLink :to="`/users/${user.username}`" class="follower-username">
+                <h4>@{{ user.username }}</h4>
+              </NuxtLink>
+              <p class="follower-bio">{{ user.bio || 'Film lover on CineLog.' }}</p>
+            </div>
+            <div class="follower-action">
+              <span v-if="user.is_self" class="self-badge">You</span>
+              <button
+                v-else-if="authStore.isAuth"
+                @click="toggleUserFollow(user)"
+                :class="['btn-follow-chip', { following: user.is_following }]"
+              >
+                {{ user.is_following ? 'Following ✓' : '+ Follow' }}
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
     </template>
   </section>
 </template>
@@ -78,7 +129,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
-import type { PublicProfile } from '~/composables/useApi'
+import type { PublicProfile, CommunityUser } from '~/composables/useApi'
 
 const route = useRoute()
 const api = useApi()
@@ -88,12 +139,16 @@ const username = computed(() => String(route.params.username || ''))
 const profile = ref<PublicProfile | null>(null)
 const favorites = ref<any[]>([])
 const ratings = ref<any[]>([])
-const activeTab = ref<'favorites' | 'ratings'>('favorites')
+const followers = ref<CommunityUser[]>([])
+const following = ref<CommunityUser[]>([])
+const activeTab = ref<'favorites' | 'ratings' | 'followers' | 'following'>('favorites')
 const isLoading = ref(true)
+const isLoadingFollows = ref(false)
 const isFollowing = ref(false)
 const error = ref('')
 
 const activeItems = computed(() => activeTab.value === 'favorites' ? favorites.value : ratings.value)
+const currentFollowUsers = computed(() => activeTab.value === 'followers' ? followers.value : following.value)
 
 onMounted(async () => {
   try {
@@ -105,6 +160,7 @@ onMounted(async () => {
     profile.value = profileRes.data
     favorites.value = favoritesRes.data || []
     ratings.value = ratingsRes.data || []
+    isFollowing.value = profileRes.data.is_following || false
   } catch (err: any) {
     error.value = err?.data?.error || 'User profile not found or set to private.'
   } finally {
@@ -112,26 +168,73 @@ onMounted(async () => {
   }
 })
 
-const getAvatarUrl = (path?: string) => {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) return useApiUrl(path)
-  return path
+const selectFollowTab = async (tab: 'followers' | 'following') => {
+  activeTab.value = tab
+  if (tab === 'followers' && followers.value.length === 0) {
+    await loadFollowers()
+  } else if (tab === 'following' && following.value.length === 0) {
+    await loadFollowing()
+  }
+}
+
+const loadFollowers = async () => {
+  isLoadingFollows.value = true
+  try {
+    const res = await api.getUserFollowers(username.value)
+    followers.value = res.data || []
+  } catch (err) {
+    console.error('Failed to load followers:', err)
+  } finally {
+    isLoadingFollows.value = false
+  }
+}
+
+const loadFollowing = async () => {
+  isLoadingFollows.value = true
+  try {
+    const res = await api.getUserFollowing(username.value)
+    following.value = res.data || []
+  } catch (err) {
+    console.error('Failed to load following:', err)
+  } finally {
+    isLoadingFollows.value = false
+  }
 }
 
 const toggleFollow = async () => {
   if (!profile.value?.user?.id) return
   const targetId = profile.value.user.id
+  const currentlyFollowing = isFollowing.value
+  isFollowing.value = !currentlyFollowing
+
+  if (profile.value) {
+    profile.value.followers_count = (profile.value.followers_count || 0) + (currentlyFollowing ? -1 : 1)
+  }
+
   try {
-    if (isFollowing.value) {
+    if (currentlyFollowing) {
       await api.unfollowUser(targetId)
-      isFollowing.value = false
     } else {
       await api.followUser(targetId)
-      isFollowing.value = true
     }
   } catch (err) {
     console.error('Failed to toggle follow status:', err)
+    isFollowing.value = currentlyFollowing
+  }
+}
+
+const toggleUserFollow = async (user: CommunityUser) => {
+  const currentlyFollowing = user.is_following
+  user.is_following = !currentlyFollowing
+  try {
+    if (currentlyFollowing) {
+      await api.unfollowUser(user.id)
+    } else {
+      await api.followUser(user.id)
+    }
+  } catch (err) {
+    console.error('Failed to toggle user follow:', err)
+    user.is_following = currentlyFollowing
   }
 }
 
@@ -369,6 +472,138 @@ const getStatusLabel = (status: string) => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stat-card.clickable:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(229, 9, 20, 0.3);
+  transform: translateY(-2px);
+}
+
+.followers-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.followers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.follower-card {
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.follower-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(229, 9, 20, 0.35);
+}
+
+.follower-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid var(--border-red);
+  color: #ff6b6b;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1rem;
+  overflow: hidden;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.follower-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.follower-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.follower-username {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.follower-username h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.follower-username:hover h4 {
+  color: var(--accent-red);
+}
+
+.follower-bio {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.follower-action {
+  flex-shrink: 0;
+}
+
+.self-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.btn-follow-chip {
+  background: rgba(229, 9, 20, 0.14);
+  border: 1px solid var(--border-red);
+  color: #ff6b6b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-follow-chip:hover {
+  background: var(--accent-red);
+  color: #ffffff;
+}
+
+.btn-follow-chip.following {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
 }
 
 .public-state {
