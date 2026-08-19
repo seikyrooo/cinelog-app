@@ -128,17 +128,34 @@
                 </div>
               </div>
 
-              <!-- Circle Checkmark Button (Increment Episode) -->
-              <button 
-                @click="incrementEpisode(item)" 
-                :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
-                :disabled="getRemainingEps(item) === 0"
-                title="Mark this episode watched"
-              >
-                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </button>
+              <!-- Side Actions (Increment Episode + Remove) -->
+              <div class="card-side-actions">
+                <button 
+                  @click="incrementEpisode(item)" 
+                  :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
+                  :disabled="getRemainingEps(item) === 0"
+                  title="Mark this episode watched"
+                  aria-label="Mark episode watched"
+                >
+                  <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+
+                <button 
+                  @click.stop="deleteItem(item.id)" 
+                  class="circle-trash-btn"
+                  title="Remove from Watchlist"
+                  aria-label="Remove from Watchlist"
+                >
+                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -183,16 +200,33 @@
                 <p class="eps-title-text">Paused watching</p>
               </div>
 
-              <button 
-                @click="incrementEpisode(item)" 
-                :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
-                :disabled="getRemainingEps(item) === 0"
-                title="Mark this episode watched"
-              >
-                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </button>
+              <div class="card-side-actions">
+                <button 
+                  @click="incrementEpisode(item)" 
+                  :class="['circle-check-btn', { completed: getRemainingEps(item) === 0 }]"
+                  :disabled="getRemainingEps(item) === 0"
+                  title="Mark this episode watched"
+                  aria-label="Mark episode watched"
+                >
+                  <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+
+                <button 
+                  @click.stop="deleteItem(item.id)" 
+                  class="circle-trash-btn"
+                  title="Remove from Watchlist"
+                  aria-label="Remove from Watchlist"
+                >
+                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -250,10 +284,26 @@
                 </div>
               </div>
 
-              <div class="circle-check-btn completed">
-                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+              <div class="card-side-actions">
+                <div class="circle-check-btn completed" title="Series Completed">
+                  <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+
+                <button 
+                  @click.stop="deleteItem(item.id)" 
+                  class="circle-trash-btn"
+                  title="Remove from Watchlist"
+                  aria-label="Remove from Watchlist"
+                >
+                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -348,19 +398,62 @@
 
           <div class="card-details">
             <div class="details-top">
-              <span class="movie-year">{{ formatYear(item.movie.release_date) }}</span>
+              <span class="movie-year">{{ formatYear(item.movie?.release_date || item.release_date) }}</span>
               <span class="user-rating" v-if="item.rating > 0">
                 ★ <strong>{{ item.rating }}</strong> / 10
               </span>
             </div>
 
-            <h3 class="movie-title clickable" @click="openDetailModal(item)">{{ item.movie.title }}</h3>
-            <p class="director-text" v-if="item.movie.director">Director: {{ item.movie.director }}</p>
+            <div class="show-title-tag clickable" @click="openDetailModal(item)">
+              <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+              <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
 
-            <div class="card-actions">
-              <button @click="openDetailModal(item)" class="btn-secondary text-sm">Details</button>
-              <button @click="openEditModal(item)" class="btn-secondary text-sm">Edit</button>
-              <button @click="deleteItem(item.id)" class="btn-danger text-sm">Delete</button>
+            <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
+
+            <!-- Interactive Quick Star Rating Bar -->
+            <div class="card-rating-quick-bar" @click.stop>
+              <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
+              <div class="quick-stars">
+                <span 
+                  v-for="star in 10" 
+                  :key="star"
+                  @click="updateItemRating(item, star)"
+                  :class="['mini-star', { active: star <= (item.rating || 0) }]"
+                  :title="'Rate ' + star + ' / 10'"
+                >★</span>
+              </div>
+              <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+            </div>
+
+            <!-- Minimalist Icon Actions Row: Watched Checkmark + Trash Button -->
+            <div class="movie-card-icon-actions">
+              <button 
+                @click.stop="toggleMovieWatched(item)" 
+                :class="['movie-action-btn', 'btn-check', { active: item.status === 'completed' }]"
+                :title="item.status === 'completed' ? 'Mark as unwatched' : 'Mark as watched'"
+                :aria-label="item.status === 'completed' ? 'Mark as unwatched' : 'Mark as watched'"
+              >
+                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
+
+              <button 
+                @click.stop="deleteItem(item.id)" 
+                class="movie-action-btn btn-trash"
+                title="Remove from Watchlist"
+                aria-label="Remove from Watchlist"
+              >
+                <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -439,6 +532,20 @@
                 >
                   <svg class="action-svg" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2.2">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </button>
+
+                <button 
+                  @click="deleteItem(activeWatchlistContext.id)"
+                  class="icon-action-btn btn-danger-icon"
+                  title="Remove from Watchlist (Resets Progress)"
+                  aria-label="Remove from Watchlist"
+                >
+                  <svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
                   </svg>
                 </button>
               </div>
@@ -1171,14 +1278,40 @@ const updateWatchlist = async () => {
   }
 }
 
+const toggleMovieWatched = async (item: any) => {
+  const newStatus = item.status === 'completed' ? 'watching' : 'completed'
+  try {
+    const res: any = await api.updateLibraryItem(item.id, {
+      status: newStatus,
+      rating: item.rating || 0,
+      favorite: item.favorite,
+      notes: item.notes || ''
+    })
+    if (res.data) {
+      item.status = res.data.status
+      fetchWatchlist()
+      if (newStatus === 'completed') {
+        showToast('🎉 Movie marked as watched! Don\'t forget to rate.')
+      } else {
+        showToast('Movie status updated to watching.')
+      }
+    }
+  } catch (err) {
+    console.error('Failed to toggle movie status:', err)
+  }
+}
+
 const deleteItem = async (id: number) => {
-  if (!confirm('Remove this item from your watchlist?')) return
+  if (!confirm('Remove this title from your watchlist? This will reset all progress.')) return
   try {
     await api.deleteLibraryItem(id)
+    showDetailModal.value = false
+    showEditModal.value = false
+    activeWatchlistContext.value = null
     fetchWatchlist()
-    showToast('Item removed from watchlist.')
+    showToast('🗑️ Title removed from watchlist.')
   } catch (err: any) {
-    alert(err?.data?.error || 'Failed to delete item.')
+    alert(err?.data?.error || 'Failed to remove from watchlist.')
   }
 }
 </script>
@@ -1750,20 +1883,99 @@ const deleteItem = async (id: number) => {
   text-overflow: ellipsis;
 }
 
-.director-text {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.card-actions {
+.card-side-actions {
   display: flex;
-  gap: 6px;
-  margin-top: auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  flex-shrink: 0;
 }
 
-.card-actions button {
-  flex: 1;
+.circle-trash-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.circle-trash-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: scale(1.08);
+}
+
+.trash-svg {
+  width: 16px;
+  height: 16px;
+}
+
+.movie-card-icon-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.movie-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+}
+
+.movie-action-btn.btn-check:hover {
+  border-color: var(--accent-red);
+  color: #ffffff;
+  transform: scale(1.08);
+  background: rgba(229, 9, 20, 0.15);
+}
+
+.movie-action-btn.btn-check.active {
+  background: var(--accent-success);
+  border-color: var(--accent-success);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.45);
+}
+
+.movie-action-btn.btn-trash:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: scale(1.08);
+}
+
+.btn-danger-icon {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.btn-danger-icon:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
 }
 
 /* WIDE & SPACIOUS DETAIL MODAL */
