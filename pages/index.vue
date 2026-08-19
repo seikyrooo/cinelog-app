@@ -9,7 +9,7 @@
       <span>{{ toastMessage }}</span>
     </div>
 
-    <!-- Immersive Borderless Featured Spotlight Hero Banner (Netflix / IDLIX Aesthetic) -->
+    <!-- Enhanced Immersive Borderless Featured Spotlight Hero Banner (Netflix / IDLIX Aesthetic) -->
     <section 
       v-if="featuredShow && !isSearchMode" 
       class="featured-hero-banner" 
@@ -32,7 +32,10 @@
               <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
-              {{ featuredShow.vote_average.toFixed(1) }} / 10
+              {{ featuredShow.vote_average.toFixed(1) }} / 10 TMDB
+            </span>
+            <span class="hero-year-badge">
+              {{ formatYear(featuredShow.release_date || featuredShow.first_air_date) }}
             </span>
           </div>
 
@@ -137,7 +140,7 @@
           <div class="poster-wrapper">
             <img 
               :src="getImageUrl(item.poster_path)" 
-              :alt="item.title || item.name"
+              :alt="item.title || item.name" 
               class="poster-img"
               @error="onImageError"
             />
@@ -169,7 +172,7 @@
     <div v-else class="discovery-container">
       
       <!-- SHELF 1: 🔥 Trending This Week -->
-      <section class="shelf-section" v-if="trendingList.length > 0" aria-labelledby="shelf-trending-title">
+      <section class="shelf-section" aria-labelledby="shelf-trending-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
             <span class="shelf-emoji">🔥</span>
@@ -235,7 +238,7 @@
       </section>
 
       <!-- SHELF 2: 🎬 Popular Feature Films -->
-      <section class="shelf-section" v-if="popularMovies.length > 0" aria-labelledby="shelf-movies-title">
+      <section class="shelf-section" aria-labelledby="shelf-movies-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
             <span class="shelf-emoji">🎬</span>
@@ -298,7 +301,7 @@
       </section>
 
       <!-- SHELF 3: 📺 Binge-Worthy TV Series -->
-      <section class="shelf-section" v-if="popularShows.length > 0" aria-labelledby="shelf-tv-title">
+      <section class="shelf-section" aria-labelledby="shelf-tv-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
             <span class="shelf-emoji">📺</span>
@@ -361,7 +364,7 @@
       </section>
 
       <!-- SHELF 4: ⭐ Top Rated Masterpieces -->
-      <section class="shelf-section" v-if="topRatedList.length > 0" aria-labelledby="shelf-toprated-title">
+      <section class="shelf-section" aria-labelledby="shelf-toprated-title">
         <div class="shelf-header">
           <div class="shelf-title-group">
             <span class="shelf-emoji">⭐</span>
@@ -427,12 +430,12 @@
 
     </div>
 
-    <!-- Modal Full Detail Spasius & Wide 2-Column Layout -->
+    <!-- Modal Full Detail Spasius & Responsive Mobile-First Layout -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content glass-panel detail-modal-content wide-modal animate-fade-in">
         
         <!-- Fixed Top Right Close Button -->
-        <button @click="showModal = false" class="close-btn-fixed" title="Close Dialog">&times;</button>
+        <button @click="showModal = false" class="close-btn-fixed" title="Close Dialog" aria-label="Close modal">&times;</button>
 
         <!-- Movie/Show Hero Backdrop Banner -->
         <div class="hero-backdrop-banner" :style="getBackdropStyle(activeItem)">
@@ -458,17 +461,19 @@
           </div>
         </div>
 
-        <!-- Wide 2-Column Layout Body -->
+        <!-- Wide 2-Column Responsive Layout Body -->
         <div class="detail-body wide-grid">
           
           <!-- Left Column: Poster & Quick Action Bar & Metadata -->
           <div class="detail-left-col">
-            <img 
-              :src="getImageUrl(activeItem?.poster_path)" 
-              :alt="activeItem?.title || activeItem?.name"
-              class="detail-poster-img"
-              @error="onImageError"
-            />
+            <div class="detail-poster-wrap">
+              <img 
+                :src="getImageUrl(activeItem?.poster_path)" 
+                :alt="activeItem?.title || activeItem?.name" 
+                class="detail-poster-img"
+                @error="onImageError"
+              />
+            </div>
 
             <!-- Quick Action Bar -->
             <div class="quick-add-bar glass-card">
@@ -571,7 +576,7 @@
                   <div class="eps-banner-wrapper">
                     <img 
                       :src="getEpisodeStillUrl(eps.still_path)" 
-                      :alt="eps.name"
+                      :alt="eps.name" 
                       class="eps-still-img"
                       @error="onEpsImageError"
                     />
@@ -620,11 +625,103 @@ const isSearchMode = ref(false)
 const searchResults = ref<any[]>([])
 const toastMessage = ref('')
 
-const trendingList = ref<any[]>([])
-const popularMovies = ref<any[]>([])
-const popularShows = ref<any[]>([])
-const topRatedList = ref<any[]>([])
-const featuredShow = ref<any>(null)
+// Curated instant initial feeds so recommendations appear immediately without blank flash
+const DEFAULT_TRENDING = [
+  {
+    id: 66732,
+    title: 'Stranger Things',
+    name: 'Stranger Things',
+    media_type: 'tv',
+    overview: 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.',
+    poster_path: '/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
+    backdrop_path: '/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
+    vote_average: 8.6,
+    first_air_date: '2016-07-15'
+  },
+  {
+    id: 872585,
+    title: 'Oppenheimer',
+    name: 'Oppenheimer',
+    media_type: 'movie',
+    overview: 'The story of J. Robert Oppenheimer’s role in the development of the atomic bomb during World War II.',
+    poster_path: '/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+    backdrop_path: '/rLb2cw0iw31jUM9Aqgfv4DpZQCe.jpg',
+    vote_average: 8.1,
+    release_date: '2023-07-19'
+  },
+  {
+    id: 100088,
+    title: 'The Last of Us',
+    name: 'The Last of Us',
+    media_type: 'tv',
+    overview: 'Twenty years after modern civilization has been destroyed, Joel, a hardened survivor, is hired to smuggle Ellie, a 14-year-old girl, out of an oppressive quarantine zone.',
+    poster_path: '/uKvVjHNqB5VmOrdxqAt2V7JMrne.jpg',
+    backdrop_path: '/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg',
+    vote_average: 8.6,
+    first_air_date: '2023-01-15'
+  },
+  {
+    id: 693134,
+    title: 'Dune: Part Two',
+    name: 'Dune: Part Two',
+    media_type: 'movie',
+    overview: 'Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a path of revenge against the conspirators who destroyed his family.',
+    poster_path: '/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
+    backdrop_path: '/xOMo8BRK7PfcJv9JCnx7s520QIq.jpg',
+    vote_average: 8.2,
+    release_date: '2024-02-27'
+  },
+  {
+    id: 94605,
+    title: 'Arcane',
+    name: 'Arcane',
+    media_type: 'tv',
+    overview: 'Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and incompatible convictions.',
+    poster_path: '/abf8tHznhSvl9BAElD23QzpEGQI.jpg',
+    backdrop_path: '/fqv8v6AycXKsivp1T5yKtLbGXce.jpg',
+    vote_average: 8.7,
+    first_air_date: '2021-11-06'
+  },
+  {
+    id: 157336,
+    title: 'Interstellar',
+    name: 'Interstellar',
+    media_type: 'movie',
+    overview: 'The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.',
+    poster_path: '/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+    backdrop_path: '/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+    vote_average: 8.4,
+    release_date: '2014-11-05'
+  },
+  {
+    id: 76479,
+    title: 'The Boys',
+    name: 'The Boys',
+    media_type: 'tv',
+    overview: 'A fun and irreverent take on what happens when superheroes, who are as popular as celebrities, as influential as politicians and as revered as gods, abuse their superpowers rather than use them for good.',
+    poster_path: '/2zmTngzbOHuqNyAmfnQzqC9p8x0.jpg',
+    backdrop_path: '/n6bUvigpRFqSwmPp1m2YADdbRBc.jpg',
+    vote_average: 8.5,
+    first_air_date: '2019-07-26'
+  },
+  {
+    id: 27205,
+    title: 'Inception',
+    name: 'Inception',
+    media_type: 'movie',
+    overview: 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: "inception".',
+    poster_path: '/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg',
+    backdrop_path: '/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',
+    vote_average: 8.4,
+    release_date: '2010-07-15'
+  }
+]
+
+const trendingList = ref<any[]>([...DEFAULT_TRENDING])
+const popularMovies = ref<any[]>([...DEFAULT_TRENDING.filter(m => m.media_type === 'movie')])
+const popularShows = ref<any[]>([...DEFAULT_TRENDING.filter(m => m.media_type === 'tv')])
+const topRatedList = ref<any[]>([...DEFAULT_TRENDING])
+const featuredShow = ref<any>(DEFAULT_TRENDING[0])
 
 const mediaTypes = [
   { label: 'All', value: 'all' },
@@ -672,10 +769,10 @@ const loadDiscoveryFeeds = async () => {
       $fetch(useApiUrl('/api/discover'), { params: { type: 'movie', sort: 'vote_average.desc' } }).catch(() => ({ data: [] }))
     ])
 
-    trendingList.value = trendingRes.data || []
-    popularMovies.value = popMoviesRes.data || []
-    popularShows.value = popShowsRes.data || []
-    topRatedList.value = topRatedRes.data || []
+    if (trendingRes?.data?.length > 0) trendingList.value = trendingRes.data
+    if (popMoviesRes?.data?.length > 0) popularMovies.value = popMoviesRes.data
+    if (popShowsRes?.data?.length > 0) popularShows.value = popShowsRes.data
+    if (topRatedRes?.data?.length > 0) topRatedList.value = topRatedRes.data
 
     if (trendingList.value.length > 0) {
       featuredShow.value = trendingList.value.find((item: any) => item.backdrop_path) || trendingList.value[0]
@@ -947,7 +1044,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 .explore-page {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 36px;
 }
 
 .toast-notification {
@@ -988,31 +1085,31 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
    ========================================================================= */
 .featured-hero-banner {
   position: relative;
-  min-height: 440px;
+  min-height: 460px;
   border-radius: 18px;
   overflow: hidden;
   background-size: cover;
   background-position: center top;
   border: none !important;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.95), 0 0 40px -10px rgba(229, 9, 20, 0.15);
 }
 
 .featured-gradient-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, #0a0a0c 0%, rgba(10, 10, 12, 0.92) 35%, rgba(10, 10, 12, 0.45) 70%, rgba(10, 10, 12, 0.75) 100%),
-    linear-gradient(180deg, rgba(10, 10, 12, 0.05) 0%, rgba(10, 10, 12, 0.4) 55%, #0a0a0c 100%);
+    linear-gradient(90deg, #0a0a0c 0%, rgba(10, 10, 12, 0.94) 38%, rgba(10, 10, 12, 0.5) 70%, rgba(10, 10, 12, 0.8) 100%),
+    linear-gradient(180deg, rgba(10, 10, 12, 0.02) 0%, rgba(10, 10, 12, 0.4) 50%, #0a0a0c 100%);
   display: flex;
   align-items: flex-end;
-  padding: 40px 48px;
+  padding: 44px 48px;
 }
 
 .featured-content {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
+  max-width: 660px;
 }
 
 .featured-badges {
@@ -1044,20 +1141,26 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   gap: 4px;
 }
 
+.hero-year-badge {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .featured-title {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
   font-weight: 900;
   color: #ffffff;
   line-height: 1.05;
   letter-spacing: -0.02em;
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
 .featured-overview {
-  color: #d1d5db;
-  font-size: 0.94rem;
-  line-height: 1.6;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
 }
 
 .featured-actions {
@@ -1067,15 +1170,15 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 .btn-hero-play {
-  padding: 12px 24px;
-  font-size: 0.92rem;
+  padding: 13px 26px;
+  font-size: 0.94rem;
   font-weight: 700;
   border-radius: 8px;
 }
 
 .btn-hero-info {
-  padding: 12px 20px;
-  font-size: 0.92rem;
+  padding: 13px 22px;
+  font-size: 0.94rem;
   font-weight: 600;
   border-radius: 8px;
 }
@@ -1234,7 +1337,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
-  padding: 4px 2px 14px 2px;
+  padding: 4px 2px 16px 2px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
@@ -1487,8 +1590,25 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 /* =========================================================================
-   MODAL DETAIL STYLING
+   RESPONSIVE DETAIL MODAL STYLING
    ========================================================================= */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+}
+
 .detail-modal-content.wide-modal {
   position: relative;
   width: 92vw;
@@ -1497,7 +1617,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   overflow-y: auto;
   padding: 0;
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: hidden;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95);
@@ -1507,7 +1627,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   position: absolute;
   top: 16px;
   right: 18px;
-  z-index: 40;
+  z-index: 50;
   background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-subtle);
@@ -1529,7 +1649,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 .hero-backdrop-banner {
-  height: 220px;
+  height: 240px;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -1538,22 +1658,24 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 .hero-backdrop-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 12, 0.2) 0%, rgba(10, 10, 12, 0.95) 90%, var(--bg-surface) 100%);
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.15) 0%, rgba(10, 10, 12, 0.95) 90%, var(--bg-surface) 100%);
   display: flex;
   align-items: flex-end;
-  padding: 24px;
+  padding: 24px 28px;
 }
 
 .banner-badges {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .hero-media-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-width: calc(100% - 48px);
 }
 
 .hero-rating-badge {
@@ -1570,6 +1692,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   font-weight: 900;
   color: #ffffff;
   line-height: 1.15;
+  word-break: break-word;
 }
 
 .hero-media-subtitle {
@@ -1581,31 +1704,17 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   display: grid;
   grid-template-columns: 240px 1fr;
   gap: 24px;
-  padding: 24px;
-}
-
-@media (max-width: 768px) {
-  .featured-hero-banner {
-    min-height: 340px;
-  }
-  .featured-gradient-overlay {
-    padding: 24px 20px;
-  }
-  .featured-actions {
-    flex-direction: column;
-  }
-  .shelf-card {
-    flex: 0 0 140px;
-  }
-  .detail-body.wide-grid {
-    grid-template-columns: 1fr;
-  }
+  padding: 24px 28px;
 }
 
 .detail-left-col {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+}
+
+.detail-poster-wrap {
+  width: 100%;
 }
 
 .detail-poster-img {
@@ -1639,7 +1748,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 .overview-text {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 20px;
@@ -1668,6 +1777,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   display: flex;
   align-items: center;
   gap: 3px;
+  flex-wrap: wrap;
 }
 
 .star-icon {
@@ -1727,6 +1837,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   overflow-x: auto;
   padding-bottom: 6px;
   margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .season-chip {
@@ -1862,20 +1973,124 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   padding: 6px 12px;
 }
 
-.modal-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  background: rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  z-index: 9999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 20px !important;
+/* =========================================================================
+   MOBILE RESPONSIVE BREAKPOINTS (PERFECT MOBILE EXPERIENCE)
+   ========================================================================= */
+@media (max-width: 768px) {
+  .explore-page {
+    gap: 24px;
+  }
+
+  .featured-hero-banner {
+    min-height: 380px;
+    border-radius: 12px;
+  }
+
+  .featured-gradient-overlay {
+    padding: 24px 18px;
+  }
+
+  .featured-title {
+    font-size: 1.75rem;
+  }
+
+  .featured-overview {
+    font-size: 0.86rem;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .featured-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .shelf-card {
+    flex: 0 0 142px;
+  }
+
+  .modal-overlay {
+    padding: 0 !important;
+  }
+
+  .detail-modal-content.wide-modal {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .hero-backdrop-banner {
+    height: 180px;
+  }
+
+  .hero-backdrop-gradient {
+    padding: 16px 18px;
+  }
+
+  .hero-media-title {
+    font-size: 1.3rem;
+  }
+
+  .close-btn-fixed {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+  }
+
+  .detail-body.wide-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px 16px 36px 16px;
+  }
+
+  .detail-poster-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  .detail-poster-img {
+    max-width: 140px;
+  }
+
+  .quick-buttons-row {
+    flex-direction: column;
+  }
+
+  .episode-item {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .eps-banner-wrapper {
+    width: 90px;
+    height: 52px;
+    grid-row: 1 / span 2;
+  }
+
+  .eps-info {
+    grid-column: 2;
+  }
+
+  .eps-header {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .eps-toggle-btn {
+    grid-column: 2;
+    align-self: flex-start;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+  }
 }
 </style>

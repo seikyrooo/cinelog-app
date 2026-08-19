@@ -1774,4 +1774,87 @@ const deleteItem = async (id: number) => {
   justify-content: center !important;
   padding: 20px !important;
 }
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0 !important;
+  }
+
+  .detail-modal-content.wide-modal {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .hero-backdrop-banner {
+    height: 180px;
+  }
+
+  .hero-backdrop-gradient {
+    padding: 16px 18px;
+  }
+
+  .hero-media-title {
+    font-size: 1.3rem;
+  }
+
+  .close-btn-fixed {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+  }
+
+  .detail-body.wide-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px 16px 36px 16px;
+  }
+
+  .detail-left-col {
+    align-items: center;
+  }
+
+  .detail-poster-img {
+    max-width: 140px;
+  }
+
+  .fav-toggle-btn, .meta-info-box {
+    width: 100%;
+  }
+
+  .episode-item {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .eps-banner-wrapper {
+    width: 90px;
+    height: 52px;
+    grid-row: 1 / span 2;
+  }
+
+  .eps-info {
+    grid-column: 2;
+  }
+
+  .eps-header {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .eps-toggle-btn {
+    grid-column: 2;
+    align-self: flex-start;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+  }
+}
 </style>
