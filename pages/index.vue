@@ -171,9 +171,8 @@
     <!-- Streaming Networks & Platform Filter Bar (Netflix, Disney+, HBO, etc.) -->
     <section v-if="!isSearchMode" class="platforms-section" aria-label="Streaming Platforms">
       <div class="section-label-row">
-        <span class="section-badge-pill">PLATFORMS</span>
-        <span class="section-hint-text">Browse originals by streaming network</span>
-        <button v-if="selectedPlatform" @click="clearPlatform" class="btn-clear-chip" aria-label="Reset platform filter">✕ Reset</button>
+        <span class="section-badge-pill">STREAMING PLATFORMS</span>
+        <span class="section-hint-text">Filter original hits by network</span>
       </div>
       <div class="platforms-scroll-track">
         <button
@@ -181,12 +180,10 @@
           :key="p.id"
           @click="selectPlatform(p.id)"
           :class="['platform-chip', { active: selectedPlatform === p.id }]"
-          :style="{ '--platform-brand': p.color, '--platform-bg': p.bg, '--platform-border': p.border }"
-          :aria-pressed="selectedPlatform === p.id"
+          :style="{ '--platform-brand': p.color }"
         >
-          <span class="platform-dot" :style="{ background: p.color }"></span>
+          <span class="platform-icon">{{ p.icon }}</span>
           <span class="platform-name">{{ p.name }}</span>
-          <span v-if="selectedPlatform === p.id" class="platform-active-check">✓</span>
         </button>
       </div>
     </section>
@@ -194,9 +191,8 @@
     <!-- Pop-Culture Universes & Franchises (MCU, DC, Star Wars, Harry Potter, etc.) -->
     <section v-if="!isSearchMode" class="franchises-section" aria-label="Universes & Franchises">
       <div class="section-label-row">
-        <span class="section-badge-pill franchise-pill">FRANCHISES & UNIVERSES</span>
+        <span class="section-badge-pill franchise-pill">COLLECTIONS & UNIVERSES</span>
         <span class="section-hint-text">Explore cinematic sagas & franchise chronologies</span>
-        <button v-if="selectedFranchise" @click="clearFranchise" class="btn-clear-chip" aria-label="Reset franchise filter">✕ Reset</button>
       </div>
       <div class="franchises-scroll-track">
         <div
@@ -204,20 +200,17 @@
           :key="f.id"
           @click="selectFranchise(f.id)"
           :class="['franchise-card', { active: selectedFranchise === f.id }]"
-          :style="{ '--card-accent': f.accent }"
+          :style="{ background: f.color }"
           role="button"
           tabindex="0"
-          :aria-pressed="selectedFranchise === f.id"
           @keyup.enter="selectFranchise(f.id)"
         >
-          <div class="franchise-card-glow"></div>
           <div class="franchise-card-content">
-            <div class="franchise-monogram">{{ f.code }}</div>
+            <span class="franchise-icon">{{ f.icon }}</span>
             <div class="franchise-meta">
+              <span class="franchise-badge-tag">{{ f.badge }}</span>
               <h4 class="franchise-title">{{ f.name }}</h4>
-              <p class="franchise-subtext">{{ f.subtitle }}</p>
             </div>
-            <span v-if="selectedFranchise === f.id" class="franchise-active-badge">ACTIVE</span>
           </div>
         </div>
       </div>
@@ -227,49 +220,41 @@
     <div v-else class="discovery-container">
 
       <!-- DYNAMIC SHELF: Streaming Platform Picks -->
-      <section v-if="selectedPlatform && platformTitles.length > 0" id="platform-results-shelf" class="shelf-section platform-spotlight-shelf" aria-label="Platform Highlights">
+      <section v-if="platformTitles.length > 0" class="shelf-section" aria-label="Platform Highlights">
         <div class="shelf-header">
           <div class="shelf-title-group">
             <span class="shelf-indicator brand-indicator" :style="{ background: activePlatformObj?.color || 'var(--accent-red)' }"></span>
             <div>
-              <div class="shelf-title-with-badge">
-                <h2 class="shelf-title">{{ activePlatformObj?.name }} Catalog</h2>
-                <span class="results-count-badge">{{ platformTitles.length }} titles</span>
-              </div>
-              <p class="shelf-sub">Top streamable originals & exclusive releases</p>
+              <h2 class="shelf-title">{{ activePlatformObj?.name }} Highlights</h2>
+              <p class="shelf-sub">Top streamable originals & exclusive releases on {{ activePlatformObj?.name }}</p>
             </div>
           </div>
 
-          <div class="shelf-header-actions">
-            <button @click="clearPlatform" class="btn-text-close" aria-label="Close platform filter">
-              <span>✕ Close Filter</span>
+          <div class="shelf-nav-controls">
+            <button 
+              @click="scrollShelf('shelf-platform', -1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll left"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
             </button>
-            <div class="shelf-nav-controls">
-              <button 
-                @click="scrollShelf('shelf-platform', -1)" 
-                class="shelf-arrow-btn" 
-                aria-label="Scroll left"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-              <button 
-                @click="scrollShelf('shelf-platform', 1)" 
-                class="shelf-arrow-btn" 
-                aria-label="Scroll right"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
+            <button 
+              @click="scrollShelf('shelf-platform', 1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll right"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
           </div>
         </div>
 
         <div v-if="isLoadingPlatform" class="loading-state text-sm">
           <div class="spinner"></div>
-          <span>Fetching {{ activePlatformObj?.name }} titles...</span>
+          <span>Loading {{ activePlatformObj?.name }} catalog...</span>
         </div>
 
         <div v-else id="shelf-platform" class="shelf-scroll-track">
@@ -305,49 +290,41 @@
       </section>
 
       <!-- DYNAMIC SHELF: Franchise / Universe Spotlight -->
-      <section v-if="selectedFranchise && franchiseTitles.length > 0" id="franchise-results-shelf" class="shelf-section franchise-spotlight-shelf" aria-label="Franchise Highlights">
+      <section v-if="franchiseTitles.length > 0" class="shelf-section" aria-label="Franchise Highlights">
         <div class="shelf-header">
           <div class="shelf-title-group">
-            <span class="shelf-indicator franchise-indicator" :style="{ background: activeFranchiseObj?.accent || 'var(--accent-red)' }"></span>
+            <span class="shelf-indicator franchise-indicator"></span>
             <div>
-              <div class="shelf-title-with-badge">
-                <h2 class="shelf-title">{{ activeFranchiseObj?.name }}</h2>
-                <span class="results-count-badge">{{ franchiseTitles.length }} titles</span>
-              </div>
-              <p class="shelf-sub">{{ activeFranchiseObj?.subtitle }}</p>
+              <h2 class="shelf-title">{{ activeFranchiseObj?.name }}</h2>
+              <p class="shelf-sub">Cinematic universe chronology & fan-favorite titles</p>
             </div>
           </div>
 
-          <div class="shelf-header-actions">
-            <button @click="clearFranchise" class="btn-text-close" aria-label="Close franchise filter">
-              <span>✕ Close Collection</span>
+          <div class="shelf-nav-controls">
+            <button 
+              @click="scrollShelf('shelf-franchise', -1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll left"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
             </button>
-            <div class="shelf-nav-controls">
-              <button 
-                @click="scrollShelf('shelf-franchise', -1)" 
-                class="shelf-arrow-btn" 
-                aria-label="Scroll left"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-              <button 
-                @click="scrollShelf('shelf-franchise', 1)" 
-                class="shelf-arrow-btn" 
-                aria-label="Scroll right"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
+            <button 
+              @click="scrollShelf('shelf-franchise', 1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll right"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
           </div>
         </div>
 
         <div v-if="isLoadingFranchise" class="loading-state text-sm">
           <div class="spinner"></div>
-          <span>Fetching {{ activeFranchiseObj?.name }} collection...</span>
+          <span>Loading {{ activeFranchiseObj?.name }}...</span>
         </div>
 
         <div v-else id="shelf-franchise" class="shelf-scroll-track">
@@ -978,48 +955,41 @@ const seasonsCount = computed(() => {
 })
 
 const platforms = [
-  { id: 'netflix', name: 'Netflix', tag: 'NETFLIX', color: '#E50914', bg: 'rgba(229, 9, 20, 0.14)', border: 'rgba(229, 9, 20, 0.4)' },
-  { id: 'disney', name: 'Disney+', tag: 'DISNEY+', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.14)', border: 'rgba(59, 130, 246, 0.4)' },
-  { id: 'hbo', name: 'HBO Max', tag: 'MAX', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.14)', border: 'rgba(168, 85, 247, 0.4)' },
-  { id: 'apple', name: 'Apple TV+', tag: 'APPLE TV+', color: '#e2e8f0', bg: 'rgba(255, 255, 255, 0.08)', border: 'rgba(255, 255, 255, 0.3)' },
-  { id: 'prime', name: 'Prime Video', tag: 'PRIME', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.14)', border: 'rgba(14, 165, 233, 0.4)' },
-  { id: 'paramount', name: 'Paramount+', tag: 'PARAMOUNT+', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.14)', border: 'rgba(56, 189, 248, 0.4)' },
-  { id: 'hulu', name: 'Hulu', tag: 'HULU', color: '#10b981', bg: 'rgba(16, 185, 129, 0.14)', border: 'rgba(16, 185, 129, 0.4)' }
+  { id: 'netflix', name: 'Netflix', color: '#E50914', icon: '🔴' },
+  { id: 'disney', name: 'Disney+', color: '#113CCF', icon: '🏰' },
+  { id: 'hbo', name: 'HBO Max', color: '#9933FF', icon: '🟡' },
+  { id: 'apple', name: 'Apple TV+', color: '#A2AAAD', icon: '🍎' },
+  { id: 'prime', name: 'Prime Video', color: '#00A8E1', icon: '🔵' },
+  { id: 'paramount', name: 'Paramount+', color: '#0064FF', icon: '⛰️' },
+  { id: 'hulu', name: 'Hulu', color: '#1CE783', icon: '🟢' }
 ]
 
 const franchises = [
-  { id: 'marvel', name: 'Marvel Cinematic Universe', code: 'MCU', subtitle: 'Phase 1–5 • Avengers & Multiverse', accent: '#ef4444' },
-  { id: 'dc', name: 'DC Extended Universe', code: 'DC', subtitle: 'Justice League • Batman • Gotham', accent: '#3b82f6' },
-  { id: 'starwars', name: 'Star Wars Saga', code: 'SW', subtitle: 'Skywalker Saga • Mandalorian & Ahsoka', accent: '#f59e0b' },
-  { id: 'harrypotter', name: 'Wizarding World', code: 'HP', subtitle: 'Hogwarts • Fantastic Beasts & Magic', accent: '#8b5cf6' },
-  { id: 'anime', name: 'Studio Ghibli & Top Anime', code: 'ANIME', subtitle: 'Miyazaki Masterpieces & Shonen Hits', accent: '#10b981' },
-  { id: 'monsterverse', name: 'MonsterVerse', code: 'TITANS', subtitle: 'Godzilla • King Kong & Hollow Earth', accent: '#f87171' }
+  { id: 'marvel', name: 'Marvel Cinematic Universe', badge: 'MCU', color: 'linear-gradient(135deg, #b91c1c 0%, #450a0a 100%)', icon: '🦸' },
+  { id: 'dc', name: 'DC Universe & Extended', badge: 'DC', color: 'linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%)', icon: '🦇' },
+  { id: 'starwars', name: 'Star Wars Saga', badge: 'Star Wars', color: 'linear-gradient(135deg, #b45309 0%, #1c1917 100%)', icon: '⭐' },
+  { id: 'harrypotter', name: 'Wizarding World', badge: 'Harry Potter', color: 'linear-gradient(135deg, #6d28d9 0%, #1e1b4b 100%)', icon: '🧙' },
+  { id: 'anime', name: 'Studio Ghibli & Top Anime', badge: 'Anime', color: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)', icon: '⛩️' },
+  { id: 'monsterverse', name: 'MonsterVerse (Godzilla & Kong)', badge: 'MonsterVerse', color: 'linear-gradient(135deg, #991b1b 0%, #262626 100%)', icon: '🦖' }
 ]
 
-const selectedPlatform = ref('')
+const selectedPlatform = ref('netflix')
 const platformTitles = ref<any[]>([])
 const isLoadingPlatform = ref(false)
 
-const selectedFranchise = ref('')
+const selectedFranchise = ref('marvel')
 const franchiseTitles = ref<any[]>([])
 const isLoadingFranchise = ref(false)
 
 const activePlatformObj = computed(() => {
-  return platforms.find(p => p.id === selectedPlatform.value) || null
+  return platforms.find(p => p.id === selectedPlatform.value) || platforms[0]
 })
 
 const activeFranchiseObj = computed(() => {
-  return franchises.find(f => f.id === selectedFranchise.value) || null
+  return franchises.find(f => f.id === selectedFranchise.value) || franchises[0]
 })
 
 const selectPlatform = async (platformId: string) => {
-  if (selectedPlatform.value === platformId) {
-    // Toggle off
-    selectedPlatform.value = ''
-    platformTitles.value = []
-    return
-  }
-
   selectedPlatform.value = platformId
   isLoadingPlatform.value = true
   try {
@@ -1027,34 +997,14 @@ const selectPlatform = async (platformId: string) => {
       params: { platform: platformId, type: 'all' }
     })
     platformTitles.value = res.data || []
-
-    nextTick(() => {
-      const el = document.getElementById('platform-results-shelf')
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      }
-    })
   } catch (err) {
     console.error('Failed to load platform titles', err)
-    platformTitles.value = []
   } finally {
     isLoadingPlatform.value = false
   }
 }
 
-const clearPlatform = () => {
-  selectedPlatform.value = ''
-  platformTitles.value = []
-}
-
 const selectFranchise = async (franchiseId: string) => {
-  if (selectedFranchise.value === franchiseId) {
-    // Toggle off
-    selectedFranchise.value = ''
-    franchiseTitles.value = []
-    return
-  }
-
   selectedFranchise.value = franchiseId
   isLoadingFranchise.value = true
   try {
@@ -1062,28 +1012,19 @@ const selectFranchise = async (franchiseId: string) => {
       params: { franchise: franchiseId }
     })
     franchiseTitles.value = res.data || []
-
-    nextTick(() => {
-      const el = document.getElementById('franchise-results-shelf')
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      }
-    })
   } catch (err) {
     console.error('Failed to load franchise titles', err)
-    franchiseTitles.value = []
   } finally {
     isLoadingFranchise.value = false
   }
 }
 
-const clearFranchise = () => {
-  selectedFranchise.value = ''
-  franchiseTitles.value = []
-}
-
 onMounted(async () => {
-  await loadDiscoveryFeeds()
+  await Promise.all([
+    loadDiscoveryFeeds(),
+    selectPlatform('netflix'),
+    selectFranchise('marvel')
+  ])
 })
 
 const loadDiscoveryFeeds = async () => {
@@ -1685,13 +1626,13 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 /* =========================================================================
-   STREAMING PLATFORMS & FRANCHISES SECTIONS (IMPECCABLE CRAFT)
+   STREAMING PLATFORMS & FRANCHISES SECTIONS
    ========================================================================= */
 .platforms-section,
 .franchises-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .section-label-row {
@@ -1702,19 +1643,19 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 .section-badge-pill {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.06);
-  color: #d4d4d8;
+  background: #27272a;
+  color: #e4e4e7;
   padding: 3px 10px;
   border-radius: 6px;
   border: 1px solid var(--border-subtle);
 }
 
 .section-badge-pill.franchise-pill {
-  background: rgba(229, 9, 20, 0.12);
+  background: rgba(229, 9, 20, 0.15);
   color: #ff6b6b;
   border-color: var(--border-red);
 }
@@ -1722,24 +1663,6 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 .section-hint-text {
   font-size: 0.8rem;
   color: var(--text-muted);
-  flex: 1;
-}
-
-.btn-clear-chip {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-clear-chip:hover {
-  background: #ef4444;
-  color: #ffffff;
 }
 
 .platforms-scroll-track {
@@ -1755,46 +1678,34 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
-  color: #d4d4d8;
+  color: #e4e4e7;
   font-weight: 700;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 38px;
-}
-
-.platform-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow: 0 0 8px currentColor;
+  min-height: 40px;
 }
 
 .platform-chip:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: var(--platform-border);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--platform-brand);
   transform: translateY(-2px);
 }
 
 .platform-chip.active {
-  background: var(--platform-bg);
+  background: var(--platform-brand);
   border-color: var(--platform-brand);
   color: #ffffff;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
 }
 
-.platform-active-check {
-  font-size: 0.75rem;
-  color: var(--platform-brand);
-  font-weight: 900;
-  margin-left: 2px;
+.platform-icon {
+  font-size: 1.1rem;
 }
 
 .franchises-scroll-track {
@@ -1807,49 +1718,28 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 .franchise-card {
-  flex: 0 0 250px;
-  min-height: 80px;
+  flex: 0 0 230px;
+  height: 84px;
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   cursor: pointer;
-  background: rgba(18, 18, 22, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
   user-select: none;
 }
 
-.franchise-card-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--card-accent);
-  box-shadow: 0 0 10px var(--card-accent);
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
 .franchise-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--card-accent);
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 
-.franchise-card:hover .franchise-card-glow {
-  opacity: 1;
-  width: 6px;
-}
-
 .franchise-card.active {
-  border-color: var(--card-accent);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.7), inset 0 0 16px rgba(255, 255, 255, 0.03);
+  border-color: #ffffff;
+  outline: 2px solid var(--accent-red);
 }
 
 .franchise-card-content {
@@ -1859,15 +1749,8 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   width: 100%;
 }
 
-.franchise-monogram {
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  color: var(--card-accent);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
+.franchise-icon {
+  font-size: 1.8rem;
   flex-shrink: 0;
 }
 
@@ -1876,7 +1759,14 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
-  flex: 1;
+}
+
+.franchise-badge-tag {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .franchise-title {
@@ -1889,78 +1779,13 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   margin: 0;
 }
 
-.franchise-subtext {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0;
+.brand-indicator {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
 }
 
-.franchise-active-badge {
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #ffffff;
-  background: var(--card-accent);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.shelf-title-with-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.results-count-badge {
-  font-size: 0.74rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-  padding: 2px 8px;
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle);
-}
-
-.shelf-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.btn-text-close {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-text-close:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
-.platform-spotlight-shelf,
-.franchise-spotlight-shelf {
-  animation: fadeInShelf 0.3s ease-out;
-}
-
-@keyframes fadeInShelf {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.franchise-indicator {
+  background: linear-gradient(180deg, #ff6b6b 0%, #991b1b 100%);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
 }
 
 /* =========================================================================
