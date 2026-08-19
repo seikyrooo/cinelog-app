@@ -167,7 +167,10 @@ const error = ref('')
 const activeItems = computed(() => activeTab.value === 'favorites' ? favorites.value : ratings.value)
 const currentFollowUsers = computed(() => activeTab.value === 'followers' ? followers.value : following.value)
 
+const router = useRouter()
+
 onMounted(async () => {
+  authStore.initAuth()
   try {
     const [profileRes, favoritesRes, ratingsRes] = await Promise.all([
       api.getPublicProfile(username.value),
@@ -220,12 +223,16 @@ const loadFollowing = async () => {
 
 const toggleFollow = async () => {
   if (!profile.value?.user?.id) return
+  if (!authStore.isAuth) {
+    router.push('/login')
+    return
+  }
   const targetId = profile.value.user.id
   const currentlyFollowing = isFollowing.value
   isFollowing.value = !currentlyFollowing
 
   if (profile.value) {
-    profile.value.followers_count = (profile.value.followers_count || 0) + (currentlyFollowing ? -1 : 1)
+    profile.value.followers_count = Math.max(0, (profile.value.followers_count || 0) + (currentlyFollowing ? -1 : 1))
   }
 
   try {
@@ -237,12 +244,21 @@ const toggleFollow = async () => {
   } catch (err) {
     console.error('Failed to toggle follow status:', err)
     isFollowing.value = currentlyFollowing
+    if (profile.value) {
+      profile.value.followers_count = Math.max(0, (profile.value.followers_count || 0) + (currentlyFollowing ? 1 : -1))
+    }
   }
 }
 
 const toggleUserFollow = async (user: CommunityUser) => {
+  if (!authStore.isAuth) {
+    router.push('/login')
+    return
+  }
   const currentlyFollowing = user.is_following
   user.is_following = !currentlyFollowing
+  user.followers_count = Math.max(0, user.followers_count + (currentlyFollowing ? -1 : 1))
+
   try {
     if (currentlyFollowing) {
       await api.unfollowUser(user.id)
@@ -252,6 +268,7 @@ const toggleUserFollow = async (user: CommunityUser) => {
   } catch (err) {
     console.error('Failed to toggle user follow:', err)
     user.is_following = currentlyFollowing
+    user.followers_count = Math.max(0, user.followers_count + (currentlyFollowing ? 1 : -1))
   }
 }
 

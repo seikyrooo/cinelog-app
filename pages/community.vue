@@ -140,8 +140,16 @@ onMounted(async () => {
 const loadUsers = async (q?: string) => {
   isLoading.value = true
   try {
-    const res = await api.searchUsers(q)
-    users.value = res.data || []
+    let res = await api.searchUsers(q)
+    if ((!res?.data || res.data.length === 0) && !q) {
+      try {
+        const discoverRes = await api.getDiscoverUsers()
+        if (discoverRes?.data && discoverRes.data.length > 0) {
+          res = discoverRes
+        }
+      } catch {}
+    }
+    users.value = res?.data || []
   } catch (err) {
     console.error('Failed to load users:', err)
   } finally {
@@ -162,6 +170,10 @@ const clearSearch = () => {
 }
 
 const toggleFollow = async (user: CommunityUser) => {
+  if (!authStore.isAuth) {
+    useRouter().push('/login')
+    return
+  }
   if (togglingMap[user.id]) return
   togglingMap[user.id] = true
 
@@ -169,7 +181,7 @@ const toggleFollow = async (user: CommunityUser) => {
 
   // Optimistic update
   user.is_following = !currentlyFollowing
-  user.followers_count += currentlyFollowing ? -1 : 1
+  user.followers_count = Math.max(0, user.followers_count + (currentlyFollowing ? -1 : 1))
 
   try {
     if (currentlyFollowing) {
@@ -181,7 +193,7 @@ const toggleFollow = async (user: CommunityUser) => {
     console.error('Failed to toggle follow status:', err)
     // Revert optimistic update
     user.is_following = currentlyFollowing
-    user.followers_count += currentlyFollowing ? 1 : -1
+    user.followers_count = Math.max(0, user.followers_count + (currentlyFollowing ? 1 : -1))
   } finally {
     togglingMap[user.id] = false
   }

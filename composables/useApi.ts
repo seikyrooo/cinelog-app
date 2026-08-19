@@ -112,6 +112,10 @@ export const useApi = () => {
     params: query ? { q: query } : undefined
   })
 
+  const getDiscoverUsers = () => $fetch<{ success: boolean; data: CommunityUser[] }>(useApiUrl('/api/users/discover'), {
+    headers: authHeaders()
+  })
+
   const getUserFollowers = (username: string) => $fetch<{ success: boolean; data: CommunityUser[] }>(useApiUrl(`/api/users/${encodeURIComponent(username)}/followers`), {
     headers: authHeaders()
   })
@@ -120,28 +124,34 @@ export const useApi = () => {
     headers: authHeaders()
   })
 
-  const followUser = (id: number | string) => $fetch<{ message: string; data: any }>(useApiUrl(`/api/me/follow/${id}`), {
+  const followUser = (idOrUsername: number | string) => $fetch<{ success?: boolean; message: string; data?: any }>(useApiUrl(`/api/me/follow/${idOrUsername}`), {
     method: 'POST',
     headers: authHeaders()
   })
 
-  const unfollowUser = (id: number | string) => $fetch<{ message: string }>(useApiUrl(`/api/me/follow/${id}`), {
+  const unfollowUser = (idOrUsername: number | string) => $fetch<{ success?: boolean; message: string }>(useApiUrl(`/api/me/follow/${idOrUsername}`), {
     method: 'DELETE',
     headers: authHeaders()
   })
 
   const uploadAvatar = async (formData: FormData) => {
+    const token = auth.token
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     try {
       return await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/me/avatar'), {
         method: 'POST',
-        headers: authHeaders(),
+        headers,
         body: formData
       })
     } catch (err: any) {
       if (err?.status === 404 || err?.statusCode === 404 || err?.response?.status === 404) {
         return await $fetch<{ success: boolean; message: string; data: ApiUser }>(useApiUrl('/api/user/avatar'), {
           method: 'POST',
-          headers: authHeaders(),
+          headers,
           body: formData
         })
       }
