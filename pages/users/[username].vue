@@ -172,17 +172,36 @@ const router = useRouter()
 onMounted(async () => {
   authStore.initAuth()
   try {
-    const [profileRes, favoritesRes, ratingsRes] = await Promise.all([
+    const [profileRes, favoritesRes, ratingsRes, followersRes, followingRes] = await Promise.allSettled([
       api.getPublicProfile(username.value),
       api.getPublicFavorites(username.value),
-      api.getPublicRatings(username.value)
+      api.getPublicRatings(username.value),
+      api.getUserFollowers(username.value),
+      api.getUserFollowing(username.value)
     ])
-    profile.value = profileRes.data
-    favorites.value = favoritesRes.data || []
-    ratings.value = ratingsRes.data || []
-    isFollowing.value = profileRes.data.is_following || false
+
+    if (profileRes.status === 'fulfilled' && profileRes.value?.data) {
+      profile.value = profileRes.value.data
+      isFollowing.value = profileRes.value.data.is_following || false
+    } else {
+      const reason = profileRes.status === 'rejected' ? profileRes.reason : null
+      error.value = reason?.data?.error || reason?.message || 'User profile not found or set to private.'
+    }
+
+    if (favoritesRes.status === 'fulfilled') {
+      favorites.value = favoritesRes.value?.data || []
+    }
+    if (ratingsRes.status === 'fulfilled') {
+      ratings.value = ratingsRes.value?.data || []
+    }
+    if (followersRes.status === 'fulfilled') {
+      followers.value = followersRes.value?.data || []
+    }
+    if (followingRes.status === 'fulfilled') {
+      following.value = followingRes.value?.data || []
+    }
   } catch (err: any) {
-    error.value = err?.data?.error || 'User profile not found or set to private.'
+    error.value = err?.data?.error || 'Failed to load user profile.'
   } finally {
     isLoading.value = false
   }
@@ -190,9 +209,9 @@ onMounted(async () => {
 
 const selectFollowTab = async (tab: 'followers' | 'following') => {
   activeTab.value = tab
-  if (tab === 'followers' && followers.value.length === 0) {
+  if (tab === 'followers') {
     await loadFollowers()
-  } else if (tab === 'following' && following.value.length === 0) {
+  } else if (tab === 'following') {
     await loadFollowing()
   }
 }
@@ -241,6 +260,7 @@ const toggleFollow = async () => {
     } else {
       await api.followUser(targetId)
     }
+    await loadFollowers()
   } catch (err) {
     console.error('Failed to toggle follow status:', err)
     isFollowing.value = currentlyFollowing
