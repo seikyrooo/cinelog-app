@@ -3,7 +3,7 @@
     <div class="profile-hero glass-card">
       <div class="avatar-upload-zone" @click="triggerFileInput" @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false" @drop.prevent="handleFileDrop" :class="{ dragging: isDragging }">
         <div class="profile-avatar" aria-hidden="true">
-          <img v-if="avatarPreview || form.avatar_url" :src="getAvatarUrl(avatarPreview || form.avatar_url)" alt="User Avatar" />
+          <img v-if="avatarPreview || form.avatar_url" :src="getAvatarUrl(avatarPreview || form.avatar_url)" alt="User Avatar" @error="onAvatarError" />
           <span v-else>{{ initials }}</span>
         </div>
         <div class="avatar-overlay">
@@ -92,7 +92,7 @@ const form = reactive({
   is_public: true
 })
 
-const { getAvatarUrl } = useFormatters()
+const { getAvatarUrl, onAvatarError } = useFormatters()
 const initials = computed(() => (authStore.user?.username || 'CL').slice(0, 2).toUpperCase())
 
 const triggerFileInput = () => {
@@ -105,6 +105,7 @@ const handleFileSelect = async (e: Event) => {
   const target = e.target as HTMLInputElement
   if (target.files && target.files[0]) {
     await uploadAvatarFile(target.files[0])
+    target.value = ''
   }
 }
 
@@ -138,7 +139,8 @@ const uploadAvatarFile = async (file: File) => {
     if (res.data) {
       authStore.setUser(res.data)
       form.avatar_url = res.data.avatar_url || ''
-      message.value = 'Avatar uploaded successfully!'
+      avatarPreview.value = ''
+      message.value = 'Avatar updated successfully!'
     }
   } catch (err: any) {
     console.error('Avatar upload error:', err)

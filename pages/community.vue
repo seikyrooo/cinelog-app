@@ -61,7 +61,7 @@
         <div class="user-card-header">
           <NuxtLink :to="`/users/${user.username}`" class="user-avatar-link">
             <div class="user-avatar">
-              <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" loading="lazy" decoding="async" />
+              <img v-if="user.avatar_url" :src="getAvatarUrl(user.avatar_url)" :alt="user.username" @error="onAvatarError" loading="lazy" decoding="async" />
               <span v-else>{{ user.username.slice(0, 2).toUpperCase() }}</span>
             </div>
           </NuxtLink>
@@ -187,7 +187,7 @@ const toggleFollow = async (user: CommunityUser) => {
   }
 }
 
-const { getAvatarUrl, formatYear } = useFormatters()
+const { getAvatarUrl, onAvatarError, formatYear } = useFormatters()
 </script>
 
 <style scoped>

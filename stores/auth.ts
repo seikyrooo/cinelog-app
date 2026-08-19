@@ -9,13 +9,34 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuth = computed(() => !!token.value)
 
+  async function fetchUser() {
+    if (!token.value || !import.meta.client) return
+    try {
+      const res: any = await $fetch(useApiUrl('/api/me'), {
+        headers: { Authorization: `Bearer ${token.value}` }
+      })
+      if (res?.data) {
+        setUser(res.data)
+      }
+    } catch (e) {
+      console.error('Failed to sync auth user profile:', e)
+    }
+  }
+
   function initAuth() {
     if (import.meta.client) {
       token.value = localStorage.getItem('cinelog_token')
       const storedId = localStorage.getItem('cinelog_user_id')
       if (storedId) userId.value = Number(storedId)
       const storedUser = localStorage.getItem('cinelog_user')
-      if (storedUser) user.value = JSON.parse(storedUser)
+      if (storedUser) {
+        try {
+          user.value = JSON.parse(storedUser)
+        } catch {}
+      }
+      if (token.value) {
+        fetchUser()
+      }
     }
   }
 
@@ -27,6 +48,9 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('cinelog_token', newToken)
       localStorage.setItem('cinelog_user_id', String(id))
       if (profile) localStorage.setItem('cinelog_user', JSON.stringify(profile))
+    }
+    if (newToken) {
+      fetchUser()
     }
   }
 
@@ -56,6 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isAuth,
     initAuth,
+    fetchUser,
     setAuth,
     setUser,
     logout

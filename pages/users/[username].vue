@@ -12,7 +12,7 @@
     <template v-else-if="profile">
       <header class="public-hero glass-card">
         <div class="public-avatar" aria-hidden="true">
-          <img v-if="profile.user.avatar_url" :src="getAvatarUrl(profile.user.avatar_url)" alt="User avatar" />
+          <img v-if="profile.user.avatar_url" :src="getAvatarUrl(profile.user.avatar_url)" alt="User avatar" @error="onAvatarError" />
           <span v-else>{{ profile.user.username.slice(0, 2).toUpperCase() }}</span>
         </div>
         <div class="public-copy">
@@ -25,6 +25,20 @@
             >
               {{ isFollowing ? 'Following ✓' : '+ Follow' }}
             </button>
+            <NuxtLink
+              v-else-if="authStore.isAuth && authStore.user?.username === profile.user.username"
+              to="/profile"
+              class="btn-edit-profile"
+            >
+              Edit Profile ↗
+            </NuxtLink>
+            <NuxtLink
+              v-else
+              to="/login"
+              class="btn-follow"
+            >
+              + Follow
+            </NuxtLink>
           </div>
           <p class="bio-text">{{ profile.user.bio || 'No bio provided yet.' }}</p>
         </div>
@@ -241,13 +255,60 @@ const toggleUserFollow = async (user: CommunityUser) => {
   }
 }
 
-const { getPosterUrl, getAvatarUrl, onImageError, formatYear, getStatusLabel } = useFormatters()
+const { getPosterUrl, getAvatarUrl, onAvatarError, onImageError, formatYear, getStatusLabel } = useFormatters()
 </script>
 
 <style scoped>
 .public-profile-page {
   display: grid;
   gap: 24px;
+}
+
+.username-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-edit-profile {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-profile:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.btn-follow {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  background: var(--accent-red);
+  border: 1px solid var(--accent-red);
+  color: #ffffff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-follow:hover {
+  background: #b80710;
+}
+
+.btn-follow.following {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
 }
 
 .public-hero {

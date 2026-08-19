@@ -51,12 +51,17 @@
 
         <div class="auth-actions">
           <template v-if="authStore.isAuth">
-            <NuxtLink to="/profile" class="user-badge">
-              <svg class="user-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <span>{{ authStore.user?.username || `User #${authStore.userId}` }}</span>
+            <NuxtLink to="/profile" class="user-badge" title="Go to Profile Settings">
+              <div class="user-avatar-mini">
+                <img 
+                  v-if="authStore.user?.avatar_url" 
+                  :src="getAvatarUrl(authStore.user.avatar_url)" 
+                  :alt="authStore.user?.username || 'User'"
+                  @error="onAvatarError"
+                />
+                <span v-else>{{ userInitials }}</span>
+              </div>
+              <span class="user-name-text">{{ authStore.user?.username || `User #${authStore.userId}` }}</span>
             </NuxtLink>
             <button @click="handleLogout" class="btn-secondary text-sm">
               <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -88,10 +93,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
+const { getAvatarUrl, onAvatarError } = useFormatters()
+
+const userInitials = computed(() => {
+  const name = authStore.user?.username || ''
+  return name ? name.slice(0, 2).toUpperCase() : 'CL'
+})
 
 onMounted(() => {
   authStore.initAuth()
@@ -203,19 +214,48 @@ const handleLogout = () => {
   font-weight: 600;
   color: #ffffff;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 6px 12px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px 4px 5px;
+  border-radius: 20px;
   border: 1px solid var(--border-subtle);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-avatar-mini {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(229, 9, 20, 0.15);
+  color: #ff6b6b;
+  display: grid;
+  place-items: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-avatar-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-name-text {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-badge:hover {
-  border-color: var(--border-red);
-  color: var(--accent-red);
+  border-color: rgba(229, 9, 20, 0.5);
+  background: rgba(229, 9, 20, 0.08);
+  color: #ffffff;
 }
 
 .main-content {

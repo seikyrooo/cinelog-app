@@ -49,10 +49,18 @@ export const useFormatters = () => {
   }
 
   const getAvatarUrl = (path?: string): string => {
-    if (!path) return ''
+    if (!path || path === 'null' || path === 'undefined') return ''
     if (path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://')) return path
     if (path.startsWith('/uploads/') || path.startsWith('uploads/')) return useApiUrl(path)
-    return path
+    if (path.startsWith('/')) return useApiUrl(path)
+    return useApiUrl('/uploads/avatars/' + path)
+  }
+
+  const onAvatarError = (e: Event) => {
+    const target = e.target as HTMLImageElement
+    if (target) {
+      target.style.display = 'none'
+    }
   }
 
   const onImageError = (e: Event) => {
@@ -87,6 +95,7 @@ export const useFormatters = () => {
     getImageUrl: getPosterUrl,
     getBackdropUrl,
     getAvatarUrl,
+    onAvatarError,
     onImageError,
     formatYear,
     getStatusLabel,
