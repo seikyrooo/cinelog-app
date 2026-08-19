@@ -168,196 +168,8 @@
       </div>
     </section>
 
-    <!-- Streaming Networks & Platform Filter Bar (Netflix, Disney+, HBO, etc.) -->
-    <section v-if="!isSearchMode" class="platforms-section" aria-label="Streaming Platforms">
-      <div class="section-label-row">
-        <span class="section-badge-pill">STREAMING PLATFORMS</span>
-        <span class="section-hint-text">Filter original hits by network</span>
-      </div>
-      <div class="platforms-scroll-track">
-        <button
-          v-for="p in platforms"
-          :key="p.id"
-          @click="selectPlatform(p.id)"
-          :class="['platform-chip', { active: selectedPlatform === p.id }]"
-          :style="{ '--platform-brand': p.color }"
-        >
-          <span class="platform-icon">{{ p.icon }}</span>
-          <span class="platform-name">{{ p.name }}</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Pop-Culture Universes & Franchises (MCU, DC, Star Wars, Harry Potter, etc.) -->
-    <section v-if="!isSearchMode" class="franchises-section" aria-label="Universes & Franchises">
-      <div class="section-label-row">
-        <span class="section-badge-pill franchise-pill">COLLECTIONS & UNIVERSES</span>
-        <span class="section-hint-text">Explore cinematic sagas & franchise chronologies</span>
-      </div>
-      <div class="franchises-scroll-track">
-        <div
-          v-for="f in franchises"
-          :key="f.id"
-          @click="selectFranchise(f.id)"
-          :class="['franchise-card', { active: selectedFranchise === f.id }]"
-          :style="{ background: f.color }"
-          role="button"
-          tabindex="0"
-          @keyup.enter="selectFranchise(f.id)"
-        >
-          <div class="franchise-card-content">
-            <span class="franchise-icon">{{ f.icon }}</span>
-            <div class="franchise-meta">
-              <span class="franchise-badge-tag">{{ f.badge }}</span>
-              <h4 class="franchise-title">{{ f.name }}</h4>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Horizontal Scrolling Shelves / Discovery Feeds (IDLIX / Netflix Layout) -->
     <div v-else class="discovery-container">
-
-      <!-- DYNAMIC SHELF: Streaming Platform Picks -->
-      <section v-if="platformTitles.length > 0" class="shelf-section" aria-label="Platform Highlights">
-        <div class="shelf-header">
-          <div class="shelf-title-group">
-            <span class="shelf-indicator brand-indicator" :style="{ background: activePlatformObj?.color || 'var(--accent-red)' }"></span>
-            <div>
-              <h2 class="shelf-title">{{ activePlatformObj?.name }} Highlights</h2>
-              <p class="shelf-sub">Top streamable originals & exclusive releases on {{ activePlatformObj?.name }}</p>
-            </div>
-          </div>
-
-          <div class="shelf-nav-controls">
-            <button 
-              @click="scrollShelf('shelf-platform', -1)" 
-              class="shelf-arrow-btn" 
-              aria-label="Scroll left"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
-            </button>
-            <button 
-              @click="scrollShelf('shelf-platform', 1)" 
-              class="shelf-arrow-btn" 
-              aria-label="Scroll right"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div v-if="isLoadingPlatform" class="loading-state text-sm">
-          <div class="spinner"></div>
-          <span>Loading {{ activePlatformObj?.name }} catalog...</span>
-        </div>
-
-        <div v-else id="shelf-platform" class="shelf-scroll-track">
-          <div 
-            v-for="item in platformTitles" 
-            :key="'platform-' + item.id" 
-            class="shelf-card clickable"
-            @click="openSaveModal(item)"
-            role="button"
-            tabindex="0"
-            @keyup.enter="openSaveModal(item)"
-          >
-            <div class="shelf-poster-wrapper">
-              <img 
-                :src="getImageUrl(item)" 
-                :alt="item.title || item.name" 
-                class="shelf-poster-img"
-                @error="onImageError"
-              />
-              <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'shelf-type-badge']">
-                {{ item.media_type === 'tv' ? 'TV' : 'Movie' }}
-              </span>
-              <span v-if="item.vote_average" class="shelf-rating-badge">
-                ★ {{ item.vote_average.toFixed(1) }}
-              </span>
-            </div>
-            <div class="shelf-card-info">
-              <h3 class="shelf-card-title">{{ item.title || item.name }}</h3>
-              <p class="shelf-card-year">{{ formatYear(item.release_date || item.first_air_date) }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- DYNAMIC SHELF: Franchise / Universe Spotlight -->
-      <section v-if="franchiseTitles.length > 0" class="shelf-section" aria-label="Franchise Highlights">
-        <div class="shelf-header">
-          <div class="shelf-title-group">
-            <span class="shelf-indicator franchise-indicator"></span>
-            <div>
-              <h2 class="shelf-title">{{ activeFranchiseObj?.name }}</h2>
-              <p class="shelf-sub">Cinematic universe chronology & fan-favorite titles</p>
-            </div>
-          </div>
-
-          <div class="shelf-nav-controls">
-            <button 
-              @click="scrollShelf('shelf-franchise', -1)" 
-              class="shelf-arrow-btn" 
-              aria-label="Scroll left"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
-            </button>
-            <button 
-              @click="scrollShelf('shelf-franchise', 1)" 
-              class="shelf-arrow-btn" 
-              aria-label="Scroll right"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div v-if="isLoadingFranchise" class="loading-state text-sm">
-          <div class="spinner"></div>
-          <span>Loading {{ activeFranchiseObj?.name }}...</span>
-        </div>
-
-        <div v-else id="shelf-franchise" class="shelf-scroll-track">
-          <div 
-            v-for="item in franchiseTitles" 
-            :key="'franchise-' + item.id" 
-            class="shelf-card clickable"
-            @click="openSaveModal(item)"
-            role="button"
-            tabindex="0"
-            @keyup.enter="openSaveModal(item)"
-          >
-            <div class="shelf-poster-wrapper">
-              <img 
-                :src="getImageUrl(item)" 
-                :alt="item.title || item.name" 
-                class="shelf-poster-img"
-                @error="onImageError"
-              />
-              <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'shelf-type-badge']">
-                {{ item.media_type === 'tv' ? 'TV' : 'Movie' }}
-              </span>
-              <span v-if="item.vote_average" class="shelf-rating-badge">
-                ★ {{ item.vote_average.toFixed(1) }}
-              </span>
-            </div>
-            <div class="shelf-card-info">
-              <h3 class="shelf-card-title">{{ item.title || item.name }}</h3>
-              <p class="shelf-card-year">{{ formatYear(item.release_date || item.first_air_date) }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
       
       <!-- SHELF 1: Trending Now -->
       <section class="shelf-section" aria-labelledby="shelf-trending-title">
@@ -954,77 +766,8 @@ const seasonsCount = computed(() => {
   return detailedInfo.value?.total_seasons || 1
 })
 
-const platforms = [
-  { id: 'netflix', name: 'Netflix', color: '#E50914', icon: '🔴' },
-  { id: 'disney', name: 'Disney+', color: '#113CCF', icon: '🏰' },
-  { id: 'hbo', name: 'HBO Max', color: '#9933FF', icon: '🟡' },
-  { id: 'apple', name: 'Apple TV+', color: '#A2AAAD', icon: '🍎' },
-  { id: 'prime', name: 'Prime Video', color: '#00A8E1', icon: '🔵' },
-  { id: 'paramount', name: 'Paramount+', color: '#0064FF', icon: '⛰️' },
-  { id: 'hulu', name: 'Hulu', color: '#1CE783', icon: '🟢' }
-]
-
-const franchises = [
-  { id: 'marvel', name: 'Marvel Cinematic Universe', badge: 'MCU', color: 'linear-gradient(135deg, #b91c1c 0%, #450a0a 100%)', icon: '🦸' },
-  { id: 'dc', name: 'DC Universe & Extended', badge: 'DC', color: 'linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%)', icon: '🦇' },
-  { id: 'starwars', name: 'Star Wars Saga', badge: 'Star Wars', color: 'linear-gradient(135deg, #b45309 0%, #1c1917 100%)', icon: '⭐' },
-  { id: 'harrypotter', name: 'Wizarding World', badge: 'Harry Potter', color: 'linear-gradient(135deg, #6d28d9 0%, #1e1b4b 100%)', icon: '🧙' },
-  { id: 'anime', name: 'Studio Ghibli & Top Anime', badge: 'Anime', color: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)', icon: '⛩️' },
-  { id: 'monsterverse', name: 'MonsterVerse (Godzilla & Kong)', badge: 'MonsterVerse', color: 'linear-gradient(135deg, #991b1b 0%, #262626 100%)', icon: '🦖' }
-]
-
-const selectedPlatform = ref('netflix')
-const platformTitles = ref<any[]>([])
-const isLoadingPlatform = ref(false)
-
-const selectedFranchise = ref('marvel')
-const franchiseTitles = ref<any[]>([])
-const isLoadingFranchise = ref(false)
-
-const activePlatformObj = computed(() => {
-  return platforms.find(p => p.id === selectedPlatform.value) || platforms[0]
-})
-
-const activeFranchiseObj = computed(() => {
-  return franchises.find(f => f.id === selectedFranchise.value) || franchises[0]
-})
-
-const selectPlatform = async (platformId: string) => {
-  selectedPlatform.value = platformId
-  isLoadingPlatform.value = true
-  try {
-    const res: any = await $fetch(useApiUrl('/api/discover/platform'), {
-      params: { platform: platformId, type: 'all' }
-    })
-    platformTitles.value = res.data || []
-  } catch (err) {
-    console.error('Failed to load platform titles', err)
-  } finally {
-    isLoadingPlatform.value = false
-  }
-}
-
-const selectFranchise = async (franchiseId: string) => {
-  selectedFranchise.value = franchiseId
-  isLoadingFranchise.value = true
-  try {
-    const res: any = await $fetch(useApiUrl('/api/discover/franchise'), {
-      params: { franchise: franchiseId }
-    })
-    franchiseTitles.value = res.data || []
-  } catch (err) {
-    console.error('Failed to load franchise titles', err)
-  } finally {
-    isLoadingFranchise.value = false
-  }
-}
-
 onMounted(async () => {
-  await Promise.all([
-    loadDiscoveryFeeds(),
-    selectPlatform('netflix'),
-    selectFranchise('marvel')
-  ])
+  await loadDiscoveryFeeds()
 })
 
 const loadDiscoveryFeeds = async () => {
@@ -1623,169 +1366,6 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 .type-btn.active {
   background: var(--accent-red);
   color: #ffffff;
-}
-
-/* =========================================================================
-   STREAMING PLATFORMS & FRANCHISES SECTIONS
-   ========================================================================= */
-.platforms-section,
-.franchises-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.section-label-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.section-badge-pill {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: #27272a;
-  color: #e4e4e7;
-  padding: 3px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border-subtle);
-}
-
-.section-badge-pill.franchise-pill {
-  background: rgba(229, 9, 20, 0.15);
-  color: #ff6b6b;
-  border-color: var(--border-red);
-}
-
-.section-hint-text {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.platforms-scroll-track {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.platform-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  color: #e4e4e7;
-  font-weight: 700;
-  font-size: 0.86rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 40px;
-}
-
-.platform-chip:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--platform-brand);
-  transform: translateY(-2px);
-}
-
-.platform-chip.active {
-  background: var(--platform-brand);
-  border-color: var(--platform-brand);
-  color: #ffffff;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
-}
-
-.platform-icon {
-  font-size: 1.1rem;
-}
-
-.franchises-scroll-track {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.franchise-card {
-  flex: 0 0 230px;
-  height: 84px;
-  border-radius: 12px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-
-.franchise-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-}
-
-.franchise-card.active {
-  border-color: #ffffff;
-  outline: 2px solid var(--accent-red);
-}
-
-.franchise-card-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.franchise-icon {
-  font-size: 1.8rem;
-  flex-shrink: 0;
-}
-
-.franchise-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
-}
-
-.franchise-badge-tag {
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.franchise-title {
-  font-size: 0.88rem;
-  font-weight: 800;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0;
-}
-
-.brand-indicator {
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-}
-
-.franchise-indicator {
-  background: linear-gradient(180deg, #ff6b6b 0%, #991b1b 100%);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
 }
 
 /* =========================================================================
@@ -2582,24 +2162,23 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 @media (max-width: 768px) {
   .explore-page {
     gap: 24px;
-    padding: 0 2px;
   }
 
   .featured-hero-banner {
-    min-height: 360px;
+    min-height: 380px;
     border-radius: 12px;
   }
 
   .featured-gradient-overlay {
-    padding: 20px 16px;
+    padding: 24px 18px;
   }
 
   .featured-title {
-    font-size: 1.6rem;
+    font-size: 1.75rem;
   }
 
   .featured-overview {
-    font-size: 0.84rem;
+    font-size: 0.86rem;
     -webkit-line-clamp: 3;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -2608,46 +2187,11 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 
   .featured-actions {
     flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .btn-hero-play,
-  .btn-hero-info {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .franchise-card {
-    flex: 0 0 180px;
-    height: 72px;
-    padding: 10px 12px;
-  }
-
-  .franchise-icon {
-    font-size: 1.5rem;
-  }
-
-  .franchise-title {
-    font-size: 0.82rem;
-  }
-
-  .platform-chip {
-    padding: 6px 14px;
-    font-size: 0.8rem;
-    min-height: 36px;
+    gap: 10px;
   }
 
   .shelf-card {
-    flex: 0 0 135px;
-  }
-
-  .shelf-poster-wrapper {
-    height: 195px;
-  }
-
-  .shelf-nav-controls {
-    display: none;
+    flex: 0 0 142px;
   }
 
   .modal-overlay {
@@ -2730,39 +2274,6 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
     align-self: flex-start;
     padding: 5px 10px;
     font-size: 0.74rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .search-box {
-    padding: 8px;
-  }
-
-  .filter-type {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .filter-type .type-btn {
-    flex: 1;
-    text-align: center;
-    padding: 6px 4px;
-  }
-
-  .search-action-btn {
-    width: 100%;
-  }
-
-  .shelf-title {
-    font-size: 1.15rem;
-  }
-
-  .shelf-card {
-    flex: 0 0 120px;
-  }
-
-  .shelf-poster-wrapper {
-    height: 175px;
   }
 }
 </style>
