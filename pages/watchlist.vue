@@ -1179,10 +1179,6 @@ onMounted(() => {
   fetchWatchlist()
 })
 
-const padZero = (num: number) => {
-  return num < 10 ? `0${num}` : `${num}`
-}
-
 const getTotalEps = (item: any) => {
   return item.movie?.total_episodes || item.total_episodes || 0
 }
@@ -1485,70 +1481,13 @@ const toggleFavoriteStatus = async (item: any) => {
   }
 }
 
-const getPosterUrl = (itemOrPath: any) => {
-  let poster = ''
-  let local = ''
-  let backdrop = ''
-
-  if (typeof itemOrPath === 'object' && itemOrPath !== null) {
-    const movie = itemOrPath.movie ? itemOrPath.movie : itemOrPath
-    poster = movie.poster_path || ''
-    local = movie.local_poster_path || ''
-    backdrop = movie.backdrop_path || movie.local_backdrop_path || ''
-  } else if (typeof itemOrPath === 'string') {
-    poster = itemOrPath
-  }
-
-  // 1. Direct TMDB CDN / External URL (100% reliable)
-  if (poster && poster !== 'null' && poster !== 'undefined') {
-    if (poster.startsWith('http://') || poster.startsWith('https://')) {
-      return poster
-    }
-    if (poster.startsWith('/uploads/') || poster.startsWith('uploads/')) {
-      return useApiUrl(poster)
-    }
-    return `https://image.tmdb.org/t/p/w500${poster.startsWith('/') ? poster : '/' + poster}`
-  }
-
-  // 2. Local Upload fallback
-  if (local && local !== 'null' && local !== 'undefined') {
-    if (local.startsWith('http://') || local.startsWith('https://')) {
-      return local
-    }
-    return useApiUrl(local)
-  }
-
-  // 3. Backdrop fallback
-  if (backdrop && backdrop !== 'null' && backdrop !== 'undefined') {
-    if (backdrop.startsWith('http://') || backdrop.startsWith('https://')) {
-      return backdrop
-    }
-    if (backdrop.startsWith('/uploads/') || backdrop.startsWith('uploads/')) {
-      return useApiUrl(backdrop)
-    }
-    return `https://image.tmdb.org/t/p/w500${backdrop.startsWith('/') ? backdrop : '/' + backdrop}`
-  }
-
-  return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
-}
-
-const onImageError = (e: Event) => {
-  const target = e.target as HTMLImageElement
-  if (target && !target.src.includes('unsplash')) {
-    target.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
-  }
-}
+const { getPosterUrl, getBackdropUrl, onImageError, padZero, formatYear, getStatusLabel } = useFormatters()
 
 const onEpsImageError = (e: Event) => {
   const target = e.target as HTMLImageElement
   if (target && !target.src.includes('unsplash')) {
     target.src = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=500&q=80'
   }
-}
-
-const formatYear = (dateStr: string) => {
-  if (!dateStr) return ''
-  return dateStr.substring(0, 4)
 }
 
 const truncateText = (text: string, len: number) => {
@@ -1561,16 +1500,6 @@ const getStatusBadgeClass = (status: string) => {
     case 'watching': return 'badge-watching'
     case 'completed': return 'badge-completed'
     default: return 'badge-plan'
-  }
-}
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'watching': return 'Watching'
-    case 'completed': return 'Completed'
-    case 'on_hold': return 'On Hold'
-    case 'dropped': return 'Dropped'
-    default: return 'Plan to Watch'
   }
 }
 

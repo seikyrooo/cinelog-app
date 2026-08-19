@@ -238,44 +238,7 @@ const toggleUserFollow = async (user: CommunityUser) => {
   }
 }
 
-const getPosterUrl = (movie: any) => {
-  let path = ''
-  if (typeof movie === 'object' && movie !== null) {
-    path = movie.local_poster_path || movie.poster_path || movie.local_backdrop_path || movie.backdrop_path || ''
-  } else if (typeof movie === 'string') {
-    path = movie
-  }
-
-  if (!path || path === 'null' || path === 'undefined') {
-    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
-  }
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path
-  }
-  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) {
-    return useApiUrl(path)
-  }
-  return `https://image.tmdb.org/t/p/w500${path.startsWith('/') ? path : '/' + path}`
-}
-
-const onImageError = (e: Event) => {
-  const target = e.target as HTMLImageElement
-  if (target && !target.src.includes('unsplash')) {
-    target.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80'
-  }
-}
-
-const formatYear = (dateStr?: string) => dateStr ? dateStr.substring(0, 4) : '—'
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'watching': return 'Watching'
-    case 'completed': return 'Completed'
-    case 'on_hold': return 'On Hold'
-    case 'dropped': return 'Dropped'
-    default: return 'Plan to Watch'
-  }
-}
+const { getPosterUrl, getAvatarUrl, onImageError, formatYear, getStatusLabel } = useFormatters()
 </script>
 
 <style scoped>

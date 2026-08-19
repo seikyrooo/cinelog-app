@@ -92,14 +92,8 @@ const form = reactive({
   is_public: true
 })
 
+const { getAvatarUrl } = useFormatters()
 const initials = computed(() => (authStore.user?.username || 'CL').slice(0, 2).toUpperCase())
-
-const getAvatarUrl = (path?: string) => {
-  if (!path) return ''
-  if (path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://')) return path
-  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) return useApiUrl(path)
-  return path
-}
 
 const triggerFileInput = () => {
   if (fileInputRef.value) {

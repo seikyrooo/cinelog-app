@@ -187,17 +187,7 @@ const toggleFollow = async (user: CommunityUser) => {
   }
 }
 
-const getAvatarUrl = (path?: string) => {
-  if (!path) return ''
-  if (path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://')) return path
-  if (path.startsWith('/uploads/') || path.startsWith('uploads/')) return useApiUrl(path)
-  return path
-}
-
-const formatYear = (dateStr?: string) => {
-  if (!dateStr) return '2026'
-  return dateStr.substring(0, 4)
-}
+const { getAvatarUrl, formatYear } = useFormatters()
 </script>
 
 <style scoped>
