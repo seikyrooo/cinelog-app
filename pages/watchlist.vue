@@ -1,7 +1,7 @@
 <template>
   <div class="tvtime-container">
     <!-- Toast Notification -->
-    <div v-if="toastMessage" class="toast-notification animate-fade-in">
+    <div v-if="toastMessage" class="toast-notification animate-fade-in" role="status" aria-live="polite">
       <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
         <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -57,7 +57,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
         <div class="spinner"></div>
-        <p>Memuat daftar watchlist...</p>
+        <p>Loading watchlist...</p>
       </div>
 
       <!-- WATCH LIST TAB -->
@@ -93,7 +93,7 @@
                     S{{ padZero(item.season_watched || 1) }} | E{{ padZero((item.episodes_watched || 0) + 1) }}
                   </span>
                   <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                    +{{ getRemainingEps(item) }} eps lagi
+                    +{{ getRemainingEps(item) }} eps left
                   </span>
                 </div>
 
@@ -103,9 +103,9 @@
 
                 <div class="card-badges-row">
                   <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
-                  <span v-if="item.favorite" class="badge-fav">★ FAVORIT</span>
+                  <span v-if="item.favorite" class="badge-fav">★ FAVORITE</span>
                   <span class="badge-total-info" v-if="getTotalEps(item) > 0">
-                    Tersisa {{ getRemainingEps(item) }} dari {{ getTotalEps(item) }} eps
+                    {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
                   </span>
                 </div>
               </div>
@@ -114,7 +114,7 @@
               <button 
                 @click="incrementEpisode(item)" 
                 class="circle-check-btn"
-                title="Tandai episode ini selesai"
+                title="Mark this episode watched"
               >
                 <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
@@ -127,7 +127,7 @@
         <!-- SECTION 2: HAVENT WATCHED FOR A WHILE (Inactive / On Hold) -->
         <div v-if="haventWatchedList.length > 0" class="section-group">
           <div class="section-pill-header">
-            <span class="pill-badge idle-badge">TERTUNDA</span>
+            <span class="pill-badge idle-badge">ON HOLD</span>
           </div>
 
           <div class="shows-stack">
@@ -154,14 +154,14 @@
                     S{{ padZero(item.season_watched || 1) }} | E{{ padZero((item.episodes_watched || 0) + 1) }}
                   </span>
                   <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                    +{{ getRemainingEps(item) }} eps lagi
+                    +{{ getRemainingEps(item) }} eps left
                   </span>
                 </div>
 
-                <p class="eps-title-text">Belum dilanjutkan lagi</p>
+                <p class="eps-title-text">Paused watching</p>
               </div>
 
-              <button @click="incrementEpisode(item)" class="circle-check-btn">
+              <button @click="incrementEpisode(item)" class="circle-check-btn" title="Mark this episode watched">
                 <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
@@ -173,7 +173,7 @@
         <!-- SECTION 3: WATCHED HISTORY (Completed Shows) -->
         <div v-if="watchedHistoryList.length > 0" class="section-group">
           <div class="section-pill-header">
-            <span class="pill-badge history-badge">RIWAYAT TAMAT</span>
+            <span class="pill-badge history-badge">COMPLETED HISTORY</span>
           </div>
 
           <div class="shows-stack">
@@ -199,10 +199,10 @@
                   <span class="season-eps-code">
                     S{{ padZero(item.season_watched || 1) }} | E{{ padZero(item.episodes_watched || getTotalEps(item)) }}
                   </span>
-                  <span class="badge-completed-tag">TAMAT ({{ item.episodes_watched || getTotalEps(item) }} eps)</span>
+                  <span class="badge-completed-tag">COMPLETED ({{ item.episodes_watched || getTotalEps(item) }} eps)</span>
                 </div>
 
-                <p class="eps-title-text">Semua episode telah ditonton 100%</p>
+                <p class="eps-title-text">All episodes watched 100%</p>
               </div>
 
               <div class="circle-check-btn completed">
@@ -216,9 +216,9 @@
 
         <!-- Empty State -->
         <div v-if="watchlist.length === 0" class="empty-state glass-card">
-          <h3>Watchlist TV Series Kosong</h3>
-          <p>Cari dan tambahkan TV show favorit Anda dari menu Eksplor.</p>
-          <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Cari TV Series</NuxtLink>
+          <h3>Your TV Watchlist is Empty</h3>
+          <p>Discover and add your favorite TV series from the Explore page.</p>
+          <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Browse TV Shows</NuxtLink>
         </div>
       </div>
 
@@ -250,19 +250,19 @@
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                <span>Rilis: <strong>{{ item.movie.next_air_date }}</strong></span>
+                <span>Airs: <strong>{{ item.movie.next_air_date }}</strong></span>
               </div>
 
               <p class="eps-title-text" v-if="item.movie.next_episode_name">
-                Judul Episode: "{{ item.movie.next_episode_name }}"
+                Episode: "{{ item.movie.next_episode_name }}"
               </p>
             </div>
           </div>
         </div>
 
         <div v-else class="empty-state glass-card">
-          <h3>Belum Ada Episode Mendatang</h3>
-          <p>Series di watchlist Anda belum memiliki jadwal rilis episode baru.</p>
+          <h3>No Upcoming Episodes Scheduled</h3>
+          <p>TV series in your watchlist currently have no new episode air dates scheduled.</p>
         </div>
       </div>
     </div>
@@ -271,12 +271,12 @@
     <div v-else class="movies-experience">
       <div v-if="isLoading" class="loading-state">
         <div class="spinner"></div>
-        <p>Memuat daftar film...</p>
+        <p>Loading movies...</p>
       </div>
 
       <div v-else-if="watchlist.length === 0" class="empty-state glass-card">
-        <h3>Belum Ada Film di Watchlist</h3>
-        <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Cari Film</NuxtLink>
+        <h3>No Movies in Your Watchlist</h3>
+        <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Browse Movies</NuxtLink>
       </div>
 
       <div v-else class="movies-grid">
@@ -295,7 +295,7 @@
             <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
               {{ getStatusLabel(item.status) }}
             </span>
-            <span v-if="item.favorite" class="fav-badge">★ Favorit</span>
+            <span v-if="item.favorite" class="fav-badge">★ Favorite</span>
           </div>
 
           <div class="card-details">
@@ -307,12 +307,12 @@
             </div>
 
             <h3 class="movie-title clickable" @click="openDetailModal(item)">{{ item.movie.title }}</h3>
-            <p class="director-text" v-if="item.movie.director">Sutradara: {{ item.movie.director }}</p>
+            <p class="director-text" v-if="item.movie.director">Director: {{ item.movie.director }}</p>
 
             <div class="card-actions">
-              <button @click="openDetailModal(item)" class="btn-secondary text-sm">Detail</button>
+              <button @click="openDetailModal(item)" class="btn-secondary text-sm">Details</button>
               <button @click="openEditModal(item)" class="btn-secondary text-sm">Edit</button>
-              <button @click="deleteItem(item.id)" class="btn-danger text-sm">Hapus</button>
+              <button @click="deleteItem(item.id)" class="btn-danger text-sm">Delete</button>
             </div>
           </div>
         </div>
@@ -324,7 +324,7 @@
       <div class="modal-content glass-panel detail-modal-content wide-modal animate-fade-in">
         
         <!-- Fixed Top Right Close Button -->
-        <button @click="showDetailModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
+        <button @click="showDetailModal = false" class="close-btn-fixed" title="Close Dialog">&times;</button>
 
         <!-- Movie/Show Hero Backdrop Banner -->
         <div class="hero-backdrop-banner" :style="getBackdropStyle(activeDetailMedia)">
@@ -368,35 +368,35 @@
               <svg class="icon-inline" viewBox="0 0 24 24" :fill="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'none'" :stroke="activeWatchlistContext.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
-              <span>{{ activeWatchlistContext.favorite ? 'Hapus dari Favorit' : '+ Favorit' }}</span>
+              <span>{{ activeWatchlistContext.favorite ? 'Remove Favorite' : '+ Favorite' }}</span>
             </button>
 
             <div class="meta-info-box glass-card">
               <p v-if="activeDetailMedia?.director || activeWatchlistContext?.movie?.director">
-                <strong>Sutradara / Pembuat:</strong> <br>
+                <strong>Director / Creator:</strong> <br>
                 <span class="highlight-text">{{ activeDetailMedia?.director || activeWatchlistContext?.movie?.director }}</span>
               </p>
               <p v-if="activeDetailMedia?.cast || activeWatchlistContext?.movie?.cast">
-                <strong>Pemeran Utama:</strong> <br>
+                <strong>Main Cast:</strong> <br>
                 {{ activeDetailMedia?.cast || activeWatchlistContext?.movie?.cast }}
               </p>
               <p v-if="isTvShowContext">
-                <strong>Total Episode:</strong> {{ activeDetailMedia?.total_episodes || activeWatchlistContext?.movie?.total_episodes || 'TBA' }} eps ({{ seasonsCount }} Season)
+                <strong>Total Episodes:</strong> {{ activeDetailMedia?.total_episodes || activeWatchlistContext?.movie?.total_episodes || 'TBA' }} eps ({{ seasonsCount }} Season{{ seasonsCount > 1 ? 's' : '' }})
               </p>
             </div>
           </div>
 
           <!-- Right Column: Overview, Seasons Selector, & Spacious Episode Grid -->
           <div class="detail-right-col">
-            <h4 class="section-subtitle">Sinopsis Cerita</h4>
-            <p class="overview-text">{{ activeDetailMedia?.overview || activeWatchlistContext?.movie?.overview || 'Belum ada ringkasan sinopsis.' }}</p>
+            <h4 class="section-subtitle">Storyline Synopsis</h4>
+            <p class="overview-text">{{ activeDetailMedia?.overview || activeWatchlistContext?.movie?.overview || 'No synopsis summary available.' }}</p>
 
             <!-- If TV Show: Season Selector & Interactive Episode Cards -->
             <div v-if="isTvShowContext" class="seasons-section">
               <div class="section-header-row">
-                <h4 class="section-subtitle">Daftar Season & Episode</h4>
+                <h4 class="section-subtitle">Seasons & Episodes</h4>
                 <span class="watched-counter-badge" v-if="activeWatchlistContext">
-                  Progres: {{ activeWatchlistContext.episodes_watched }} eps ditonton
+                  Progress: {{ activeWatchlistContext.episodes_watched }} eps watched
                 </span>
               </div>
 
@@ -415,7 +415,7 @@
               <!-- Episodes List with Episode Still Banner -->
               <div v-if="isLoadingEpisodes" class="loading-state text-sm">
                 <div class="spinner"></div>
-                <span>Memuat episode Season {{ selectedSeason }}...</span>
+                <span>Loading Season {{ selectedSeason }} episodes...</span>
               </div>
 
               <div v-else class="episodes-list">
@@ -431,13 +431,13 @@
                       class="eps-still-img"
                       @error="onEpsImageError"
                     />
-                    <span class="eps-num-badge">Eps {{ eps.episode_number }}</span>
+                    <span class="eps-num-badge">E{{ eps.episode_number }}</span>
                   </div>
 
                   <div class="eps-info">
                     <div class="eps-header">
                       <h5 class="eps-name">{{ eps.name }}</h5>
-                      <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
+                      <span class="eps-date" v-if="eps.air_date">Aired: {{ eps.air_date }}</span>
                     </div>
                     <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 120) }}</p>
                   </div>
@@ -450,7 +450,7 @@
                     <svg v-if="isEpisodeWatched(eps.episode_number)" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Sudah' : '+ Tonton' }}</span>
+                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Watched' : '+ Watch' }}</span>
                   </button>
                 </div>
               </div>
@@ -463,24 +463,24 @@
     <!-- Modal Edit Watchlist Item -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal-content glass-panel edit-modal-box animate-fade-in">
-        <button @click="showEditModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
+        <button @click="showEditModal = false" class="close-btn-fixed" title="Close Dialog">&times;</button>
         <h2 class="modal-title">Edit Watchlist</h2>
         <p class="modal-subtitle">{{ editingItem?.movie?.title }}</p>
 
         <form @submit.prevent="updateWatchlist" class="modal-form">
           <div class="form-group">
-            <label>Status Tontonan</label>
+            <label>Watch Status</label>
             <select v-model="editForm.status" class="form-input">
-              <option value="watching">Sedang Nonton (Watching)</option>
-              <option value="completed">Selesai (Completed)</option>
-              <option value="plan_to_watch">Rencana Nonton (Plan to Watch)</option>
-              <option value="on_hold">Ditunda (On Hold)</option>
-              <option value="dropped">Dihentikan (Dropped)</option>
+              <option value="watching">Watching</option>
+              <option value="completed">Completed</option>
+              <option value="plan_to_watch">Plan to Watch</option>
+              <option value="on_hold">On Hold</option>
+              <option value="dropped">Dropped</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>Rating Anda (1 - 10)</label>
+            <label>Your Rating (1 - 10)</label>
             <div class="star-rating-selector">
               <span 
                 v-for="star in 10" 
@@ -488,25 +488,25 @@
                 @click="editForm.rating = star"
                 :class="['star-icon', { active: star <= editForm.rating }]"
               >★</span>
-              <span class="rating-number">{{ editForm.rating > 0 ? editForm.rating + ' / 10' : 'Belum dinilai' }}</span>
+              <span class="rating-number">{{ editForm.rating > 0 ? editForm.rating + ' / 10' : 'Not rated yet' }}</span>
             </div>
           </div>
 
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" v-model="editForm.favorite" />
-              Tandai sebagai Favorit
+              Mark as Favorite
             </label>
           </div>
 
           <div class="form-group">
-            <label>Catatan Pribadi</label>
-            <textarea v-model="editForm.notes" rows="3" class="form-input text-area"></textarea>
+            <label>Personal Notes</label>
+            <textarea v-model="editForm.notes" rows="3" class="form-input text-area" placeholder="Write your private review or thoughts..."></textarea>
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="showEditModal = false" class="btn-secondary">Batal</button>
-            <button type="submit" class="btn-primary">Simpan Perubahan</button>
+            <button type="button" @click="showEditModal = false" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
           </div>
         </form>
       </div>
@@ -736,7 +736,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       if (res.data) {
         activeWatchlistContext.value = res.data
         fetchWatchlist()
-        showToast(`Tersimpan: Season ${selectedSeason.value} Episode ${epsNumber}`)
+        showToast(`Saved: Season ${selectedSeason.value} Episode ${epsNumber}`)
       }
     } catch (err) {
       console.error(err)
@@ -759,9 +759,9 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Tamat! Series berpindah ke Riwayat Tamat')
+        showToast('🎉 Completed! Moved to Completed History')
       } else {
-        showToast(`Progres diperbarui: S${res.data.season_watched} E${res.data.episodes_watched}`)
+        showToast(`Progress logged: S${res.data.season_watched} E${res.data.episodes_watched}`)
       }
     }
   } catch (err) {
@@ -787,7 +787,7 @@ const toggleFavoriteStatus = async (item: any) => {
         activeWatchlistContext.value.favorite = newFavState
       }
       fetchWatchlist()
-      showToast(newFavState ? 'Ditambahkan ke Favorit! ★' : 'Dihapus dari Favorit.')
+      showToast(newFavState ? 'Added to Favorites! ★' : 'Removed from Favorites.')
     }
   } catch (err) {
     console.error(err)
@@ -832,11 +832,11 @@ const getStatusBadgeClass = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'watching': return 'Sedang Nonton'
-    case 'completed': return 'Selesai'
-    case 'on_hold': return 'Tertunda'
-    case 'dropped': return 'Diberhentikan'
-    default: return 'Rencana Nonton'
+    case 'watching': return 'Watching'
+    case 'completed': return 'Completed'
+    case 'on_hold': return 'On Hold'
+    case 'dropped': return 'Dropped'
+    default: return 'Plan to Watch'
   }
 }
 
@@ -849,9 +849,9 @@ const incrementEpisode = async (item: any) => {
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Tamat! Series ini telah berpindah ke Riwayat Tamat')
+        showToast('🎉 Completed! Moved to Completed History')
       } else {
-        showToast(`+1 Episode! Total ${item.episodes_watched} eps ditonton`)
+        showToast(`+1 Episode! Total ${item.episodes_watched} eps watched`)
       }
     }
   } catch (err) {
@@ -879,20 +879,20 @@ const updateWatchlist = async () => {
     await api.updateLibraryItem(editingItem.value.id, editForm.value)
     showEditModal.value = false
     fetchWatchlist()
-    showToast('Watchlist berhasil diperbarui!')
+    showToast('Watchlist updated successfully!')
   } catch (err: any) {
-    alert(err?.data?.error || 'Gagal mengupdate watchlist.')
+    alert(err?.data?.error || 'Failed to update watchlist.')
   }
 }
 
 const deleteItem = async (id: number) => {
-  if (!confirm('Hapus item ini dari watchlist Anda?')) return
+  if (!confirm('Remove this item from your watchlist?')) return
   try {
     await api.deleteLibraryItem(id)
     fetchWatchlist()
-    showToast('Item berhasil dihapus dari watchlist.')
+    showToast('Item removed from watchlist.')
   } catch (err: any) {
-    alert(err?.data?.error || 'Gagal menghapus item.')
+    alert(err?.data?.error || 'Failed to delete item.')
   }
 }
 </script>

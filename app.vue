@@ -23,7 +23,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <span>Eksplor</span>
+            <span>Explore</span>
           </NuxtLink>
           <NuxtLink to="/watchlist" class="nav-item" active-class="active">
             <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -36,7 +36,7 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
-            <span>Profil</span>
+            <span>Profile</span>
           </NuxtLink>
         </nav>
 
@@ -55,12 +55,12 @@
                 <polyline points="16 17 21 12 16 7"></polyline>
                 <line x1="21" y1="12" x2="9" y2="12"></line>
               </svg>
-              <span>Keluar</span>
+              <span>Log Out</span>
             </button>
           </template>
           <template v-else>
-            <NuxtLink to="/login" class="btn-secondary text-sm">Masuk</NuxtLink>
-            <NuxtLink to="/register" class="btn-primary text-sm">Daftar</NuxtLink>
+            <NuxtLink to="/login" class="btn-secondary text-sm">Sign In</NuxtLink>
+            <NuxtLink to="/register" class="btn-primary text-sm">Sign Up</NuxtLink>
           </template>
         </div>
       </div>

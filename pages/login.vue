@@ -1,17 +1,17 @@
 <template>
   <div class="auth-page">
     <div class="auth-card glass-panel animate-fade-in">
-      <h1 class="auth-title">Selamat Datang Kembali</h1>
-      <p class="auth-subtitle">Masuk ke akun CineLog untuk mengelola daftar tontonan kamu.</p>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Sign in to your CineLog account to track and manage your watchlists.</p>
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label>Email</label>
+          <label>Email Address</label>
           <input 
             v-model="email" 
             type="email" 
             required 
-            placeholder="nama@email.com" 
+            placeholder="name@email.com" 
             class="form-input"
           />
         </div>
@@ -30,12 +30,12 @@
         <p v-if="errorMessage" class="error-msg">⚠️ {{ errorMessage }}</p>
 
         <button type="submit" class="btn-primary btn-full" :disabled="isLoading">
-          {{ isLoading ? 'Memproses...' : 'Login' }}
+          {{ isLoading ? 'Signing in...' : 'Sign In' }}
         </button>
       </form>
 
       <p class="auth-footer">
-        Belum punya akun? <NuxtLink to="/register">Daftar sekarang</NuxtLink>
+        Don't have an account? <NuxtLink to="/register">Sign up now</NuxtLink>
       </p>
     </div>
   </div>
@@ -45,7 +45,6 @@
 import { ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-const config = useRuntimeConfig()
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -72,7 +71,7 @@ const handleLogin = async () => {
       router.push('/')
     }
   } catch (err: any) {
-    errorMessage.value = err?.data?.error || 'Login gagal. Periksa kembali email & password.'
+    errorMessage.value = err?.data?.error || 'Login failed. Please check your credentials.'
   } finally {
     isLoading.value = false
   }

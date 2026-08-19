@@ -1,7 +1,7 @@
 <template>
-  <div class="search-page">
+  <div class="explore-page">
     <!-- Notification Toast -->
-    <div v-if="toastMessage" class="toast-notification animate-fade-in">
+    <div v-if="toastMessage" class="toast-notification animate-fade-in" role="status" aria-live="polite">
       <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
         <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -9,102 +9,126 @@
       <span>{{ toastMessage }}</span>
     </div>
 
-    <!-- Featured Hero Banner on Explore -->
-    <section v-if="featuredShow" class="featured-hero-banner glass-card" :style="getBackdropStyle(featuredShow)" aria-label="Pilihan trending CineLog">
+    <!-- Immersive Borderless Featured Spotlight Hero Banner (Netflix / IDLIX Aesthetic) -->
+    <section 
+      v-if="featuredShow && !isSearchMode" 
+      class="featured-hero-banner" 
+      :style="getBackdropStyle(featuredShow)" 
+      aria-label="Featured Spotlight"
+    >
       <div class="featured-gradient-overlay">
         <div class="featured-content">
           <div class="featured-badges">
-            <span class="badge badge-tv">Pilihan Utama</span>
-            <span class="hero-rating-badge">
+            <span class="badge-featured-pill">
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              SPOTLIGHT
+            </span>
+            <span :class="['badge', featuredShow.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
+              {{ featuredShow.media_type === 'tv' ? 'TV Series' : 'Movie' }}
+            </span>
+            <span class="hero-rating-badge" v-if="featuredShow.vote_average">
               <svg class="icon-star-gold" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
-              {{ featuredShow.vote_average?.toFixed(1) || '9.0' }} / 10.0
+              {{ featuredShow.vote_average.toFixed(1) }} / 10
             </span>
           </div>
-          <h2 class="featured-title">{{ featuredShow.title || featuredShow.name }}</h2>
-          <p class="featured-overview">{{ truncateText(featuredShow.overview, 160) }}</p>
+
+          <h1 class="featured-title">{{ featuredShow.title || featuredShow.name }}</h1>
+          <p class="featured-overview">{{ truncateText(featuredShow.overview, 180) }}</p>
+
           <div class="featured-actions">
-            <button @click="openSaveModal(featuredShow)" class="btn-primary">
-              <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button @click="openSaveModal(featuredShow)" class="btn-primary btn-hero-play">
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
-              <span>Lihat Detail & Watchlist</span>
+              <span>View Details & Episodes</span>
+            </button>
+            <button @click="openSaveModal(featuredShow)" class="btn-secondary btn-hero-info">
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add to Watchlist</span>
             </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Search Section -->
-    <section class="hero-section" aria-labelledby="explore-title">
-      <div class="hero-copy">
-        <h1 id="explore-title" class="hero-title">Temukan Film & Serial TV Favorit</h1>
-        <p class="hero-subtitle">Cari judul, cek daftar pemain, pantau season, dan catat setiap episode yang sudah Anda tonton.</p>
-      </div>
-
-      <!-- Search Box -->
-      <div class="search-box glass-card" role="search" aria-label="Cari film dan TV show">
-        <svg class="search-leading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input 
-          v-model="searchQuery" 
-          @keyup.enter="handleSearch"
-          type="text" 
-          placeholder="Ketik judul... (Contoh: Stranger Things, Oppenheimer, Naruto)" 
-          class="search-input"
-          aria-label="Judul film atau TV show"
-        />
-        
-        <div class="filter-type">
-          <button 
-            v-for="t in mediaTypes" 
-            :key="t.value"
-            @click="selectedType = t.value; handleSearch()"
-            :class="['type-btn', { active: selectedType === t.value }]"
-            :aria-pressed="selectedType === t.value"
-          >
-            {{ t.label }}
-          </button>
-        </div>
-
-        <button @click="handleSearch" class="btn-primary search-action-btn">
-          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- Search Bar Section -->
+    <section class="search-section" aria-labelledby="search-heading">
+      <div class="search-bar-wrapper">
+        <div class="search-box glass-card" role="search" aria-label="Search movies and TV shows">
+          <svg class="search-leading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <span>Cari</span>
-        </button>
+          <input 
+            v-model="searchQuery" 
+            @keyup.enter="handleSearch"
+            type="text" 
+            placeholder="Search movies, TV shows, anime... (e.g. Stranger Things, Oppenheimer, The Last of Us)" 
+            class="search-input"
+            aria-label="Search query"
+          />
+
+          <div class="filter-type">
+            <button 
+              v-for="t in mediaTypes" 
+              :key="t.value"
+              @click="selectedType = t.value; if (searchQuery.trim()) handleSearch();"
+              :class="['type-btn', { active: selectedType === t.value }]"
+              :aria-pressed="selectedType === t.value"
+            >
+              {{ t.label }}
+            </button>
+          </div>
+
+          <button @click="handleSearch" class="btn-primary search-action-btn">
+            <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Search</span>
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="loading-state">
+    <!-- Search Loading State -->
+    <div v-if="isSearching" class="loading-state">
       <div class="spinner"></div>
-      <p>Mencari data dari TMDB...</p>
+      <p>Searching TMDB catalog...</p>
     </div>
 
-    <!-- Empty State -->
-    <div v-else-if="results.length === 0 && searched" class="empty-state glass-card" role="status">
-      <h2>Judul Tidak Ditemukan</h2>
-      <p>Tidak ada hasil untuk "{{ searchQuery }}". Silakan periksa ejaan atau ubah filter tipe media.</p>
-    </div>
-
-    <!-- Results Grid -->
-    <section v-else-if="results.length > 0" class="results-section" aria-labelledby="results-title">
+    <!-- Search Results Grid Mode -->
+    <section v-else-if="isSearchMode" class="results-section" aria-labelledby="results-title">
       <div class="results-header">
         <div>
-          <h2 id="results-title">{{ results.length }} Judul Ditemukan</h2>
-          <p class="results-sub">Klik kartu untuk membuka detail, melihat season, dan menyimpan ke watchlist.</p>
+          <h2 id="results-title">{{ searchResults.length }} Results Found for "{{ searchQuery }}"</h2>
+          <p class="results-sub">Click any title to view full synopsis, cast, episode tracking, or add to your watchlist.</p>
         </div>
+        <button @click="clearSearch" class="btn-secondary text-sm">
+          <span>✕ Clear Search</span>
+        </button>
       </div>
-      <div class="results-grid">
+
+      <!-- Search Empty State -->
+      <div v-if="searchResults.length === 0" class="empty-state glass-card" role="status">
+        <h2>No Results Found</h2>
+        <p>We couldn't find any matches for "{{ searchQuery }}". Try adjusting your keywords or category filter.</p>
+        <button @click="clearSearch" class="btn-primary" style="margin-top: 14px;">Return to Recommendations</button>
+      </div>
+
+      <!-- Search Grid -->
+      <div v-else class="media-grid">
         <div 
-          v-for="item in results" 
-          :key="item.id" 
-          class="glass-card media-card clickable"
+          v-for="item in searchResults" 
+          :key="'search-' + item.id" 
+          class="media-card glass-card clickable"
           @click="openSaveModal(item)"
           role="button"
           tabindex="0"
@@ -131,22 +155,284 @@
           <div class="card-info">
             <h3 class="media-title">{{ item.title || item.name }}</h3>
             <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
-            <p class="overview">{{ truncateText(item.overview, 95) }}</p>
+            <p class="overview">{{ truncateText(item.overview, 90) }}</p>
 
             <button class="btn-secondary btn-full btn-card-action">
-              <span>Detail & Watchlist</span>
+              <span>Details & Watchlist</span>
             </button>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- Horizontal Scrolling Shelves / Discovery Feeds (IDLIX / Netflix Layout) -->
+    <div v-else class="discovery-container">
+      
+      <!-- SHELF 1: 🔥 Trending This Week -->
+      <section class="shelf-section" v-if="trendingList.length > 0" aria-labelledby="shelf-trending-title">
+        <div class="shelf-header">
+          <div class="shelf-title-group">
+            <span class="shelf-emoji">🔥</span>
+            <div>
+              <h2 id="shelf-trending-title" class="shelf-title">Trending This Week</h2>
+              <p class="shelf-sub">The most popular movies & TV shows across all platforms</p>
+            </div>
+          </div>
+
+          <!-- Horizontal Scroll Navigation Buttons -->
+          <div class="shelf-nav-controls">
+            <button 
+              @click="scrollShelf('shelf-trending', -1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll left"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button 
+              @click="scrollShelf('shelf-trending', 1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll right"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="shelf-trending" class="shelf-scroll-track">
+          <div 
+            v-for="item in trendingList" 
+            :key="'trending-' + item.id" 
+            class="shelf-card clickable"
+            @click="openSaveModal(item)"
+            role="button"
+            tabindex="0"
+            @keyup.enter="openSaveModal(item)"
+          >
+            <div class="shelf-poster-wrapper">
+              <img 
+                :src="getImageUrl(item.poster_path)" 
+                :alt="item.title || item.name" 
+                class="shelf-poster-img"
+                @error="onImageError"
+              />
+              <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'shelf-type-badge']">
+                {{ item.media_type === 'tv' ? 'TV' : 'Movie' }}
+              </span>
+              <span v-if="item.vote_average" class="shelf-rating-badge">
+                ★ {{ item.vote_average.toFixed(1) }}
+              </span>
+            </div>
+            <div class="shelf-card-info">
+              <h3 class="shelf-card-title">{{ item.title || item.name }}</h3>
+              <p class="shelf-card-year">{{ formatYear(item.release_date || item.first_air_date) }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHELF 2: 🎬 Popular Feature Films -->
+      <section class="shelf-section" v-if="popularMovies.length > 0" aria-labelledby="shelf-movies-title">
+        <div class="shelf-header">
+          <div class="shelf-title-group">
+            <span class="shelf-emoji">🎬</span>
+            <div>
+              <h2 id="shelf-movies-title" class="shelf-title">Popular Feature Films</h2>
+              <p class="shelf-sub">Blockbusters, theatrical releases, and audience favorites</p>
+            </div>
+          </div>
+
+          <div class="shelf-nav-controls">
+            <button 
+              @click="scrollShelf('shelf-movies', -1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll left"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button 
+              @click="scrollShelf('shelf-movies', 1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll right"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="shelf-movies" class="shelf-scroll-track">
+          <div 
+            v-for="item in popularMovies" 
+            :key="'pop-movie-' + item.id" 
+            class="shelf-card clickable"
+            @click="openSaveModal(item)"
+            role="button"
+            tabindex="0"
+            @keyup.enter="openSaveModal(item)"
+          >
+            <div class="shelf-poster-wrapper">
+              <img 
+                :src="getImageUrl(item.poster_path)" 
+                :alt="item.title" 
+                class="shelf-poster-img"
+                @error="onImageError"
+              />
+              <span class="badge badge-movie shelf-type-badge">Movie</span>
+              <span v-if="item.vote_average" class="shelf-rating-badge">
+                ★ {{ item.vote_average.toFixed(1) }}
+              </span>
+            </div>
+            <div class="shelf-card-info">
+              <h3 class="shelf-card-title">{{ item.title }}</h3>
+              <p class="shelf-card-year">{{ formatYear(item.release_date) }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHELF 3: 📺 Binge-Worthy TV Series -->
+      <section class="shelf-section" v-if="popularShows.length > 0" aria-labelledby="shelf-tv-title">
+        <div class="shelf-header">
+          <div class="shelf-title-group">
+            <span class="shelf-emoji">📺</span>
+            <div>
+              <h2 id="shelf-tv-title" class="shelf-title">Binge-Worthy TV Series</h2>
+              <p class="shelf-sub">Top serial drama, thriller, and sci-fi series with active seasons</p>
+            </div>
+          </div>
+
+          <div class="shelf-nav-controls">
+            <button 
+              @click="scrollShelf('shelf-tv', -1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll left"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button 
+              @click="scrollShelf('shelf-tv', 1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll right"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="shelf-tv" class="shelf-scroll-track">
+          <div 
+            v-for="item in popularShows" 
+            :key="'pop-tv-' + item.id" 
+            class="shelf-card clickable"
+            @click="openSaveModal(item)"
+            role="button"
+            tabindex="0"
+            @keyup.enter="openSaveModal(item)"
+          >
+            <div class="shelf-poster-wrapper">
+              <img 
+                :src="getImageUrl(item.poster_path)" 
+                :alt="item.name" 
+                class="shelf-poster-img"
+                @error="onImageError"
+              />
+              <span class="badge badge-tv shelf-type-badge">TV Series</span>
+              <span v-if="item.vote_average" class="shelf-rating-badge">
+                ★ {{ item.vote_average.toFixed(1) }}
+              </span>
+            </div>
+            <div class="shelf-card-info">
+              <h3 class="shelf-card-title">{{ item.name }}</h3>
+              <p class="shelf-card-year">{{ formatYear(item.first_air_date) }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHELF 4: ⭐ Top Rated Masterpieces -->
+      <section class="shelf-section" v-if="topRatedList.length > 0" aria-labelledby="shelf-toprated-title">
+        <div class="shelf-header">
+          <div class="shelf-title-group">
+            <span class="shelf-emoji">⭐</span>
+            <div>
+              <h2 id="shelf-toprated-title" class="shelf-title">Critically Acclaimed Masterpieces</h2>
+              <p class="shelf-sub">Highest rated cinema works and modern classics</p>
+            </div>
+          </div>
+
+          <div class="shelf-nav-controls">
+            <button 
+              @click="scrollShelf('shelf-toprated', -1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll left"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button 
+              @click="scrollShelf('shelf-toprated', 1)" 
+              class="shelf-arrow-btn" 
+              aria-label="Scroll right"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="shelf-toprated" class="shelf-scroll-track">
+          <div 
+            v-for="item in topRatedList" 
+            :key="'toprated-' + item.id" 
+            class="shelf-card clickable"
+            @click="openSaveModal(item)"
+            role="button"
+            tabindex="0"
+            @keyup.enter="openSaveModal(item)"
+          >
+            <div class="shelf-poster-wrapper">
+              <img 
+                :src="getImageUrl(item.poster_path)" 
+                :alt="item.title || item.name" 
+                class="shelf-poster-img"
+                @error="onImageError"
+              />
+              <span :class="['badge', item.media_type === 'tv' ? 'badge-tv' : 'badge-movie', 'shelf-type-badge']">
+                {{ item.media_type === 'tv' ? 'TV' : 'Movie' }}
+              </span>
+              <span v-if="item.vote_average" class="shelf-rating-badge">
+                ★ {{ item.vote_average.toFixed(1) }}
+              </span>
+            </div>
+            <div class="shelf-card-info">
+              <h3 class="shelf-card-title">{{ item.title || item.name }}</h3>
+              <p class="shelf-card-year">{{ formatYear(item.release_date || item.first_air_date) }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
     <!-- Modal Full Detail Spasius & Wide 2-Column Layout -->
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content glass-panel detail-modal-content wide-modal animate-fade-in">
         
         <!-- Fixed Top Right Close Button -->
-        <button @click="showModal = false" class="close-btn-fixed" title="Tutup Modal">&times;</button>
+        <button @click="showModal = false" class="close-btn-fixed" title="Close Dialog">&times;</button>
 
         <!-- Movie/Show Hero Backdrop Banner -->
         <div class="hero-backdrop-banner" :style="getBackdropStyle(activeItem)">
@@ -187,7 +473,7 @@
             <!-- Quick Action Bar -->
             <div class="quick-add-bar glass-card">
               <div class="rating-input-row">
-                <label>Rating Anda (1 - 10):</label>
+                <label>Your Rating (1 - 10):</label>
                 <div class="star-rating-selector">
                   <span 
                     v-for="star in 10" 
@@ -209,7 +495,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span>{{ isSaving ? 'Menyimpan...' : 'Tambah Watchlist' }}</span>
+                  <span>{{ isSaving ? 'Saving...' : 'Add to Watchlist' }}</span>
                 </button>
                 <button 
                   @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
@@ -218,7 +504,7 @@
                   <svg class="icon-inline" viewBox="0 0 24 24" :fill="form.favorite ? 'var(--accent-red)' : 'none'" :stroke="form.favorite ? 'var(--accent-red)' : 'currentColor'" stroke-width="2">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                   </svg>
-                  <span>{{ form.favorite ? 'Favorit' : '+ Favorit' }}</span>
+                  <span>{{ form.favorite ? 'Favorite' : '+ Favorite' }}</span>
                 </button>
               </div>
             </div>
@@ -226,35 +512,35 @@
             <!-- Metadata Box -->
             <div v-if="isFetchingDetail" class="loading-state text-sm">
               <div class="spinner"></div>
-              <span>Memuat detail sutradara & cast...</span>
+              <span>Fetching director & cast details...</span>
             </div>
 
             <div v-else-if="detailedInfo" class="meta-info-box glass-card">
               <p v-if="detailedInfo.director">
-                <strong>Sutradara / Pembuat:</strong> <br>
+                <strong>Director / Creator:</strong> <br>
                 <span class="highlight-text">{{ detailedInfo.director }}</span>
               </p>
               <p v-if="detailedInfo.cast">
-                <strong>Pemeran Utama:</strong> <br>
+                <strong>Main Cast:</strong> <br>
                 {{ detailedInfo.cast }}
               </p>
               <p v-if="detailedInfo.media_type === 'tv'">
-                <strong>Total Episode:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ seasonsCount }} Season)
+                <strong>Total Episodes:</strong> {{ detailedInfo.total_episodes || 'TBA' }} eps ({{ seasonsCount }} Season{{ seasonsCount > 1 ? 's' : '' }})
               </p>
             </div>
           </div>
 
           <!-- Right Column: Overview, Seasons Selector, & Spacious Episode Grid -->
           <div class="detail-right-col">
-            <h4 class="section-subtitle">Sinopsis Cerita</h4>
-            <p class="overview-text">{{ activeItem?.overview || 'Belum ada ringkasan sinopsis untuk judul ini.' }}</p>
+            <h4 class="section-subtitle">Storyline Synopsis</h4>
+            <p class="overview-text">{{ activeItem?.overview || 'No synopsis summary available for this title.' }}</p>
 
             <!-- If TV Show: Season Selector & Episodes List -->
             <div v-if="activeItem?.media_type === 'tv' || !activeItem?.media_type" class="seasons-section">
               <div class="section-header-row">
-                <h4 class="section-subtitle">Daftar Season & Episode</h4>
+                <h4 class="section-subtitle">Seasons & Episodes</h4>
                 <span class="watched-counter-badge" v-if="watchlistContext">
-                  Progres: {{ watchlistContext.episodes_watched }} eps ditonton
+                  Progress: {{ watchlistContext.episodes_watched }} eps watched
                 </span>
               </div>
 
@@ -273,7 +559,7 @@
               <!-- Episodes List -->
               <div v-if="isLoadingEpisodes" class="loading-state text-sm">
                 <div class="spinner"></div>
-                <span>Memuat episode Season {{ selectedSeason }}...</span>
+                <span>Loading Season {{ selectedSeason }} episodes...</span>
               </div>
 
               <div v-else class="episodes-list">
@@ -289,13 +575,13 @@
                       class="eps-still-img"
                       @error="onEpsImageError"
                     />
-                    <span class="eps-num-badge">Eps {{ eps.episode_number }}</span>
+                    <span class="eps-num-badge">E{{ eps.episode_number }}</span>
                   </div>
 
                   <div class="eps-info">
                     <div class="eps-header">
                       <h5 class="eps-name">{{ eps.name }}</h5>
-                      <span class="eps-date" v-if="eps.air_date">Tayang: {{ eps.air_date }}</span>
+                      <span class="eps-date" v-if="eps.air_date">Aired: {{ eps.air_date }}</span>
                     </div>
                     <p class="eps-overview" v-if="eps.overview">{{ truncateText(eps.overview, 120) }}</p>
                   </div>
@@ -308,7 +594,7 @@
                     <svg v-if="isEpisodeWatched(eps.episode_number)" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Sudah' : '+ Tonton' }}</span>
+                    <span>{{ isEpisodeWatched(eps.episode_number) ? 'Watched' : '+ Watch' }}</span>
                   </button>
                 </div>
               </div>
@@ -329,18 +615,23 @@ const router = useRouter()
 
 const searchQuery = ref('')
 const selectedType = ref('all')
-const results = ref<any[]>([])
-const isLoading = ref(false)
-const searched = ref(false)
+const isSearching = ref(false)
+const isSearchMode = ref(false)
+const searchResults = ref<any[]>([])
 const toastMessage = ref('')
 
+const trendingList = ref<any[]>([])
+const popularMovies = ref<any[]>([])
+const popularShows = ref<any[]>([])
+const topRatedList = ref<any[]>([])
+const featuredShow = ref<any>(null)
+
 const mediaTypes = [
-  { label: 'Semua', value: 'all' },
-  { label: 'Movie', value: 'movie' },
+  { label: 'All', value: 'all' },
+  { label: 'Movies', value: 'movie' },
   { label: 'TV Series', value: 'tv' }
 ]
 
-const featuredShow = ref<any>(null)
 const showModal = ref(false)
 const activeItem = ref<any>(null)
 const isSaving = ref(false)
@@ -369,17 +660,38 @@ const seasonsCount = computed(() => {
 })
 
 onMounted(async () => {
+  await loadDiscoveryFeeds()
+})
+
+const loadDiscoveryFeeds = async () => {
   try {
-    const res: any = await $fetch(useApiUrl('/api/search'), {
-      params: { q: 'Breaking Bad', type: 'tv' }
-    })
-    if (res.data && res.data.length > 0) {
-      featuredShow.value = res.data[0]
+    const [trendingRes, popMoviesRes, popShowsRes, topRatedRes]: any[] = await Promise.all([
+      $fetch(useApiUrl('/api/trending'), { params: { type: 'all', time: 'week' } }).catch(() => ({ data: [] })),
+      $fetch(useApiUrl('/api/discover'), { params: { type: 'movie', sort: 'popularity.desc' } }).catch(() => ({ data: [] })),
+      $fetch(useApiUrl('/api/discover'), { params: { type: 'tv', sort: 'popularity.desc' } }).catch(() => ({ data: [] })),
+      $fetch(useApiUrl('/api/discover'), { params: { type: 'movie', sort: 'vote_average.desc' } }).catch(() => ({ data: [] }))
+    ])
+
+    trendingList.value = trendingRes.data || []
+    popularMovies.value = popMoviesRes.data || []
+    popularShows.value = popShowsRes.data || []
+    topRatedList.value = topRatedRes.data || []
+
+    if (trendingList.value.length > 0) {
+      featuredShow.value = trendingList.value.find((item: any) => item.backdrop_path) || trendingList.value[0]
     }
   } catch (err) {
-    console.error(err)
+    console.error('Failed to load discovery feeds', err)
   }
-})
+}
+
+const scrollShelf = (shelfId: string, direction: number) => {
+  const container = document.getElementById(shelfId)
+  if (container) {
+    const scrollAmount = container.clientWidth * 0.75 * direction
+    container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+  }
+}
 
 const showToast = (msg: string) => {
   toastMessage.value = msg
@@ -389,23 +701,35 @@ const showToast = (msg: string) => {
 }
 
 const handleSearch = async () => {
-  if (!searchQuery.value.trim()) return
-  isLoading.value = true
-  searched.value = true
+  const query = searchQuery.value.trim()
+  if (!query) {
+    clearSearch()
+    return
+  }
+
+  isSearching.value = true
+  isSearchMode.value = true
+
   try {
     const res: any = await $fetch(useApiUrl('/api/search'), {
       params: {
-        q: searchQuery.value,
+        q: query,
         type: selectedType.value
       }
     })
-    results.value = res.data || []
+    searchResults.value = res.data || []
   } catch (err) {
     console.error(err)
-    results.value = []
+    searchResults.value = []
   } finally {
-    isLoading.value = false
+    isSearching.value = false
   }
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  isSearchMode.value = false
+  searchResults.value = []
 }
 
 const getImageUrl = (path: string) => {
@@ -415,7 +739,7 @@ const getImageUrl = (path: string) => {
 
 const getBackdropStyle = (media: any) => {
   const path = media?.backdrop_path || media?.poster_path
-  if (!path) return { background: '#121216' }
+  if (!path) return { background: '#0a0a0c' }
   return { backgroundImage: `url(https://image.tmdb.org/t/p/w1280${path})` }
 }
 
@@ -453,7 +777,7 @@ const isEpisodeWatched = (epsNumber: number) => {
 
 const toggleEpisodeWatched = async (epsNumber: number) => {
   if (!authStore.isAuth) {
-    showToast('Silakan login terlebih dahulu.')
+    showToast('Please sign in first.')
     router.push('/login')
     return
   }
@@ -475,7 +799,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
         }
       })
       watchlistContext.value = res.data
-      showToast(`Progres diperbarui: S${selectedSeason.value} Eps ${targetCount}`)
+      showToast(`Progress logged: S${selectedSeason.value} E${targetCount}`)
     } catch (err) {
       console.error(err)
     }
@@ -566,7 +890,7 @@ const fetchSeasonEpisodes = async (seasonNum: number) => {
 
 const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) => {
   if (!authStore.isAuth) {
-    showToast('Silakan login terlebih dahulu.')
+    showToast('Please sign in first.')
     router.push('/login')
     return
   }
@@ -608,11 +932,11 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 
     if (res.data) {
       watchlistContext.value = res.data
-      showToast(form.value.favorite ? `Ditambahkan ke Favorit! ★` : `Tersimpan di Watchlist: ${payload.title}`)
+      showToast(form.value.favorite ? `Added to Favorites! ★` : `Saved to Watchlist: ${payload.title}`)
     }
   } catch (err: any) {
     console.error(err)
-    alert(err?.data?.error || 'Gagal menyimpan ke watchlist.')
+    alert(err?.data?.error || 'Failed to save to watchlist.')
   } finally {
     isSaving.value = false
   }
@@ -620,6 +944,12 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 </script>
 
 <style scoped>
+.explore-page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
 .toast-notification {
   position: fixed;
   top: 80px;
@@ -653,75 +983,113 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   color: var(--accent-star);
 }
 
+/* =========================================================================
+   CINEMATIC BORDERLESS HERO BANNER (NO TACKY LIGHT BORDER / IDLIX AESTHETIC)
+   ========================================================================= */
 .featured-hero-banner {
   position: relative;
-  min-height: 320px;
-  border-radius: 16px;
+  min-height: 440px;
+  border-radius: 18px;
   overflow: hidden;
   background-size: cover;
-  background-position: center;
-  margin-bottom: 32px;
-  border: 1px solid var(--border-subtle);
+  background-position: center top;
+  border: none !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95);
 }
 
 .featured-gradient-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(10, 10, 12, 0.96) 0%, rgba(10, 10, 12, 0.75) 50%, rgba(10, 10, 12, 0.2) 100%),
-    linear-gradient(180deg, rgba(18, 18, 22, 0.1) 0%, rgba(18, 18, 22, 0.95) 100%);
+    linear-gradient(90deg, #0a0a0c 0%, rgba(10, 10, 12, 0.92) 35%, rgba(10, 10, 12, 0.45) 70%, rgba(10, 10, 12, 0.75) 100%),
+    linear-gradient(180deg, rgba(10, 10, 12, 0.05) 0%, rgba(10, 10, 12, 0.4) 55%, #0a0a0c 100%);
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
-  padding: 32px;
+  padding: 40px 48px;
 }
 
 .featured-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-width: 620px;
+  gap: 14px;
+  max-width: 640px;
 }
 
 .featured-badges {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.badge-featured-pill {
+  background: var(--accent-red);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hero-rating-badge {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .featured-title {
-  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-size: clamp(2rem, 4vw, 3.2rem);
   font-weight: 900;
   color: #ffffff;
   line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
 }
 
 .featured-overview {
-  color: var(--text-secondary);
-  font-size: 0.92rem;
-  line-height: 1.55;
-  margin-top: 4px;
-}
-
-.hero-section {
-  margin-bottom: 32px;
-  display: grid;
-  gap: 18px;
-}
-
-.hero-title {
-  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: 6px;
-  color: #ffffff;
-}
-
-.hero-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+  color: #d1d5db;
+  font-size: 0.94rem;
   line-height: 1.6;
-  max-width: 64ch;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.featured-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.btn-hero-play {
+  padding: 12px 24px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.btn-hero-info {
+  padding: 12px 20px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* =========================================================================
+   SEARCH SECTION
+   ========================================================================= */
+.search-section {
+  width: 100%;
+}
+
+.search-bar-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .search-box {
@@ -785,9 +1153,201 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   color: #ffffff;
 }
 
+/* =========================================================================
+   HORIZONTAL SCROLLING SHELVES (IDLIX / NETFLIX SLIDER)
+   ========================================================================= */
+.discovery-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.shelf-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shelf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.shelf-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shelf-emoji {
+  font-size: 1.5rem;
+}
+
+.shelf-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.shelf-sub {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  margin-top: 1px;
+}
+
+.shelf-nav-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.shelf-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shelf-arrow-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.shelf-arrow-btn:hover {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+  transform: scale(1.05);
+}
+
+.shelf-scroll-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 14px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.shelf-scroll-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.shelf-scroll-track::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shelf-scroll-track::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.shelf-scroll-track::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-red);
+}
+
+.shelf-card {
+  flex: 0 0 175px;
+  scroll-snap-align: start;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.shelf-card:hover {
+  border-color: var(--accent-red);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.8), 0 0 15px -3px rgba(229, 9, 20, 0.35);
+}
+
+.shelf-poster-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 148%;
+  background: #141418;
+  overflow: hidden;
+}
+
+.shelf-poster-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.shelf-card:hover .shelf-poster-img {
+  transform: scale(1.06);
+}
+
+.shelf-type-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.shelf-rating-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(10, 10, 12, 0.88);
+  backdrop-filter: blur(6px);
+  color: var(--accent-star);
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+.shelf-card-info {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shelf-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shelf-card-year {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+/* =========================================================================
+   SEARCH RESULTS GRID
+   ========================================================================= */
 .results-section {
   display: grid;
-  gap: 18px;
+  gap: 20px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .results-header h2 {
@@ -802,10 +1362,10 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   margin-top: 2px;
 }
 
-.results-grid {
+.media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
 }
 
 .media-card {
@@ -926,7 +1486,9 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   font-size: 0.88rem;
 }
 
-/* MODAL DETAIL STYLING */
+/* =========================================================================
+   MODAL DETAIL STYLING
+   ========================================================================= */
 .detail-modal-content.wide-modal {
   position: relative;
   width: 92vw;
@@ -1023,8 +1585,17 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 }
 
 @media (max-width: 768px) {
+  .featured-hero-banner {
+    min-height: 340px;
+  }
   .featured-gradient-overlay {
-    padding: 20px;
+    padding: 24px 20px;
+  }
+  .featured-actions {
+    flex-direction: column;
+  }
+  .shelf-card {
+    flex: 0 0 140px;
   }
   .detail-body.wide-grid {
     grid-template-columns: 1fr;

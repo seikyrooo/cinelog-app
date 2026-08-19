@@ -8,7 +8,7 @@
 
       <div class="profile-heading">
         <h1>{{ authStore.user?.username || 'CineLog User' }}</h1>
-        <p class="muted">Kelola bio, avatar profil, dan visibilitas akun publik Anda.</p>
+        <p class="muted">Manage your bio, avatar, and public profile visibility.</p>
       </div>
     </div>
 
@@ -18,8 +18,8 @@
     <form class="profile-form glass-card" @submit.prevent="saveProfile">
       <label class="field-group">
         <span>Bio</span>
-        <textarea v-model="form.bio" rows="4" maxlength="280" placeholder="Contoh: Penggemar genre Sci-Fi, Psychological Thriller, dan Serial Drama."></textarea>
-        <small>{{ form.bio.length }}/280 karakter</small>
+        <textarea v-model="form.bio" rows="4" maxlength="280" placeholder="e.g., Cinephile, sci-fi enthusiast, drama series lover."></textarea>
+        <small>{{ form.bio.length }}/280 characters</small>
       </label>
 
       <label class="field-group">
@@ -30,21 +30,21 @@
       <label class="privacy-row">
         <input v-model="form.is_public" type="checkbox" />
         <span>
-          <strong>Profil Publik</strong>
-          <small>Pengguna lain dapat melihat bio, tontonan favorit, dan rating yang Anda bagikan secara publik.</small>
+          <strong>Public Profile</strong>
+          <small>Allow other users to view your bio, public favorites, and ratings.</small>
         </span>
       </label>
 
       <div class="actions-row">
         <button class="btn-primary" type="submit" :disabled="isSaving">
-          {{ isSaving ? 'Menyimpan...' : 'Simpan Profil' }}
+          {{ isSaving ? 'Saving...' : 'Save Profile' }}
         </button>
         <NuxtLink
           v-if="authStore.user?.username && form.is_public"
           class="btn-secondary"
           :to="`/users/${authStore.user.username}`"
         >
-          Buka Profil Publik
+          View Public Profile
         </NuxtLink>
       </div>
     </form>
@@ -105,9 +105,9 @@ const saveProfile = async () => {
       is_public: form.is_public
     })
     authStore.setUser(res.data)
-    message.value = 'Profil berhasil disimpan.'
+    message.value = 'Profile saved successfully.'
   } catch (err: any) {
-    error.value = err?.data?.error || 'Gagal menyimpan profil.'
+    error.value = err?.data?.error || 'Failed to save profile.'
   } finally {
     isSaving.value = false
   }

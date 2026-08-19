@@ -1,8 +1,8 @@
 <template>
   <div class="auth-page">
     <div class="auth-card glass-panel animate-fade-in">
-      <h1 class="auth-title">Buat Akun Baru</h1>
-      <p class="auth-subtitle">Mulai melacak film dan serial TV favoritmu sekarang juga.</p>
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Start tracking your favorite movies and TV shows today.</p>
 
       <form @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
@@ -11,18 +11,18 @@
             v-model="username" 
             type="text" 
             required 
-            placeholder="Username unik" 
+            placeholder="Unique username" 
             class="form-input"
           />
         </div>
 
         <div class="form-group">
-          <label>Email</label>
+          <label>Email Address</label>
           <input 
             v-model="email" 
             type="email" 
             required 
-            placeholder="nama@email.com" 
+            placeholder="name@email.com" 
             class="form-input"
           />
         </div>
@@ -33,7 +33,7 @@
             v-model="password" 
             type="password" 
             required 
-            placeholder="Minimal 6 karakter" 
+            placeholder="Minimum 6 characters" 
             class="form-input"
           />
         </div>
@@ -41,12 +41,12 @@
         <p v-if="errorMessage" class="error-msg">⚠️ {{ errorMessage }}</p>
 
         <button type="submit" class="btn-primary btn-full" :disabled="isLoading">
-          {{ isLoading ? 'Memproses...' : 'Daftar Akun' }}
+          {{ isLoading ? 'Creating account...' : 'Create Account' }}
         </button>
       </form>
 
       <p class="auth-footer">
-        Sudah punya akun? <NuxtLink to="/login">Login di sini</NuxtLink>
+        Already have an account? <NuxtLink to="/login">Sign in here</NuxtLink>
       </p>
     </div>
   </div>
@@ -55,7 +55,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const config = useRuntimeConfig()
 const router = useRouter()
 
 const username = ref('')
@@ -78,10 +77,10 @@ const handleRegister = async () => {
       }
     })
 
-    alert('🎉 Pendaftaran berhasil! Silakan login.')
+    alert('🎉 Account created successfully! Please sign in.')
     router.push('/login')
   } catch (err: any) {
-    errorMessage.value = err?.data?.error || 'Pendaftaran gagal. Coba lagi.'
+    errorMessage.value = err?.data?.error || 'Registration failed. Please check your details and try again.'
   } finally {
     isLoading.value = false
   }

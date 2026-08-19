@@ -1,8 +1,8 @@
 <template>
   <section class="public-profile-page">
-    <div v-if="isLoading" class="public-state glass-card" aria-busy="true">Memuat profil publik...</div>
+    <div v-if="isLoading" class="public-state glass-card" aria-busy="true">Loading public profile...</div>
     <div v-else-if="error" class="public-state glass-card" role="alert">
-      <h1>Profil Tidak Tersedia</h1>
+      <h1>Profile Unavailable</h1>
       <p>{{ error }}</p>
     </div>
     <template v-else-if="profile">
@@ -13,30 +13,30 @@
         </div>
         <div class="public-copy">
           <h1>@{{ profile.user.username }}</h1>
-          <p>{{ profile.user.bio || 'Belum ada bio.' }}</p>
+          <p>{{ profile.user.bio || 'No bio provided yet.' }}</p>
         </div>
-        <div class="public-stats" aria-label="Statistik publik">
-          <div><strong>{{ profile.favorite_count }}</strong><span>Favorit</span></div>
-          <div><strong>{{ profile.rating_count }}</strong><span>Rating</span></div>
+        <div class="public-stats" aria-label="Public statistics">
+          <div><strong>{{ profile.favorite_count }}</strong><span>Favorites</span></div>
+          <div><strong>{{ profile.rating_count }}</strong><span>Ratings</span></div>
         </div>
       </header>
 
-      <div class="tabs" role="tablist" aria-label="Konten profil publik">
+      <div class="tabs" role="tablist" aria-label="Public profile tabs">
         <button :class="['tab-btn', { active: activeTab === 'favorites' }]" type="button" @click="activeTab = 'favorites'">
-          Favorit Publik
+          Public Favorites
         </button>
         <button :class="['tab-btn', { active: activeTab === 'ratings' }]" type="button" @click="activeTab = 'ratings'">
-          Rating Publik
+          Public Ratings
         </button>
       </div>
 
       <div v-if="activeItems.length === 0" class="public-state glass-card">
-        Belum ada {{ activeTab === 'favorites' ? 'favorit' : 'rating' }} publik.
+        No public {{ activeTab === 'favorites' ? 'favorites' : 'ratings' }} shared yet.
       </div>
 
       <div v-else class="public-grid">
         <article v-for="item in activeItems" :key="item.id" class="public-card glass-card">
-          <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Poster media'" @error="onImageError" />
+          <img :src="getPosterUrl(item.movie)" :alt="item.movie?.title || 'Media poster'" @error="onImageError" />
           <div class="public-card-body">
             <span :class="['badge', item.movie?.media_type === 'tv' ? 'badge-tv' : 'badge-movie']">
               {{ item.movie?.media_type === 'tv' ? 'TV' : 'Movie' }}
@@ -44,7 +44,7 @@
             <h2>{{ item.movie?.title || 'Untitled' }}</h2>
             <p>{{ formatYear(item.movie?.release_date) }} · {{ getStatusLabel(item.status) }}</p>
             <strong v-if="item.rating" class="rating-tag">★ {{ item.rating }}/10</strong>
-            <strong v-else-if="item.favorite" class="favorite-tag">♥ Favorit</strong>
+            <strong v-else-if="item.favorite" class="favorite-tag">♥ Favorite</strong>
           </div>
         </article>
       </div>
@@ -80,7 +80,7 @@ onMounted(async () => {
     favorites.value = favoritesRes.data || []
     ratings.value = ratingsRes.data || []
   } catch (err: any) {
-    error.value = err?.data?.error || 'Profil pengguna tidak ditemukan atau bersifat privat.'
+    error.value = err?.data?.error || 'User profile not found or set to private.'
   } finally {
     isLoading.value = false
   }
@@ -100,11 +100,11 @@ const formatYear = (dateStr?: string) => dateStr ? dateStr.substring(0, 4) : '�
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'watching': return 'Sedang Ditonton'
-    case 'completed': return 'Selesai'
-    case 'on_hold': return 'Tertunda'
-    case 'dropped': return 'Diberhentikan'
-    default: return 'Rencana Nonton'
+    case 'watching': return 'Watching'
+    case 'completed': return 'Completed'
+    case 'on_hold': return 'On Hold'
+    case 'dropped': return 'Dropped'
+    default: return 'Plan to Watch'
   }
 }
 </script>
