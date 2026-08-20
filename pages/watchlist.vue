@@ -136,7 +136,7 @@
 
                   <div class="card-badges-row">
                     <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
-                    <span v-if="item.favorite" class="badge-fav">★ FAVORITE</span>
+                    <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
                     <span class="badge-total-info" v-if="getTotalEps(item) > 0">
                       {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
                     </span>
@@ -3029,40 +3029,49 @@ const confirmDeleteItem = async () => {
 
 .score-chips-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+}
+
+@media (max-width: 480px) {
+  .score-chips-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .score-chip-btn {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  padding: 7px 0;
+  padding: 8px 0;
   border-radius: 6px;
   cursor: pointer;
   text-align: center;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
 }
 
 .score-chip-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .score-chip-btn.highlighted {
-  background: rgba(229, 9, 20, 0.15);
-  border-color: rgba(229, 9, 20, 0.35);
-  color: #ff6b6b;
+  background: rgba(229, 9, 20, 0.12);
+  border-color: rgba(229, 9, 20, 0.3);
+  color: #ff858d;
 }
 
 .score-chip-btn.active {
   background: var(--accent-red) !important;
   border-color: var(--accent-red) !important;
   color: #ffffff !important;
-  box-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
+  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.45);
+  transform: scale(1.05);
 }
 
 .char-count-text {
