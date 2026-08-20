@@ -170,22 +170,22 @@
             <div class="card-quick-actions" @click.stop>
               <button 
                 @click.stop="quickAddToWatchlist(item)" 
-                :class="['btn-card-quick', 'btn-quick-watchlist', { 'active-saved': isInWatchlist(item) }]"
-                :title="isInWatchlist(item) ? 'In Watchlist (Click to edit)' : 'Add to Watchlist'"
+                :class="['btn-card-quick', 'btn-quick-watchlist', { 'in-watchlist': isInWatchlist(item) }]"
+                :title="isInWatchlist(item) ? 'Saved in Watchlist (Click to view/edit)' : 'Add to Watchlist'"
               >
-                <svg v-if="isInWatchlist(item)" class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg v-if="isInWatchlist(item)" class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <svg v-else class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                <span>{{ isInWatchlist(item) ? 'In Watchlist' : '+ Watchlist' }}</span>
+                <span>{{ isInWatchlist(item) ? 'In Watchlist' : 'Watchlist' }}</span>
               </button>
 
               <button 
                 @click.stop="quickToggleFavorite(item)" 
-                :class="['btn-card-quick', 'btn-quick-fav', { 'active-fav': isFavorite(item) }]"
+                :class="['btn-card-quick', 'btn-quick-fav', { 'is-favorite': isFavorite(item) }]"
                 :title="isFavorite(item) ? 'Favorited' : 'Add to Favorites'"
                 aria-label="Toggle Favorite"
               >
@@ -813,20 +813,35 @@ const seasonsCount = computed(() => {
 const userWatchlistMap = ref<Record<string, any>>({})
 
 onMounted(async () => {
+  if (import.meta.client) {
+    authStore.initAuth()
+  }
   await Promise.all([
     loadDiscoveryFeeds(),
     loadUserWatchlistMap()
   ])
 })
 
+watch(() => authStore.token, (newToken) => {
+  if (newToken) {
+    loadUserWatchlistMap()
+  } else {
+    userWatchlistMap.value = {}
+  }
+})
+
 const loadUserWatchlistMap = async () => {
-  if (!authStore.isAuth) {
+  let token = authStore.token
+  if (!token && import.meta.client) {
+    token = localStorage.getItem('cinelog_token')
+  }
+  if (!token) {
     userWatchlistMap.value = {}
     return
   }
   try {
     const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
-      headers: { Authorization: `Bearer ${authStore.token}` }
+      headers: { Authorization: `Bearer ${token}` }
     }).catch(() => null)
 
     const list = res?.data || []
@@ -849,6 +864,7 @@ const getUserMediaStatus = (item: any) => {
   if (!item) return null
   const id = item.id || item.tmdb_id || item.movie?.tmdb_id || item.movie?.id
   const type = item.media_type || item.movie?.media_type || 'movie'
+  if (!id) return null
   return userWatchlistMap.value[`${id}_${type}`] || userWatchlistMap.value[`${id}`] || null
 }
 
@@ -872,7 +888,11 @@ const getStatusBadgeLabel = (entry: any) => {
 }
 
 const quickAddToWatchlist = async (item: any) => {
-  if (!authStore.isAuth) {
+  let token = authStore.token
+  if (!token && import.meta.client) {
+    token = localStorage.getItem('cinelog_token')
+  }
+  if (!token) {
     showToast('Please sign in to add to your watchlist.')
     router.push('/login')
     return
@@ -886,9 +906,9 @@ const quickAddToWatchlist = async (item: any) => {
 
   try {
     const payload = {
-      tmdb_id: item.id || item.tmdb_id,
+      tmdb_id: Number(item.id || item.tmdb_id),
       media_type: item.media_type || 'movie',
-      title: item.title || item.name,
+      title: item.title || item.name || '',
       overview: item.overview || '',
       poster_path: item.poster_path || '',
       backdrop_path: item.backdrop_path || '',
@@ -900,7 +920,7 @@ const quickAddToWatchlist = async (item: any) => {
 
     const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
       method: 'POST',
-      headers: { Authorization: `Bearer ${authStore.token}` },
+      headers: { Authorization: `Bearer ${token}` },
       body: payload
     })
 
@@ -909,16 +929,20 @@ const quickAddToWatchlist = async (item: any) => {
       const type = item.media_type || 'movie'
       userWatchlistMap.value[`${id}_${type}`] = res.data
       userWatchlistMap.value[`${id}`] = res.data
-      showToast(`Added "${payload.title}" to Watchlist!`)
+      showToast(`Saved to Watchlist: ${payload.title}`)
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Quick add to watchlist error:', err)
-    showToast('Failed to add to watchlist.')
+    showToast(err?.data?.error || 'Failed to add to watchlist.')
   }
 }
 
 const quickToggleFavorite = async (item: any) => {
-  if (!authStore.isAuth) {
+  let token = authStore.token
+  if (!token && import.meta.client) {
+    token = localStorage.getItem('cinelog_token')
+  }
+  if (!token) {
     showToast('Please sign in first.')
     router.push('/login')
     return
@@ -931,7 +955,7 @@ const quickToggleFavorite = async (item: any) => {
     if (existing?.id) {
       const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${existing.id}`), {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${authStore.token}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: { favorite: newFavStatus }
       })
 
@@ -945,9 +969,9 @@ const quickToggleFavorite = async (item: any) => {
       }
     } else {
       const payload = {
-        tmdb_id: item.id || item.tmdb_id,
+        tmdb_id: Number(item.id || item.tmdb_id),
         media_type: item.media_type || 'movie',
-        title: item.title || item.name,
+        title: item.title || item.name || '',
         overview: item.overview || '',
         poster_path: item.poster_path || '',
         backdrop_path: item.backdrop_path || '',
@@ -959,7 +983,7 @@ const quickToggleFavorite = async (item: any) => {
 
       const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
         method: 'POST',
-        headers: { Authorization: `Bearer ${authStore.token}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: payload
       })
 
@@ -971,11 +995,12 @@ const quickToggleFavorite = async (item: any) => {
         showToast(`Favorited "${payload.title}"!`)
       }
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Quick toggle favorite error:', err)
-    showToast('Failed to update favorite.')
+    showToast(err?.data?.error || 'Failed to update favorite.')
   }
 }
+
 
 const loadDiscoveryFeeds = async () => {
   try {
@@ -2417,47 +2442,62 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 .card-status-pill,
 .shelf-status-pill {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   left: 8px;
   font-size: 0.65rem;
   font-weight: 800;
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 3;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 4;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.7);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   white-space: nowrap;
 }
 
 .card-status-pill.watching,
 .shelf-status-pill.watching {
-  background: rgba(0, 150, 255, 0.85);
+  background: rgba(14, 165, 233, 0.92);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.5);
 }
 
 .card-status-pill.completed,
 .shelf-status-pill.completed {
-  background: rgba(16, 185, 129, 0.9);
+  background: rgba(16, 185, 129, 0.95);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5);
 }
 
 .card-status-pill.plan_to_watch,
 .shelf-status-pill.plan_to_watch {
-  background: rgba(139, 92, 246, 0.85);
+  background: rgba(139, 92, 246, 0.92);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.5);
 }
 
 .card-status-pill.dropped,
 .shelf-status-pill.dropped {
-  background: rgba(239, 68, 68, 0.85);
+  background: rgba(239, 68, 68, 0.92);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);
+}
+
+.card-status-pill.on_hold,
+.shelf-status-pill.on_hold {
+  background: rgba(245, 158, 11, 0.92);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.5);
 }
 
 .card-quick-actions {
@@ -2489,16 +2529,25 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   transform: translateY(-1px);
 }
 
-.btn-quick-watchlist.active-saved {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: rgba(16, 185, 129, 0.5);
-  color: #34d399;
+/* Active in-watchlist button styled in vibrant red like detail modal */
+.btn-quick-watchlist.in-watchlist {
+  background: var(--accent-red) !important;
+  color: #ffffff !important;
+  border-color: var(--accent-red) !important;
+  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.45) !important;
 }
 
-.btn-quick-fav.active-fav {
-  background: rgba(229, 9, 20, 0.2);
-  border-color: rgba(229, 9, 20, 0.5);
-  color: #ff6b6b;
+.btn-quick-watchlist.in-watchlist:hover {
+  background: var(--accent-red-hover) !important;
+  box-shadow: 0 6px 18px rgba(229, 9, 20, 0.6) !important;
+}
+
+/* Active favorite button styled with red glow */
+.btn-quick-fav.is-favorite {
+  background: rgba(229, 9, 20, 0.25) !important;
+  border-color: var(--accent-red) !important;
+  color: #ff5252 !important;
+  box-shadow: 0 2px 10px rgba(229, 9, 20, 0.3) !important;
 }
 
 .btn-icon-svg {
