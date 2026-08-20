@@ -39,11 +39,7 @@
         </div>
       </div>
 
-      <div class="field-group">
-        <label for="avatar-url-input">Or External Avatar URL (Optional)</label>
-        <input id="avatar-url-input" v-model="form.avatar_url" type="url" placeholder="https://example.com/avatar.webp" />
-        <small class="hint-text">You can upload a file directly above, or enter an external image URL here.</small>
-      </div>
+
 
       <label class="privacy-row">
         <input v-model="form.is_public" type="checkbox" />

@@ -127,6 +127,7 @@
       </div>
 
       <!-- Search Grid -->
+      <!-- Search Grid -->
       <div v-else class="media-grid">
         <div 
           v-for="item in searchResults" 
@@ -139,7 +140,7 @@
         >
           <div class="poster-wrapper">
             <img 
-              :src="getImageUrl(item.poster_path)" 
+              :src="getImageUrl(item)" 
               :alt="item.title || item.name" 
               class="poster-img"
               @error="onImageError"
@@ -153,16 +154,47 @@
               </svg>
               {{ item.vote_average.toFixed(1) }}
             </span>
+
+            <!-- Status Pill on Search Card (Watching / Completed / etc) -->
+            <span v-if="getUserMediaStatus(item)" :class="['card-status-pill', getUserMediaStatus(item)?.status]">
+              {{ getStatusBadgeLabel(getUserMediaStatus(item)) }}
+            </span>
           </div>
 
           <div class="card-info">
             <h3 class="media-title">{{ item.title || item.name }}</h3>
             <p class="release-date">{{ formatYear(item.release_date || item.first_air_date) }}</p>
-            <p class="overview">{{ truncateText(item.overview, 90) }}</p>
+            <p class="overview">{{ truncateText(item.overview, 75) }}</p>
 
-            <button class="btn-secondary btn-full btn-card-action">
-              <span>Details & Watchlist</span>
-            </button>
+            <!-- Search Quick Action Buttons (Add to Watchlist + Favorite) -->
+            <div class="card-quick-actions" @click.stop>
+              <button 
+                @click.stop="quickAddToWatchlist(item)" 
+                :class="['btn-card-quick', 'btn-quick-watchlist', { 'active-saved': isInWatchlist(item) }]"
+                :title="isInWatchlist(item) ? 'In Watchlist (Click to edit)' : 'Add to Watchlist'"
+              >
+                <svg v-if="isInWatchlist(item)" class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <svg v-else class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>{{ isInWatchlist(item) ? 'In Watchlist' : '+ Watchlist' }}</span>
+              </button>
+
+              <button 
+                @click.stop="quickToggleFavorite(item)" 
+                :class="['btn-card-quick', 'btn-quick-fav', { 'active-fav': isFavorite(item) }]"
+                :title="isFavorite(item) ? 'Favorited' : 'Add to Favorites'"
+                aria-label="Toggle Favorite"
+              >
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" :fill="isFavorite(item) ? 'var(--accent-red)' : 'none'" :stroke="isFavorite(item) ? 'var(--accent-red)' : 'currentColor'" stroke-width="2.2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span>{{ isFavorite(item) ? 'Favorited' : 'Favorite' }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -228,6 +260,9 @@
               <span v-if="item.vote_average" class="shelf-rating-badge">
                 ★ {{ item.vote_average.toFixed(1) }}
               </span>
+              <span v-if="getUserMediaStatus(item)" :class="['shelf-status-pill', getUserMediaStatus(item)?.status]">
+                {{ getStatusBadgeLabel(getUserMediaStatus(item)) }}
+              </span>
             </div>
             <div class="shelf-card-info">
               <h3 class="shelf-card-title">{{ item.title || item.name }}</h3>
@@ -291,6 +326,9 @@
               <span v-if="item.vote_average" class="shelf-rating-badge">
                 ★ {{ item.vote_average.toFixed(1) }}
               </span>
+              <span v-if="getUserMediaStatus(item)" :class="['shelf-status-pill', getUserMediaStatus(item)?.status]">
+                {{ getStatusBadgeLabel(getUserMediaStatus(item)) }}
+              </span>
             </div>
             <div class="shelf-card-info">
               <h3 class="shelf-card-title">{{ item.title }}</h3>
@@ -353,6 +391,9 @@
               <span class="badge badge-tv shelf-type-badge">TV Series</span>
               <span v-if="item.vote_average" class="shelf-rating-badge">
                 ★ {{ item.vote_average.toFixed(1) }}
+              </span>
+              <span v-if="getUserMediaStatus(item)" :class="['shelf-status-pill', getUserMediaStatus(item)?.status]">
+                {{ getStatusBadgeLabel(getUserMediaStatus(item)) }}
               </span>
             </div>
             <div class="shelf-card-info">
@@ -418,6 +459,9 @@
               </span>
               <span v-if="item.vote_average" class="shelf-rating-badge">
                 ★ {{ item.vote_average.toFixed(1) }}
+              </span>
+              <span v-if="getUserMediaStatus(item)" :class="['shelf-status-pill', getUserMediaStatus(item)?.status]">
+                {{ getStatusBadgeLabel(getUserMediaStatus(item)) }}
               </span>
             </div>
             <div class="shelf-card-info">
@@ -766,9 +810,172 @@ const seasonsCount = computed(() => {
   return detailedInfo.value?.total_seasons || 1
 })
 
+const userWatchlistMap = ref<Record<string, any>>({})
+
 onMounted(async () => {
-  await loadDiscoveryFeeds()
+  await Promise.all([
+    loadDiscoveryFeeds(),
+    loadUserWatchlistMap()
+  ])
 })
+
+const loadUserWatchlistMap = async () => {
+  if (!authStore.isAuth) {
+    userWatchlistMap.value = {}
+    return
+  }
+  try {
+    const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    }).catch(() => null)
+
+    const list = res?.data || []
+    const map: Record<string, any> = {}
+    for (const item of list) {
+      const tmdbId = item.movie?.tmdb_id || item.tmdb_id || item.movie?.id || item.id
+      const mediaType = item.movie?.media_type || item.media_type || 'movie'
+      if (tmdbId) {
+        map[`${tmdbId}_${mediaType}`] = item
+        map[`${tmdbId}`] = item
+      }
+    }
+    userWatchlistMap.value = map
+  } catch (err) {
+    console.error('Failed to load user watchlist map:', err)
+  }
+}
+
+const getUserMediaStatus = (item: any) => {
+  if (!item) return null
+  const id = item.id || item.tmdb_id || item.movie?.tmdb_id || item.movie?.id
+  const type = item.media_type || item.movie?.media_type || 'movie'
+  return userWatchlistMap.value[`${id}_${type}`] || userWatchlistMap.value[`${id}`] || null
+}
+
+const isInWatchlist = (item: any) => !!getUserMediaStatus(item)
+const isFavorite = (item: any) => !!getUserMediaStatus(item)?.favorite
+
+const getStatusBadgeLabel = (entry: any) => {
+  if (!entry) return ''
+  const status = entry.status || 'watching'
+  if (status === 'completed') return 'Completed ✓'
+  if (status === 'watching') {
+    if (entry.media_type === 'tv' || entry.movie?.media_type === 'tv') {
+      if (entry.episodes_watched > 0) return `Watching (E${entry.episodes_watched})`
+    }
+    return 'Watching'
+  }
+  if (status === 'plan_to_watch') return 'Plan to Watch'
+  if (status === 'dropped') return 'Dropped'
+  if (status === 'on_hold') return 'On Hold'
+  return status
+}
+
+const quickAddToWatchlist = async (item: any) => {
+  if (!authStore.isAuth) {
+    showToast('Please sign in to add to your watchlist.')
+    router.push('/login')
+    return
+  }
+
+  const existing = getUserMediaStatus(item)
+  if (existing) {
+    openSaveModal(item)
+    return
+  }
+
+  try {
+    const payload = {
+      tmdb_id: item.id || item.tmdb_id,
+      media_type: item.media_type || 'movie',
+      title: item.title || item.name,
+      overview: item.overview || '',
+      poster_path: item.poster_path || '',
+      backdrop_path: item.backdrop_path || '',
+      release_date: item.release_date || item.first_air_date || '',
+      vote_average: item.vote_average || 0,
+      status: 'watching',
+      favorite: false
+    }
+
+    const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authStore.token}` },
+      body: payload
+    })
+
+    if (res?.data) {
+      const id = item.id || item.tmdb_id
+      const type = item.media_type || 'movie'
+      userWatchlistMap.value[`${id}_${type}`] = res.data
+      userWatchlistMap.value[`${id}`] = res.data
+      showToast(`Added "${payload.title}" to Watchlist!`)
+    }
+  } catch (err) {
+    console.error('Quick add to watchlist error:', err)
+    showToast('Failed to add to watchlist.')
+  }
+}
+
+const quickToggleFavorite = async (item: any) => {
+  if (!authStore.isAuth) {
+    showToast('Please sign in first.')
+    router.push('/login')
+    return
+  }
+
+  const existing = getUserMediaStatus(item)
+  const newFavStatus = !existing?.favorite
+
+  try {
+    if (existing?.id) {
+      const res: any = await $fetch(useApiUrl(`/api/user/watchlist/${existing.id}`), {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${authStore.token}` },
+        body: { favorite: newFavStatus }
+      })
+
+      if (res?.data) {
+        existing.favorite = newFavStatus
+        const id = item.id || item.tmdb_id
+        const type = item.media_type || 'movie'
+        userWatchlistMap.value[`${id}_${type}`] = existing
+        userWatchlistMap.value[`${id}`] = existing
+        showToast(newFavStatus ? `Favorited "${item.title || item.name}"!` : `Removed from favorites.`)
+      }
+    } else {
+      const payload = {
+        tmdb_id: item.id || item.tmdb_id,
+        media_type: item.media_type || 'movie',
+        title: item.title || item.name,
+        overview: item.overview || '',
+        poster_path: item.poster_path || '',
+        backdrop_path: item.backdrop_path || '',
+        release_date: item.release_date || item.first_air_date || '',
+        vote_average: item.vote_average || 0,
+        status: 'watching',
+        favorite: true
+      }
+
+      const res: any = await $fetch(useApiUrl('/api/user/watchlist'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authStore.token}` },
+        body: payload
+      })
+
+      if (res?.data) {
+        const id = item.id || item.tmdb_id
+        const type = item.media_type || 'movie'
+        userWatchlistMap.value[`${id}_${type}`] = res.data
+        userWatchlistMap.value[`${id}`] = res.data
+        showToast(`Favorited "${payload.title}"!`)
+      }
+    }
+  } catch (err) {
+    console.error('Quick toggle favorite error:', err)
+    showToast('Failed to update favorite.')
+  }
+}
 
 const loadDiscoveryFeeds = async () => {
   try {
@@ -1064,6 +1271,10 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 
     if (res.data) {
       watchlistContext.value = res.data
+      const id = activeItem.value.id || activeItem.value.tmdb_id
+      const type = activeItem.value.media_type || 'movie'
+      userWatchlistMap.value[`${id}_${type}`] = res.data
+      userWatchlistMap.value[`${id}`] = res.data
       showToast(form.value.favorite ? `Added to Favorites! ★` : `Saved to Watchlist: ${payload.title}`)
     }
   } catch (err: any) {
@@ -2198,5 +2409,101 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
     padding: 5px 10px;
     font-size: 0.74rem;
   }
+}
+
+/* =========================================================================
+   STATUS PILLS & FAST SEARCH ACTION BUTTONS (IMPECCABLE DESIGN)
+   ========================================================================= */
+.card-status-pill,
+.shelf-status-pill {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 3;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.card-status-pill.watching,
+.shelf-status-pill.watching {
+  background: rgba(0, 150, 255, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.card-status-pill.completed,
+.shelf-status-pill.completed {
+  background: rgba(16, 185, 129, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.card-status-pill.plan_to_watch,
+.shelf-status-pill.plan_to_watch {
+  background: rgba(139, 92, 246, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.card-status-pill.dropped,
+.shelf-status-pill.dropped {
+  background: rgba(239, 68, 68, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.card-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn-card-quick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 8px;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.btn-card-quick:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-quick-watchlist.active-saved {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+
+.btn-quick-fav.active-fav {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: rgba(229, 9, 20, 0.5);
+  color: #ff6b6b;
+}
+
+.btn-icon-svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
 }
 </style>
