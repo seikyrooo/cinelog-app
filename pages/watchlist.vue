@@ -150,7 +150,7 @@
                       :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
                     >
                       <span class="star-icon-mini">★</span>
-                      <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                      <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : 'Rate & Review' }}</span>
                     </button>
                   </div>
                 </div>
@@ -780,13 +780,13 @@
         </div>
 
         <form @submit.prevent="updateWatchlist" class="modal-form">
-          <!-- Score Selector with Auto-Completed notice -->
+          <!-- Score Selector with Auto-Completed badge -->
           <div class="form-group">
             <div class="rating-header-row">
               <label>Your Score (1 - 10)</label>
               <span class="rating-score-display" v-if="editForm.rating > 0">
                 <span class="star-gold">★</span> {{ editForm.rating }} / 10
-                <small class="auto-complete-notice">• Auto Completed ✓</small>
+                <small class="auto-complete-notice">Completed</small>
               </span>
               <span class="rating-score-display" v-else>
                 <small class="text-muted">Select rating</small>
@@ -801,27 +801,15 @@
                 @click="onSelectRating(score)"
                 :class="['score-chip-btn', { active: editForm.rating === score, highlighted: score <= editForm.rating }]"
               >
-                ★ {{ score }}
+                {{ score }}
               </button>
             </div>
-          </div>
-
-          <!-- Watch Status Selector -->
-          <div class="form-group">
-            <label>Watch Status</label>
-            <select v-model="editForm.status" class="form-input">
-              <option value="completed">Completed ✓</option>
-              <option value="watching">Currently Watching</option>
-              <option value="plan_to_watch">Plan to Watch</option>
-              <option value="on_hold">On Hold</option>
-              <option value="dropped">Dropped</option>
-            </select>
           </div>
 
           <!-- Review / Commentary Input -->
           <div class="form-group">
             <div class="review-label-row">
-              <label>Review & Commentary</label>
+              <label>Review & Notes</label>
               <span class="char-count-text">{{ (editForm.notes || '').length }}/500</span>
             </div>
             <textarea 
@@ -829,7 +817,7 @@
               rows="3" 
               maxlength="500" 
               class="form-input text-area" 
-              placeholder="What did you think of the film/show? Share your review or commentary..."
+              placeholder="Write your review or thoughts..."
             ></textarea>
           </div>
 
@@ -838,16 +826,16 @@
             <label class="toggle-row-label">
               <input type="checkbox" v-model="editForm.is_public_feed" class="custom-toggle-checkbox" />
               <div class="toggle-text-col">
-                <strong>📢 Publish to Community Feed</strong>
-                <span>Show this rating and review to mutual friends on the activity stream.</span>
+                <strong>Publish to Community Feed</strong>
+                <span>Allow friends to see this rating and review in the community activity stream.</span>
               </div>
             </label>
 
             <label class="toggle-row-label">
               <input type="checkbox" v-model="editForm.favorite" class="custom-toggle-checkbox" />
               <div class="toggle-text-col">
-                <strong>★ Add to Favorites</strong>
-                <span>Highlight on your public profile.</span>
+                <strong>Add to Favorites</strong>
+                <span>Highlight on your public profile page.</span>
               </div>
             </label>
           </div>
@@ -1501,7 +1489,7 @@ const updateItemRating = async (item: any, rating: number) => {
         activeWatchlistContext.value.rating = res.data.rating
         activeWatchlistContext.value.status = res.data.status
       }
-      showToast(`⭐ Rated ${rating} / 10!`)
+      showToast(`Rated ${rating}/10`)
     }
   } catch (err) {
     console.error('Failed to update rating:', err)
@@ -1526,7 +1514,7 @@ const toggleFavoriteStatus = async (item: any) => {
         activeWatchlistContext.value.favorite = newFavState
       }
       fetchWatchlist()
-      showToast(newFavState ? 'Added to Favorites! ★' : 'Removed from Favorites.')
+      showToast(newFavState ? 'Added to Favorites' : 'Removed from Favorites')
     }
   } catch (err) {
     console.error(err)
@@ -1558,7 +1546,7 @@ const getStatusBadgeClass = (status: string) => {
 const incrementEpisode = async (item: any) => {
   const total = getTotalEps(item)
   if (total > 0 && item.episodes_watched >= total) {
-    showToast('🎉 All episodes already watched! Show is in Completed History.')
+    showToast('All episodes already watched! Show is in Completed History.')
     return
   }
 
@@ -1571,7 +1559,7 @@ const incrementEpisode = async (item: any) => {
       fetchWatchlist()
 
       if (res.data.status === 'completed') {
-        showToast('🎉 Series Completed! Moved to Completed History')
+        showToast('Series Completed! Moved to Completed History')
       } else {
         showToast(`+1 Episode logged! (${getEpisodeProgressCode(item)})`)
       }
@@ -1630,7 +1618,7 @@ const toggleMovieWatched = async (item: any) => {
       item.status = res.data.status
       fetchWatchlist()
       if (newStatus === 'completed') {
-        showToast('🎉 Movie marked as watched! Don\'t forget to rate.')
+        showToast('Movie marked as watched! Don\'t forget to rate.')
       } else {
         showToast('Movie status updated to watching.')
       }
@@ -1658,7 +1646,7 @@ const confirmDeleteItem = async () => {
     showEditModal.value = false
     activeWatchlistContext.value = null
     fetchWatchlist()
-    showToast('🗑️ Title removed from watchlist.')
+    showToast('Title removed from watchlist.')
   } catch (err: any) {
     showToast(err?.data?.error || 'Failed to remove from watchlist.')
   } finally {
