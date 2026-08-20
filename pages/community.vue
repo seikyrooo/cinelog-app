@@ -116,7 +116,10 @@
                 </NuxtLink>
                 <span class="activity-action-label">{{ getActivityActionLabel(act) }}</span>
               </div>
-              <span class="activity-time">{{ formatRelativeTime(act.updated_at || act.created_at) }}</span>
+              <span class="activity-time">
+                {{ formatRelativeTime(act.updated_at || act.created_at) }}
+                <span v-if="act.is_edited" class="edited-tag">• edited</span>
+              </span>
             </div>
 
             <!-- Rating badge if rated -->
@@ -432,21 +435,15 @@ const loadUsers = async (q?: string) => {
 
 const getActivityActionLabel = (act: any): string => {
   if (act.review || act.notes) {
-    return 'reviewed and rated'
+    return 'rated & reviewed'
   }
   if (act.rating > 0) {
-    return 'gave a rating'
-  }
-  if (act.status === 'completed') {
-    return 'finished watching'
-  }
-  if (act.status === 'watching') {
-    return 'is currently watching'
+    return 'rated'
   }
   if (act.favorite) {
     return 'added to favorites'
   }
-  return 'logged media'
+  return 'logged'
 }
 
 const onSearchInput = () => {
@@ -857,6 +854,13 @@ const { getAvatarUrl, getPosterUrl, onAvatarError, onImageError, formatYear, for
 .activity-time {
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+
+.edited-tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.8;
 }
 
 .activity-rating-badge {

@@ -142,19 +142,16 @@
                     </span>
                   </div>
 
-                  <!-- Interactive Quick Rating Bar -->
-                  <div class="card-rating-quick-bar" @click.stop>
-                    <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
-                    <div class="quick-stars">
-                      <span 
-                        v-for="star in 10" 
-                        :key="star"
-                        @click="updateItemRating(item, star)"
-                        :class="['mini-star', { active: star <= (item.rating || 0) }]"
-                        :title="'Rate ' + star + ' / 10'"
-                      >★</span>
-                    </div>
-                    <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                  <!-- Unified Quick-Log & Rate Action -->
+                  <div class="card-log-action-row" @click.stop>
+                    <button 
+                      @click="openEditModal(item)" 
+                      :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
+                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
+                    >
+                      <span class="star-icon-mini">★</span>
+                      <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -230,18 +227,16 @@
                   <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
                 </p>
 
-                <!-- Interactive Quick Rating Bar -->
-                <div class="card-rating-quick-bar" @click.stop>
-                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
-                  <div class="quick-stars">
-                    <span 
-                      v-for="star in 10" 
-                      :key="star"
-                      @click="updateItemRating(item, star)"
-                      :class="['mini-star', { active: star <= (item.rating || 0) }]"
-                    >★</span>
-                  </div>
-                  <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                <!-- Unified Quick-Log & Rate Action -->
+                <div class="card-log-action-row" @click.stop>
+                  <button 
+                    @click="openEditModal(item)" 
+                    :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
+                  >
+                    <span class="star-icon-mini">★</span>
+                    <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                  </button>
                 </div>
               </div>
 
@@ -308,18 +303,16 @@
                   </span>
                 </div>
 
-                <!-- Interactive Quick Rating Bar -->
-                <div class="card-rating-quick-bar" @click.stop>
-                  <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
-                  <div class="quick-stars">
-                    <span 
-                      v-for="star in 10" 
-                      :key="star"
-                      @click="updateItemRating(item, star)"
-                      :class="['mini-star', { active: star <= (item.rating || 0) }]"
-                    >★</span>
-                  </div>
-                  <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
+                <!-- Unified Quick-Log & Rate Action -->
+                <div class="card-log-action-row" @click.stop>
+                  <button 
+                    @click="openEditModal(item)" 
+                    :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
+                  >
+                    <span class="star-icon-mini">★</span>
+                    <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                  </button>
                 </div>
               </div>
 
@@ -552,45 +545,26 @@
 
             <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
 
-            <!-- Interactive Quick Star Rating Bar -->
-            <div class="card-rating-quick-bar" @click.stop>
-              <span class="rating-prompt-text">{{ item.rating > 0 ? 'Your Score:' : 'Rate:' }}</span>
-              <div class="quick-stars">
-                <span 
-                  v-for="star in 10" 
-                  :key="star"
-                  @click="updateItemRating(item, star)"
-                  :class="['mini-star', { active: star <= (item.rating || 0) }]"
-                  :title="'Rate ' + star + ' / 10'"
-                >★</span>
-              </div>
-              <span class="quick-rating-num" v-if="item.rating > 0">{{ item.rating }}/10</span>
-            </div>
-
-            <!-- Minimalist Icon Actions Row: Watched Checkmark + Trash Button -->
-            <div class="movie-card-icon-actions">
+            <!-- Unified Quick-Log & Rate Action and Minimal Trash Action -->
+            <div class="movie-card-bottom-row">
               <button 
-                @click.stop="toggleMovieWatched(item)" 
-                :class="['movie-action-btn', 'btn-check', { active: item.status === 'completed' }]"
-                :title="item.status === 'completed' ? 'Mark as unwatched' : 'Mark as watched'"
-                :aria-label="item.status === 'completed' ? 'Mark as unwatched' : 'Mark as watched'"
+                @click.stop="openEditModal(item)" 
+                :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
+                :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review movie'"
               >
-                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <span class="star-icon-mini">★</span>
+                <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
               </button>
 
               <button 
                 @click.stop="promptDeleteItem(item)" 
-                class="movie-action-btn btn-trash"
+                class="circle-trash-btn"
                 title="Remove from Watchlist"
                 aria-label="Remove from Watchlist"
               >
                 <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
                 </svg>
               </button>
             </div>
@@ -784,53 +758,103 @@
       </div>
     </div>
 
-    <!-- Modal Edit Watchlist Item -->
+    <!-- Unified Quick-Log & Rate Modal Dialog -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal-content glass-panel edit-modal-box animate-fade-in">
         <button @click="showEditModal = false" class="close-btn-fixed" title="Close Dialog">&times;</button>
-        <h2 class="modal-title">Edit Watchlist</h2>
-        <p class="modal-subtitle">{{ editingItem?.movie?.title }}</p>
+        
+        <div class="modal-media-header">
+          <img 
+            :src="getPosterUrl(editingItem)" 
+            :alt="editingItem?.movie?.title || editingItem?.title" 
+            class="modal-poster-mini" 
+            @error="onImageError"
+          />
+          <div class="modal-header-info">
+            <h2 class="modal-title">{{ editingItem?.movie?.title || editingItem?.title }}</h2>
+            <div class="modal-tags-row">
+              <span class="modal-type-badge">{{ editingItem?.movie?.media_type === 'tv' ? 'TV SHOW' : 'MOVIE' }}</span>
+              <span class="modal-year">{{ formatYear(editingItem?.movie?.release_date || editingItem?.movie?.first_air_date) }}</span>
+            </div>
+          </div>
+        </div>
 
         <form @submit.prevent="updateWatchlist" class="modal-form">
+          <!-- Score Selector with Auto-Completed notice -->
+          <div class="form-group">
+            <div class="rating-header-row">
+              <label>Your Score (1 - 10)</label>
+              <span class="rating-score-display" v-if="editForm.rating > 0">
+                <span class="star-gold">★</span> {{ editForm.rating }} / 10
+                <small class="auto-complete-notice">• Auto Completed ✓</small>
+              </span>
+              <span class="rating-score-display" v-else>
+                <small class="text-muted">Select rating</small>
+              </span>
+            </div>
+            
+            <div class="score-chips-grid">
+              <button 
+                type="button"
+                v-for="score in 10" 
+                :key="score"
+                @click="onSelectRating(score)"
+                :class="['score-chip-btn', { active: editForm.rating === score, highlighted: score <= editForm.rating }]"
+              >
+                ★ {{ score }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Watch Status Selector -->
           <div class="form-group">
             <label>Watch Status</label>
             <select v-model="editForm.status" class="form-input">
-              <option value="watching">Watching</option>
-              <option value="completed">Completed</option>
+              <option value="completed">Completed ✓</option>
+              <option value="watching">Currently Watching</option>
               <option value="plan_to_watch">Plan to Watch</option>
               <option value="on_hold">On Hold</option>
               <option value="dropped">Dropped</option>
             </select>
           </div>
 
+          <!-- Review / Commentary Input -->
           <div class="form-group">
-            <label>Your Rating (1 - 10)</label>
-            <div class="star-rating-selector">
-              <span 
-                v-for="star in 10" 
-                :key="star"
-                @click="editForm.rating = star"
-                :class="['star-icon', { active: star <= editForm.rating }]"
-              >★</span>
-              <span class="rating-number">{{ editForm.rating > 0 ? editForm.rating + ' / 10' : 'Not rated yet' }}</span>
+            <div class="review-label-row">
+              <label>Review & Commentary</label>
+              <span class="char-count-text">{{ (editForm.notes || '').length }}/500</span>
             </div>
+            <textarea 
+              v-model="editForm.notes" 
+              rows="3" 
+              maxlength="500" 
+              class="form-input text-area" 
+              placeholder="What did you think of the film/show? Share your review or commentary..."
+            ></textarea>
           </div>
 
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="editForm.favorite" />
-              Mark as Favorite
+          <!-- Modal Toggles: Publish to Activity Feed & Favorites -->
+          <div class="modal-toggles-box">
+            <label class="toggle-row-label">
+              <input type="checkbox" v-model="editForm.is_public_feed" class="custom-toggle-checkbox" />
+              <div class="toggle-text-col">
+                <strong>📢 Publish to Community Feed</strong>
+                <span>Show this rating and review to mutual friends on the activity stream.</span>
+              </div>
             </label>
-          </div>
 
-          <div class="form-group">
-            <label>Personal Notes</label>
-            <textarea v-model="editForm.notes" rows="3" class="form-input text-area" placeholder="Write your private review or thoughts..."></textarea>
+            <label class="toggle-row-label">
+              <input type="checkbox" v-model="editForm.favorite" class="custom-toggle-checkbox" />
+              <div class="toggle-text-col">
+                <strong>★ Add to Favorites</strong>
+                <span>Highlight on your public profile.</span>
+              </div>
+            </label>
           </div>
 
           <div class="modal-actions">
             <button type="button" @click="showEditModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="submit" class="btn-primary">Save Log</button>
           </div>
         </form>
       </div>
@@ -1559,16 +1583,26 @@ const incrementEpisode = async (item: any) => {
 
 const openEditModal = (item: any) => {
   editingItem.value = item
+  const initialRating = item.rating || 0
   editForm.value = {
-    status: item.status,
-    rating: item.rating || 8.0,
-    favorite: item.favorite,
-    notes: item.notes || '',
+    status: item.status || (initialRating > 0 ? 'completed' : 'plan_to_watch'),
+    rating: initialRating,
+    favorite: item.favorite || false,
+    notes: item.notes || item.review || '',
+    review: item.review || item.notes || '',
+    is_public_feed: typeof item.is_public_feed === 'boolean' ? item.is_public_feed : true,
     season_watched: item.season_watched || 1,
     episodes_watched: item.episodes_watched || 0,
     total_episodes: item.total_episodes || item.movie?.total_episodes || 0
   }
   showEditModal.value = true
+}
+
+const onSelectRating = (score: number) => {
+  editForm.value.rating = score
+  if (score > 0 && (editForm.value.status === 'plan_to_watch' || !editForm.value.status)) {
+    editForm.value.status = 'completed'
+  }
 }
 
 const updateWatchlist = async () => {
@@ -2847,27 +2881,124 @@ const confirmDeleteItem = async () => {
   height: 18px;
 }
 
-/* EDIT MODAL */
+/* CARD LOG & RATE TRIGGERS */
+.card-log-action-row {
+  margin-top: 4px;
+}
+
+.btn-card-log-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-card-log-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-card-log-trigger.rated {
+  background: rgba(229, 9, 20, 0.12);
+  border-color: rgba(229, 9, 20, 0.4);
+  color: #ff6b6b;
+}
+
+.btn-card-log-trigger.rated:hover {
+  background: rgba(229, 9, 20, 0.22);
+  color: #ffffff;
+  border-color: var(--accent-red);
+}
+
+.star-icon-mini {
+  color: #ffaa00;
+  font-size: 0.85rem;
+}
+
+.movie-card-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* EDIT & QUICK-LOG MODAL */
 .edit-modal-box {
   width: 90vw;
-  max-width: 440px;
-  padding: 28px;
+  max-width: 480px;
+  padding: 24px;
   border-radius: 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+}
+
+.modal-media-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-poster-mini {
+  width: 48px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #222;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.modal-header-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .modal-title {
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.modal-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 18px;
+.modal-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-type-badge {
+  font-size: 0.64rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(229, 9, 20, 0.2);
+  color: #ff6b6b;
+  letter-spacing: 0.04em;
+}
+
+.modal-year {
+  font-size: 0.76rem;
+  color: var(--text-muted);
 }
 
 .modal-form {
@@ -2884,6 +3015,73 @@ const confirmDeleteItem = async () => {
   margin-bottom: 6px;
 }
 
+.rating-header-row, .review-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.rating-score-display {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffaa00;
+}
+
+.star-gold {
+  color: #ffaa00;
+}
+
+.auto-complete-notice {
+  font-size: 0.72rem;
+  color: #10b981;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.score-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.score-chip-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.score-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.score-chip-btn.highlighted {
+  background: rgba(229, 9, 20, 0.15);
+  border-color: rgba(229, 9, 20, 0.35);
+  color: #ff6b6b;
+}
+
+.score-chip-btn.active {
+  background: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
+}
+
+.char-count-text {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 .form-input {
   width: 100%;
   background: rgba(255, 255, 255, 0.04);
@@ -2898,45 +3096,46 @@ const confirmDeleteItem = async () => {
   resize: vertical;
 }
 
-.checkbox-group {
-  margin-top: -4px;
+.modal-toggles-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
 }
 
-.checkbox-label {
+.toggle-row-label {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: #ffffff;
+  align-items: flex-start;
+  gap: 10px;
   cursor: pointer;
 }
 
-.checkbox-label input {
+.custom-toggle-checkbox {
+  margin-top: 3px;
   accent-color: var(--accent-red);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
-.star-rating-selector {
+.toggle-text-col {
   display: flex;
-  align-items: center;
-  gap: 3px;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.star-icon {
-  font-size: 1.15rem;
-  color: #3f3f46;
-  cursor: pointer;
-  transition: color 0.15s;
+.toggle-text-col strong {
+  font-size: 0.82rem;
+  color: #ffffff;
 }
 
-.star-icon.active {
-  color: var(--accent-star);
-}
-
-.rating-number {
-  margin-left: 6px;
-  font-size: 0.8rem;
-  color: var(--accent-star);
-  font-weight: 700;
+.toggle-text-col span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.3;
 }
 
 .modal-actions {
