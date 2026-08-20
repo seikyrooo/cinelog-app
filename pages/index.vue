@@ -534,13 +534,28 @@
                 </div>
               </div>
 
+              <!-- Review / Commentary Input Area -->
+              <div class="review-input-group">
+                <label for="modal-review-input">Your Review / Commentary (Optional):</label>
+                <textarea 
+                  id="modal-review-input" 
+                  v-model="form.notes" 
+                  rows="3" 
+                  maxlength="500" 
+                  placeholder="Write your review, impression, or favorite scenes..."
+                  class="modal-review-textarea"
+                ></textarea>
+                <div class="review-char-count">
+                  <small>{{ (form.notes || '').length }}/500 chars</small>
+                </div>
+              </div>
+
               <div class="quick-action-icon-row">
                 <button 
                   @click="saveToWatchlist('watching')" 
-                  :class="['icon-action-btn', 'btn-primary', { active: watchlistContext }]"
+                  :class="['icon-action-btn', 'btn-primary-action', { 'in-watchlist': watchlistContext }]"
                   :disabled="isSaving"
-                  :title="watchlistContext ? 'Saved in Watchlist' : 'Add to Watchlist'"
-                  aria-label="Add to Watchlist"
+                  :title="watchlistContext ? 'Saved in Watchlist (Click to save edits)' : 'Save to Watchlist'"
                 >
                   <svg v-if="watchlistContext" class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -549,6 +564,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
+                  <span>{{ isSaving ? 'Saving...' : (watchlistContext ? 'Update Log' : 'Save Log') }}</span>
                 </button>
                 <button 
                   @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
@@ -2075,6 +2091,46 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   font-weight: 700;
 }
 
+.review-input-group {
+  margin-bottom: 12px;
+}
+
+.review-input-group label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.modal-review-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.84rem;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 140px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.modal-review-textarea:focus {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--accent-red);
+  outline: none;
+}
+
+.review-char-count {
+  text-align: right;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 .quick-action-icon-row {
   display: flex;
   gap: 10px;
@@ -2088,9 +2144,12 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0;
+  padding: 0 14px;
   border: 1px solid var(--border-subtle);
 }
 
@@ -2098,16 +2157,26 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   transform: translateY(-2px);
 }
 
-.icon-action-btn.btn-primary {
-  background: var(--accent-red);
+.icon-action-btn.btn-primary-action {
+  background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
-  border-color: var(--accent-red);
-  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.35);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.icon-action-btn.btn-primary:hover {
-  background: var(--accent-red-hover);
-  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+.icon-action-btn.btn-primary-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.icon-action-btn.btn-primary-action.in-watchlist {
+  background: var(--accent-red) !important;
+  color: #ffffff !important;
+  border-color: var(--accent-red) !important;
+  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.4);
+}
+
+.icon-action-btn.btn-primary-action.in-watchlist:hover {
+  background: var(--accent-red-hover) !important;
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.6);
 }
 
 .icon-action-btn.btn-secondary {

@@ -124,6 +124,18 @@ export const useApi = () => {
     headers: authHeaders()
   })
 
+  const getSocialFeed = (params?: { page?: number; limit?: number; type?: 'following' | 'community' }) => $fetch<{
+    success: boolean
+    data: any[]
+    page: number
+    limit: number
+    is_following_feed?: boolean
+    following_count?: number
+  }>(useApiUrl('/api/community/activity'), {
+    headers: authHeaders(),
+    params
+  })
+
   const followUser = (idOrUsername: number | string) => $fetch<{ success?: boolean; message: string; data?: any }>(useApiUrl(`/api/me/follow/${idOrUsername}`), {
     method: 'POST',
     headers: authHeaders()
@@ -199,6 +211,8 @@ export const useApi = () => {
     getPublicFavorites,
     getPublicRatings,
     searchUsers,
+    getDiscoverUsers,
+    getSocialFeed,
     getUserFollowers,
     getUserFollowing,
     followUser,

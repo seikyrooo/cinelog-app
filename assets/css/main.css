@@ -317,3 +317,12 @@ input:focus, textarea:focus, select:focus {
 .animate-fade-in {
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* =========================================================================
+   IMPECCABLE NAVBAR RED PROGRESS BAR GLOW
+   ========================================================================= */
+.nuxt-loading-indicator {
+  box-shadow: 0 0 14px rgba(229, 9, 20, 0.95), 0 0 4px rgba(229, 9, 20, 0.7) !important;
+  z-index: 99999 !important;
+}
+

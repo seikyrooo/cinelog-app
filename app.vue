@@ -1,5 +1,8 @@
 <template>
   <div class="app-layout">
+    <!-- Top-Edge Micro Progress Bar (Impeccable Netflix Red Theme) -->
+    <NuxtLoadingIndicator color="#E50914" :height="3" :duration="2000" :throttle="50" />
+
     <!-- Navbar Header -->
     <header class="navbar-header glass-panel">
       <div class="nav-container">

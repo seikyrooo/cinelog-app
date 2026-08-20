@@ -105,14 +105,32 @@ export const useFormatters = () => {
     return num < 10 ? `0${num}` : `${num}`
   }
 
+  const formatRelativeTime = (dateStr?: string): string => {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
+    if (diffSec < 60) return 'Just now'
+    const diffMin = Math.floor(diffSec / 60)
+    if (diffMin < 60) return `${diffMin}m ago`
+    const diffHours = Math.floor(diffMin / 60)
+    if (diffHours < 24) return `${diffHours}h ago`
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays < 30) return `${diffDays}d ago`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
   return {
+    FALLBACK_POSTER,
+    FALLBACK_BACKDROP,
     getPosterUrl,
-    getImageUrl: getPosterUrl,
     getBackdropUrl,
     getAvatarUrl,
+    getImageUrl: getPosterUrl,
     onAvatarError,
     onImageError,
     formatYear,
+    formatRelativeTime,
     getStatusLabel,
     padZero
   }
