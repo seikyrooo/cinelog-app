@@ -9,7 +9,7 @@
       <span>{{ toastMessage }}</span>
     </div>
 
-    <!-- Enhanced Immersive Borderless Featured Spotlight Hero Banner (Netflix / IDLIX Aesthetic) -->
+    <!-- Enhanced Immersive Borderless Featured Spotlight Hero Banner (Cinematic Aesthetic) -->
     <section 
       v-if="featuredShow && !isSearchMode" 
       class="featured-hero-banner" 
@@ -200,7 +200,7 @@
       </div>
     </section>
 
-    <!-- Horizontal Scrolling Shelves / Discovery Feeds (IDLIX / Netflix Layout) -->
+    <!-- Horizontal Scrolling Shelves / Discovery Feeds (Cinematic Layout) -->
     <div v-else class="discovery-container">
       
       <!-- SHELF 1: Trending Now -->
@@ -1452,70 +1452,70 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
 
 .featured-actions {
   display: flex;
-  gap: 14px;
-  margin-top: 6px;
+  align-items: center;
+  gap: 12px;
 }
 
-.btn-hero-play {
-  padding: 13px 26px;
-  font-size: 0.94rem;
-  font-weight: 700;
-  border-radius: 8px;
+.btn-hero-primary {
+  padding: 12px 24px;
+  font-size: 0.95rem;
 }
 
 .btn-hero-info {
-  padding: 13px 22px;
-  font-size: 0.94rem;
-  font-weight: 600;
-  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
 }
 
 /* =========================================================================
-   SEARCH SECTION
+   SEARCH BAR & CATEGORY PILLS
    ========================================================================= */
 .search-section {
-  width: 100%;
+  margin-bottom: 40px;
 }
 
 .search-bar-wrapper {
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
 .search-box {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 12px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
   align-items: center;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  transition: all 0.2s ease;
+  padding: 6px 10px 6px 18px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-box:focus-within {
-  border-color: var(--border-red);
-  box-shadow: 0 0 0 3px var(--accent-red-subtle);
+  border-color: var(--accent-red);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2), 0 12px 40px rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .search-leading-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: var(--text-muted);
-  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .search-input {
   flex: 1;
-  min-width: 220px;
   background: transparent;
   border: none;
   color: #ffffff;
-  font-size: 0.92rem;
-  padding: 8px 10px;
+  font-size: 1rem;
+  padding: 10px 0;
   outline: none;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
 }
 
 .filter-type {
