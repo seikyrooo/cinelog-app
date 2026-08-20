@@ -142,15 +142,23 @@
                     </span>
                   </div>
 
-                  <!-- Unified Quick-Log & Rate Action -->
+                  <!-- Ultra-Minimalist Rate & Log Action -->
                   <div class="card-log-action-row" @click.stop>
                     <button 
                       @click="openEditModal(item)" 
-                      :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
-                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
+                      :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
                     >
-                      <span class="star-icon-mini">★</span>
-                      <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : 'Rate & Review' }}</span>
+                      <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                      <template v-if="item.rating > 0">
+                        <span class="rate-val">{{ item.rating }}</span>
+                        <span class="rate-max">/10</span>
+                      </template>
+                      <template v-else>
+                        <span>Rate</span>
+                      </template>
                     </button>
                   </div>
                 </div>
@@ -227,15 +235,23 @@
                   <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
                 </p>
 
-                <!-- Unified Quick-Log & Rate Action -->
+                <!-- Ultra-Minimalist Rate & Log Action -->
                 <div class="card-log-action-row" @click.stop>
                   <button 
                     @click="openEditModal(item)" 
-                    :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
+                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
                   >
-                    <span class="star-icon-mini">★</span>
-                    <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <template v-if="item.rating > 0">
+                      <span class="rate-val">{{ item.rating }}</span>
+                      <span class="rate-max">/10</span>
+                    </template>
+                    <template v-else>
+                      <span>Rate</span>
+                    </template>
                   </button>
                 </div>
               </div>
@@ -303,15 +319,23 @@
                   </span>
                 </div>
 
-                <!-- Unified Quick-Log & Rate Action -->
+                <!-- Ultra-Minimalist Rate & Log Action -->
                 <div class="card-log-action-row" @click.stop>
                   <button 
                     @click="openEditModal(item)" 
-                    :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review show'"
+                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
                   >
-                    <span class="star-icon-mini">★</span>
-                    <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <template v-if="item.rating > 0">
+                      <span class="rate-val">{{ item.rating }}</span>
+                      <span class="rate-max">/10</span>
+                    </template>
+                    <template v-else>
+                      <span>Rate</span>
+                    </template>
                   </button>
                 </div>
               </div>
@@ -545,15 +569,23 @@
 
             <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
 
-            <!-- Unified Quick-Log & Rate Action and Minimal Trash Action -->
+            <!-- Ultra-Minimalist Rate & Log Action and Minimal Trash Action -->
             <div class="movie-card-bottom-row">
               <button 
                 @click.stop="openEditModal(item)" 
-                :class="['btn-card-log-trigger', { rated: item.rating > 0 }]"
-                :title="item.rating > 0 ? 'Edit score & review' : 'Rate & review movie'"
+                :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
               >
-                <span class="star-icon-mini">★</span>
-                <span>{{ item.rating > 0 ? item.rating + ' / 10 • Rated' : '+ Rate & Review' }}</span>
+                <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <template v-if="item.rating > 0">
+                  <span class="rate-val">{{ item.rating }}</span>
+                  <span class="rate-max">/10</span>
+                </template>
+                <template v-else>
+                  <span>Rate</span>
+                </template>
               </button>
 
               <button 
@@ -2869,48 +2901,60 @@ const confirmDeleteItem = async () => {
   height: 18px;
 }
 
-/* CARD LOG & RATE TRIGGERS */
+/* ULTRA-MINIMALIST RATE BUTTON */
 .card-log-action-row {
   margin-top: 4px;
 }
 
-.btn-card-log-trigger {
+.btn-minimal-rate {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 6px;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a1a1aa;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.02em;
 }
 
-.btn-card-log-trigger:hover {
-  background: rgba(255, 255, 255, 0.1);
+.btn-minimal-rate:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
 }
 
-.btn-card-log-trigger.rated {
-  background: rgba(229, 9, 20, 0.12);
-  border-color: rgba(229, 9, 20, 0.4);
-  color: #ff6b6b;
+.rate-star-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
-.btn-card-log-trigger.rated:hover {
-  background: rgba(229, 9, 20, 0.22);
-  color: #ffffff;
-  border-color: var(--accent-red);
-}
-
-.star-icon-mini {
+.btn-minimal-rate.rated {
+  background: rgba(255, 170, 0, 0.08);
+  border-color: rgba(255, 170, 0, 0.3);
   color: #ffaa00;
-  font-size: 0.85rem;
+}
+
+.btn-minimal-rate.rated:hover {
+  background: rgba(255, 170, 0, 0.15);
+  border-color: #ffaa00;
+  color: #ffc107;
+}
+
+.rate-val {
+  font-weight: 800;
+  color: #ffaa00;
+}
+
+.rate-max {
+  font-size: 0.64rem;
+  color: rgba(255, 170, 0, 0.65);
 }
 
 .movie-card-bottom-row {
