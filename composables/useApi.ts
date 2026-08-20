@@ -193,6 +193,44 @@ export const useApi = () => {
     headers: authHeaders()
   })
 
+  const toggleActivityLike = (activityId: number) => $fetch<{ success: boolean; liked: boolean; likes_count: number }>(useApiUrl(`/api/me/activity/${activityId}/like`), {
+    method: 'POST',
+    headers: authHeaders()
+  })
+
+  const getActivityComments = (activityId: number) => $fetch<{ success: boolean; data: any[]; count: number }>(useApiUrl(`/api/me/activity/${activityId}/comments`), {
+    headers: authHeaders()
+  })
+
+  const postActivityComment = (activityId: number, content: string) => $fetch<{ success: boolean; data: any; comments_count: number }>(useApiUrl(`/api/me/activity/${activityId}/comments`), {
+    method: 'POST',
+    headers: authHeaders(),
+    body: { content }
+  })
+
+  const deleteActivityComment = (commentId: number) => $fetch<{ success: boolean; message: string }>(useApiUrl(`/api/me/activity/comments/${commentId}`), {
+    method: 'DELETE',
+    headers: authHeaders()
+  })
+
+  const getNotifications = () => $fetch<{ success: boolean; data: any[]; unread_count: number }>(useApiUrl('/api/me/notifications'), {
+    headers: authHeaders()
+  })
+
+  const getUnreadNotificationCount = () => $fetch<{ success: boolean; unread_count: number }>(useApiUrl('/api/me/notifications/unread-count'), {
+    headers: authHeaders()
+  })
+
+  const markNotificationAsRead = (id: number) => $fetch<{ success: boolean }>(useApiUrl(`/api/me/notifications/${id}/read`), {
+    method: 'PUT',
+    headers: authHeaders()
+  })
+
+  const markAllNotificationsAsRead = () => $fetch<{ success: boolean; message: string }>(useApiUrl('/api/me/notifications/read-all'), {
+    method: 'PUT',
+    headers: authHeaders()
+  })
+
   return {
     authHeaders,
     getMe,
@@ -216,6 +254,15 @@ export const useApi = () => {
     getUserFollowers,
     getUserFollowing,
     followUser,
-    unfollowUser
+    unfollowUser,
+    toggleActivityLike,
+    getActivityComments,
+    postActivityComment,
+    deleteActivityComment,
+    getNotifications,
+    getUnreadNotificationCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead
   }
 }
+

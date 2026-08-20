@@ -165,6 +165,112 @@
               </div>
             </div>
           </div>
+
+          <!-- Activity Actions Row: Like & Comment Counters & Triggers -->
+          <div class="activity-interaction-bar">
+            <button 
+              @click="toggleLike(act)" 
+              :class="['btn-interaction-chip', 'like-chip', { active: act.is_liked }]"
+              :title="act.is_liked ? 'Unlike this post' : 'Like this post'"
+            >
+              <svg class="interaction-icon" viewBox="0 0 24 24" :fill="act.is_liked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              <span>{{ act.likes_count || 0 }}</span>
+              <span class="action-label-text">{{ act.likes_count === 1 ? 'Like' : 'Likes' }}</span>
+            </button>
+
+            <button 
+              @click="toggleComments(act)" 
+              :class="['btn-interaction-chip', 'comment-chip', { active: expandedComments[act.id] }]"
+              title="View comments"
+            >
+              <svg class="interaction-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>{{ act.comments_count || 0 }}</span>
+              <span class="action-label-text">{{ act.comments_count === 1 ? 'Comment' : 'Comments' }}</span>
+            </button>
+          </div>
+
+          <!-- Expandable Comments Drawer / Box -->
+          <div v-if="expandedComments[act.id]" class="activity-comments-section animate-fade-in">
+            <!-- Loading state for comments -->
+            <div v-if="loadingComments[act.id]" class="comments-loading">
+              <div class="spinner-mini"></div>
+              <span>Loading comments...</span>
+            </div>
+
+            <!-- List of comments -->
+            <div v-else class="comments-list">
+              <div v-if="!commentsData[act.id] || commentsData[act.id].length === 0" class="no-comments-yet">
+                <span>No comments yet. Be the first to start the conversation!</span>
+              </div>
+              <div 
+                v-for="comm in commentsData[act.id]" 
+                :key="'comm-' + comm.id"
+                class="comment-row"
+              >
+                <NuxtLink :to="`/users/${encodeURIComponent(comm.user?.username || '')}`" class="comment-avatar-link">
+                  <div class="comment-avatar">
+                    <img 
+                      v-if="comm.user?.avatar_url" 
+                      :src="getAvatarUrl(comm.user.avatar_url)" 
+                      :alt="comm.user?.username" 
+                      @error="onAvatarError"
+                    />
+                    <span v-else>{{ (comm.user?.username || 'C').slice(0, 1).toUpperCase() }}</span>
+                  </div>
+                </NuxtLink>
+
+                <div class="comment-content-box">
+                  <div class="comment-header-row">
+                    <NuxtLink :to="`/users/${encodeURIComponent(comm.user?.username || '')}`" class="comment-author">
+                      @{{ comm.user?.username }}
+                    </NuxtLink>
+                    <span class="comment-time">{{ formatRelativeTime(comm.created_at) }}</span>
+                    <button 
+                      v-if="authStore.userId === comm.user_id" 
+                      @click="deleteComment(act, comm.id)"
+                      class="btn-delete-comment"
+                      title="Delete comment"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p class="comment-text">{{ comm.content }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Post New Comment Input Form -->
+            <form @submit.prevent="submitComment(act)" class="comment-form">
+              <div class="comment-form-avatar">
+                <img 
+                  v-if="authStore.user?.avatar_url" 
+                  :src="getAvatarUrl(authStore.user.avatar_url)" 
+                  :alt="authStore.user?.username" 
+                  @error="onAvatarError"
+                />
+                <span v-else>{{ userInitials }}</span>
+              </div>
+              <input 
+                v-model="commentInputs[act.id]" 
+                type="text" 
+                placeholder="Write a comment..."
+                class="comment-input-field"
+                :disabled="submittingComment[act.id]"
+              />
+              <button 
+                type="submit" 
+                :disabled="!commentInputs[act.id] || !commentInputs[act.id].trim() || submittingComment[act.id]"
+                class="btn-submit-comment"
+              >
+                <span v-if="submittingComment[act.id]">...</span>
+                <span v-else>Post</span>
+              </button>
+            </form>
+          </div>
         </article>
       </div>
     </section>
@@ -267,7 +373,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import type { CommunityUser } from '~/composables/useApi'
 
@@ -379,9 +485,102 @@ const toggleFollow = async (user: CommunityUser) => {
     console.error('Failed to toggle follow status:', err)
     // Revert optimistic update
     user.is_following = currentlyFollowing
-    user.followers_count = Math.max(0, user.followers_count + (currentlyFollowing ? 1 : -1))
   } finally {
     togglingMap[user.id] = false
+  }
+}
+
+const togglingLikeMap = reactive<Record<number, boolean>>({})
+const expandedComments = reactive<Record<number, boolean>>({})
+const commentsData = reactive<Record<number, any[]>>({})
+const loadingComments = reactive<Record<number, boolean>>({})
+const commentInputs = reactive<Record<number, string>>({})
+const submittingComment = reactive<Record<number, boolean>>({})
+
+const userInitials = computed(() => {
+  const name = authStore.user?.username || ''
+  return name ? name.slice(0, 2).toUpperCase() : 'CL'
+})
+
+const toggleLike = async (act: any) => {
+  if (!authStore.isAuth) {
+    useRouter().push('/login')
+    return
+  }
+  if (togglingLikeMap[act.id]) return
+  togglingLikeMap[act.id] = true
+
+  const currentlyLiked = act.is_liked
+  act.is_liked = !currentlyLiked
+  act.likes_count = Math.max(0, (act.likes_count || 0) + (currentlyLiked ? -1 : 1))
+
+  try {
+    const res = await api.toggleActivityLike(act.id)
+    if (res && typeof res.liked === 'boolean') {
+      act.is_liked = res.liked
+      act.likes_count = res.likes_count
+    }
+  } catch (err) {
+    console.error('Failed to toggle like:', err)
+    act.is_liked = currentlyLiked
+    act.likes_count = Math.max(0, (act.likes_count || 0) + (currentlyLiked ? 1 : -1))
+  } finally {
+    togglingLikeMap[act.id] = false
+  }
+}
+
+const toggleComments = async (act: any) => {
+  expandedComments[act.id] = !expandedComments[act.id]
+  if (expandedComments[act.id] && !commentsData[act.id]) {
+    await loadComments(act.id)
+  }
+}
+
+const loadComments = async (activityId: number) => {
+  loadingComments[activityId] = true
+  try {
+    const res = await api.getActivityComments(activityId)
+    commentsData[activityId] = res?.data || []
+  } catch (err) {
+    console.error('Failed to load comments:', err)
+  } finally {
+    loadingComments[activityId] = false
+  }
+}
+
+const submitComment = async (act: any) => {
+  if (!authStore.isAuth) {
+    useRouter().push('/login')
+    return
+  }
+  const text = commentInputs[act.id]?.trim()
+  if (!text || submittingComment[act.id]) return
+
+  submittingComment[act.id] = true
+  try {
+    const res = await api.postActivityComment(act.id, text)
+    if (res?.data) {
+      if (!commentsData[act.id]) commentsData[act.id] = []
+      commentsData[act.id].push(res.data)
+      act.comments_count = res.comments_count || (act.comments_count || 0) + 1
+      commentInputs[act.id] = ''
+    }
+  } catch (err) {
+    console.error('Failed to post comment:', err)
+  } finally {
+    submittingComment[act.id] = false
+  }
+}
+
+const deleteComment = async (act: any, commentId: number) => {
+  try {
+    await api.deleteActivityComment(commentId)
+    if (commentsData[act.id]) {
+      commentsData[act.id] = commentsData[act.id].filter(c => c.id !== commentId)
+    }
+    act.comments_count = Math.max(0, (act.comments_count || 1) - 1)
+  } catch (err) {
+    console.error('Failed to delete comment:', err)
   }
 }
 
@@ -816,6 +1015,258 @@ const { getAvatarUrl, getPosterUrl, onAvatarError, onImageError, formatYear, for
   background: rgba(229, 9, 20, 0.2);
   color: #ff6b6b;
   border: 1px solid rgba(229, 9, 20, 0.4);
+}
+/* Activity Interaction Bar (Likes & Comments) */
+.activity-interaction-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.btn-interaction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interaction-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.action-label-text {
+  font-weight: 500;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.btn-interaction-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.btn-interaction-chip:hover .interaction-icon {
+  transform: scale(1.15);
+}
+
+.like-chip.active {
+  background: rgba(229, 9, 20, 0.15);
+  border-color: rgba(229, 9, 20, 0.45);
+  color: #ff4b55;
+}
+
+.like-chip.active .action-label-text {
+  color: #ff6b6b;
+}
+
+.comment-chip.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Comments Section Drawer */
+.activity-comments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0 -20px -18px -20px;
+  padding: 14px 20px 18px 20px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.comments-loading {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.no-comments-yet {
+  padding: 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.comment-avatar-link {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.comment-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(229, 9, 20, 0.15);
+  color: #ff6b6b;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-content-box {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.comment-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.comment-author {
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.comment-author:hover {
+  color: var(--accent-red);
+}
+
+.comment-time {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.btn-delete-comment {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.btn-delete-comment:hover {
+  color: var(--accent-red);
+}
+
+.comment-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #e5e5e5;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.comment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.comment-form-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(229, 9, 20, 0.15);
+  color: #ff6b6b;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.comment-form-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-input-field {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.82rem;
+}
+
+.comment-input-field:focus {
+  outline: none;
+  border-color: var(--accent-red);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-submit-comment {
+  padding: 8px 14px;
+  background: var(--accent-red);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-submit-comment:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-submit-comment:hover:not(:disabled) {
+  background: #b80710;
 }
 
 /* =========================================================================
