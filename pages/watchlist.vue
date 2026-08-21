@@ -445,19 +445,6 @@
                 <p class="eps-title-text" v-if="item.movie?.next_episode_name">
                   <span class="eps-label">Next Ep:</span> <strong>"{{ item.movie?.next_episode_name }}"</strong>
                 </p>
-
-                <div class="card-badges-row">
-                  <span class="badge-total-info">
-                    Current Progress: S{{ padZero(item.season_watched || 1) }} ({{ item.episodes_watched || 0 }} eps watched)
-                  </span>
-                </div>
-              </div>
-
-              <!-- Side Action Button -->
-              <div class="card-side-actions">
-                <button class="btn-radar-details" @click.stop="openDetailModal(item)">
-                  <span>Details</span>
-                </button>
               </div>
             </div>
           </div>
@@ -495,18 +482,6 @@
                   <span class="countdown-badge badge-tba">Next Season in Production / TBA</span>
                   <span class="radar-status-pill">{{ item.movie?.media_status || 'Ongoing' }}</span>
                 </div>
-
-                <div class="card-badges-row">
-                  <span class="badge-total-info">
-                    Progress: S{{ padZero(item.season_watched || 1) }} • {{ item.episodes_watched || 0 }} eps watched
-                  </span>
-                </div>
-              </div>
-
-              <div class="card-side-actions">
-                <button class="btn-radar-details" @click.stop="openDetailModal(item)">
-                  <span>Details</span>
-                </button>
               </div>
             </div>
           </div>
