@@ -818,21 +818,15 @@
               <label>Your Score (1 - 10)</label>
               <span class="rating-score-display" v-if="editForm.rating > 0">
                 <span class="star-gold">★</span> {{ editForm.rating }} / 10
-                <button 
-                  type="button" 
-                  class="btn-clear-rating" 
-                  @click="clearRating" 
-                  title="Hapus / Reset Rating"
-                >✕ Hapus Rate</button>
               </span>
               <span class="rating-score-display" v-else>
-                <small class="text-muted">Unrated (Pilih 1 - 10)</small>
+                <small class="text-muted">Unrated (Select 1 - 10)</small>
               </span>
             </div>
             
             <div class="score-chips-grid">
               <button 
-                type="button"
+                type="button" 
                 v-for="score in 10" 
                 :key="score"
                 @click="onSelectRating(score)"
@@ -877,9 +871,24 @@
             </label>
           </div>
 
-          <div class="modal-actions">
-            <button type="button" @click="showEditModal = false" class="btn-secondary">Cancel</button>
-            <button type="submit" class="btn-primary">Save Log</button>
+          <div class="modal-actions modal-actions-split">
+            <button 
+              v-if="editingItem?.rating > 0 || editForm.rating > 0" 
+              type="button" 
+              @click="deleteRatingAndSave" 
+              class="btn-delete-rate"
+              title="Delete rating score"
+            >
+              <svg viewBox="0 0 24 24" class="btn-action-icon" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Delete Rate</span>
+            </button>
+            <div class="modal-actions-right">
+              <button type="button" @click="showEditModal = false" class="btn-secondary">Cancel</button>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
           </div>
         </form>
       </div>
@@ -1644,6 +1653,23 @@ const onSelectRating = (score: number) => {
 
 const clearRating = () => {
   editForm.value.rating = 0
+}
+
+const deleteRatingAndSave = async () => {
+  if (!editingItem.value) return
+  editForm.value.rating = 0
+  const isMovie = (editingItem.value?.movie?.media_type || editingItem.value?.media_type || currentMediaType.value) === 'movie'
+  if (isMovie && editForm.value.status === 'completed') {
+    editForm.value.status = 'watching'
+  }
+  try {
+    await api.updateLibraryItem(editingItem.value.id, editForm.value)
+    showEditModal.value = false
+    fetchWatchlist()
+    showToast('Rating deleted successfully!')
+  } catch (err: any) {
+    showToast(err?.data?.error || 'Failed to delete rating.')
+  }
 }
 
 const updateWatchlist = async () => {
@@ -3226,6 +3252,49 @@ const confirmDeleteItem = async () => {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 8px;
+}
+
+.modal-actions.modal-actions-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.modal-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.btn-delete-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-delete-rate:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-action-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .loading-state, .empty-state {
