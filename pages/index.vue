@@ -65,38 +65,51 @@
     <section class="search-section" aria-labelledby="search-heading">
       <div class="search-bar-wrapper">
         <div class="search-box glass-card" role="search" aria-label="Search movies and TV shows">
-          <svg class="search-leading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input 
-            v-model="searchQuery" 
-            @keyup.enter="handleSearch"
-            type="text" 
-            placeholder="Search movies, TV shows, anime... (e.g. Stranger Things, Oppenheimer, The Last of Us)" 
-            class="search-input"
-            aria-label="Search query"
-          />
-
-          <div class="filter-type">
-            <button 
-              v-for="t in mediaTypes" 
-              :key="t.value"
-              @click="selectedType = t.value; if (searchQuery.trim()) handleSearch();"
-              :class="['type-btn', { active: selectedType === t.value }]"
-              :aria-pressed="selectedType === t.value"
-            >
-              {{ t.label }}
-            </button>
-          </div>
-
-          <button @click="handleSearch" class="btn-primary search-action-btn">
-            <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div class="search-input-field">
+            <svg class="search-leading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <span>Search</span>
-          </button>
+            <input 
+              v-model="searchQuery" 
+              @keyup.enter="handleSearch"
+              type="text" 
+              placeholder="Search movies, TV shows, anime..." 
+              class="search-input"
+              aria-label="Search query"
+            />
+            <button 
+              v-if="searchQuery" 
+              @click="clearSearch" 
+              class="search-clear-inline" 
+              title="Clear search text"
+              aria-label="Clear search text"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="search-controls">
+            <div class="filter-type">
+              <button 
+                v-for="t in mediaTypes" 
+                :key="t.value"
+                @click="selectedType = t.value; if (searchQuery.trim()) handleSearch();"
+                :class="['type-btn', { active: selectedType === t.value }]"
+                :aria-pressed="selectedType === t.value"
+              >
+                {{ t.label }}
+              </button>
+            </div>
+
+            <button @click="handleSearch" class="btn-primary search-action-btn">
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <span>Search</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -1441,18 +1454,19 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
    SEARCH BAR & CATEGORY PILLS
    ========================================================================= */
 .search-section {
-  margin-bottom: 40px;
+  margin-bottom: 36px;
 }
 
 .search-bar-wrapper {
-  max-width: 800px;
+  max-width: 840px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  padding: 6px 10px 6px 18px;
+  padding: 6px 8px 6px 16px;
   gap: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1467,19 +1481,28 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   background: rgba(255, 255, 255, 0.05);
 }
 
+.search-input-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .search-leading-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.95rem;
   padding: 10px 0;
   outline: none;
   font-family: inherit;
@@ -1489,9 +1512,32 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   color: var(--text-muted);
 }
 
+.search-clear-inline {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.search-clear-inline:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .filter-type {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   background: rgba(255, 255, 255, 0.04);
   padding: 3px;
   border-radius: 8px;
@@ -1507,11 +1553,22 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .type-btn.active {
   background: var(--accent-red);
   color: #ffffff;
+}
+
+.search-action-btn {
+  padding: 9px 18px;
+  border-radius: 25px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* =========================================================================
@@ -2360,7 +2417,72 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
    ========================================================================= */
 @media (max-width: 768px) {
   .explore-page {
-    gap: 24px;
+    gap: 20px;
+  }
+
+  .search-section {
+    margin-bottom: 20px;
+  }
+
+  .search-box {
+    flex-direction: column;
+    border-radius: 16px;
+    padding: 12px 14px;
+    gap: 12px;
+    background: rgba(20, 20, 26, 0.85);
+  }
+
+  .search-input-field {
+    width: 100%;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .search-input {
+    font-size: 0.95rem;
+  }
+
+  .search-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .filter-type {
+    flex: 1;
+    justify-content: space-between;
+  }
+
+  .type-btn {
+    flex: 1;
+    text-align: center;
+    padding: 7px 6px;
+    font-size: 0.76rem;
+  }
+
+  .search-action-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+  }
+
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card-info {
+    padding: 10px;
+  }
+
+  .overview {
+    display: none;
   }
 
   .featured-hero-banner {
