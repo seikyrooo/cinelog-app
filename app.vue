@@ -43,6 +43,13 @@
             </svg>
             <span>Community</span>
           </NuxtLink>
+          <NuxtLink to="/download" class="nav-item" active-class="active">
+            <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>App</span>
+          </NuxtLink>
           <NuxtLink v-if="authStore.isAuth" to="/profile" class="nav-item" active-class="active">
             <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -171,7 +178,16 @@
 
     <!-- Footer -->
     <footer class="footer glass-panel">
-      <p>© 2026 CineLog — Film & TV Show Tracking Platform. Powered by TMDB.</p>
+      <div class="footer-inner">
+        <p>© 2026 CineLog — Film & TV Show Tracking Platform. Powered by TMDB.</p>
+        <NuxtLink to="/download" class="footer-app-link">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span>Get Android App (v1.0.0)</span>
+        </NuxtLink>
+      </div>
     </footer>
   </div>
 </template>
@@ -681,12 +697,46 @@ const handleLogout = () => {
 }
 
 .footer {
-  text-align: center;
   padding: 24px;
   margin-top: auto;
   font-size: 0.82rem;
   color: var(--text-muted);
   border-top: 1px solid var(--border-subtle);
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-inner p {
+  margin: 0;
+}
+
+.footer-app-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: #d4d4d8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+}
+
+.footer-app-link:hover {
+  background: rgba(229, 9, 20, 0.1);
+  border-color: rgba(229, 9, 20, 0.4);
+  color: #ffffff;
 }
 
 .text-sm {
