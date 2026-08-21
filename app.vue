@@ -6,7 +6,7 @@
     <!-- Navbar Header -->
     <header class="navbar-header glass-panel">
       <div class="nav-container">
-        <NuxtLink to="/" class="brand">
+        <NuxtLink to="/" class="brand" @click="closeMobileMenu">
           <svg class="brand-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="2" width="20" height="20" rx="3" ry="3"></rect>
             <line x1="7" y1="2" x2="7" y2="22"></line>
@@ -20,7 +20,8 @@
           <span class="brand-name">CINE<span class="brand-log-badge">LOG</span></span>
         </NuxtLink>
 
-        <nav class="nav-links">
+        <!-- Desktop Navigation Links -->
+        <nav class="nav-links desktop-only">
           <NuxtLink to="/" class="nav-item" active-class="active">
             <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
@@ -59,114 +60,220 @@
           </NuxtLink>
         </nav>
 
-        <div class="auth-actions">
-          <template v-if="authStore.isAuth">
-            <!-- Notification Bell Icon with Dropdown -->
-            <div class="notif-wrapper" ref="notifWrapperRef">
-              <button 
-                @click="toggleNotifDropdown" 
-                :class="['notif-bell-btn', { active: showNotifDropdown, has_unread: unreadNotifCount > 0 }]"
-                title="Notifications"
-              >
-                <svg class="bell-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Right Header Actions (Auth & Notifications & Mobile Menu Toggle) -->
+        <div class="header-right-actions">
+          <!-- Desktop Auth Buttons -->
+          <div class="auth-actions desktop-only">
+            <template v-if="authStore.isAuth">
+              <NuxtLink to="/profile" class="user-badge" title="Go to Profile Settings">
+                <div class="user-avatar-mini">
+                  <img 
+                    v-if="authStore.user?.avatar_url" 
+                    :src="getAvatarUrl(authStore.user.avatar_url)" 
+                    :alt="authStore.user?.username || 'User'"
+                    @error="onAvatarError"
+                  />
+                  <span v-else>{{ userInitials }}</span>
+                </div>
+                <span class="user-name-text">{{ authStore.user?.username || `User #${authStore.userId}` }}</span>
+              </NuxtLink>
+              <button @click="handleLogout" class="btn-secondary text-sm">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Log Out</span>
+              </button>
+            </template>
+            <template v-else>
+              <NuxtLink to="/login" class="btn-secondary text-sm">Sign In</NuxtLink>
+              <NuxtLink to="/register" class="btn-primary text-sm">Sign Up</NuxtLink>
+            </template>
+          </div>
+
+          <!-- Notification Bell Icon (Visible on Both Mobile & Desktop when logged in) -->
+          <div v-if="authStore.isAuth" class="notif-wrapper" ref="notifWrapperRef">
+            <button 
+              @click="toggleNotifDropdown" 
+              :class="['notif-bell-btn', { active: showNotifDropdown, has_unread: unreadNotifCount > 0 }]"
+              title="Notifications"
+            >
+              <svg class="bell-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span v-if="unreadNotifCount > 0" class="notif-badge-pill">
+                {{ unreadNotifCount > 99 ? '99+' : unreadNotifCount }}
+              </span>
+            </button>
+
+            <!-- Notifications Dropdown Popover -->
+            <div v-if="showNotifDropdown" class="notif-dropdown glass-card animate-fade-in">
+              <div class="notif-dropdown-header">
+                <div class="notif-header-title">
+                  <span class="notif-title-text">Notifications</span>
+                  <span v-if="unreadNotifCount > 0" class="notif-unread-tag">{{ unreadNotifCount }} new</span>
+                </div>
+                <button 
+                  v-if="unreadNotifCount > 0" 
+                  @click="markAllAsRead" 
+                  class="btn-mark-all-read"
+                >
+                  Mark all read
+                </button>
+              </div>
+
+              <div v-if="isLoadingNotifs" class="notif-loading">
+                <div class="spinner-mini"></div>
+                <span>Loading updates...</span>
+              </div>
+
+              <div v-else-if="notifications.length === 0" class="notif-empty">
+                <svg class="empty-bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
-                <span v-if="unreadNotifCount > 0" class="notif-badge-pill">
-                  {{ unreadNotifCount > 99 ? '99+' : unreadNotifCount }}
-                </span>
-              </button>
+                <p>No notifications yet</p>
+                <small>When others like or comment on your watch activity, you'll see it here.</small>
+              </div>
 
-              <!-- Notifications Dropdown Popover -->
-              <div v-if="showNotifDropdown" class="notif-dropdown glass-card animate-fade-in">
-                <div class="notif-dropdown-header">
-                  <div class="notif-header-title">
-                    <span class="notif-title-text">Notifications</span>
-                    <span v-if="unreadNotifCount > 0" class="notif-unread-tag">{{ unreadNotifCount }} new</span>
+              <div v-else class="notif-list-scroll">
+                <div 
+                  v-for="item in notifications" 
+                  :key="'notif-' + item.id"
+                  @click="handleNotificationClick(item)"
+                  :class="['notif-item', { unread: !item.is_read }]"
+                >
+                  <div class="notif-actor-avatar">
+                    <img 
+                      v-if="item.actor?.avatar_url" 
+                      :src="getAvatarUrl(item.actor.avatar_url)" 
+                      :alt="item.actor?.username || 'User'"
+                      @error="onAvatarError"
+                    />
+                    <span v-else>{{ (item.actor?.username || 'C').slice(0, 1).toUpperCase() }}</span>
+                    
+                    <!-- Action Icon Mini Badge -->
+                    <span :class="['notif-type-badge', item.type]">
+                      <span v-if="item.type === 'like'">❤️</span>
+                      <span v-else-if="item.type === 'comment'">💬</span>
+                      <span v-else>👥</span>
+                    </span>
                   </div>
-                  <button 
-                    v-if="unreadNotifCount > 0" 
-                    @click="markAllAsRead" 
-                    class="btn-mark-all-read"
-                  >
-                    Mark all read
-                  </button>
-                </div>
 
-                <div v-if="isLoadingNotifs" class="notif-loading">
-                  <div class="spinner-mini"></div>
-                  <span>Loading updates...</span>
-                </div>
-
-                <div v-else-if="notifications.length === 0" class="notif-empty">
-                  <svg class="empty-bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                  </svg>
-                  <p>No notifications yet</p>
-                  <small>When others like or comment on your watch activity, you'll see it here.</small>
-                </div>
-
-                <div v-else class="notif-list-scroll">
-                  <div 
-                    v-for="item in notifications" 
-                    :key="'notif-' + item.id"
-                    @click="handleNotificationClick(item)"
-                    :class="['notif-item', { unread: !item.is_read }]"
-                  >
-                    <div class="notif-actor-avatar">
-                      <img 
-                        v-if="item.actor?.avatar_url" 
-                        :src="getAvatarUrl(item.actor.avatar_url)" 
-                        :alt="item.actor?.username || 'User'"
-                        @error="onAvatarError"
-                      />
-                      <span v-else>{{ (item.actor?.username || 'C').slice(0, 1).toUpperCase() }}</span>
-                      
-                      <!-- Action Icon Mini Badge -->
-                      <span :class="['notif-type-badge', item.type]">
-                        <span v-if="item.type === 'like'">❤️</span>
-                        <span v-else-if="item.type === 'comment'">💬</span>
-                        <span v-else>👥</span>
-                      </span>
-                    </div>
-
-                    <div class="notif-item-body">
-                      <p class="notif-item-message">{{ item.message }}</p>
-                      <span class="notif-item-time">{{ formatRelativeTime(item.created_at) }}</span>
-                    </div>
-
-                    <span v-if="!item.is_read" class="notif-unread-dot"></span>
+                  <div class="notif-item-body">
+                    <p class="notif-item-message">{{ item.message }}</p>
+                    <span class="notif-item-time">{{ formatRelativeTime(item.created_at) }}</span>
                   </div>
+
+                  <span v-if="!item.is_read" class="notif-unread-dot"></span>
                 </div>
               </div>
             </div>
+          </div>
 
-            <NuxtLink to="/profile" class="user-badge" title="Go to Profile Settings">
-              <div class="user-avatar-mini">
-                <img 
-                  v-if="authStore.user?.avatar_url" 
-                  :src="getAvatarUrl(authStore.user.avatar_url)" 
-                  :alt="authStore.user?.username || 'User'"
-                  @error="onAvatarError"
-                />
-                <span v-else>{{ userInitials }}</span>
-              </div>
-              <span class="user-name-text">{{ authStore.user?.username || `User #${authStore.userId}` }}</span>
-            </NuxtLink>
-            <button @click="handleLogout" class="btn-secondary text-sm">
+          <!-- Minimalist Hamburger / Menu Toggle Button (Mobile Only) -->
+          <button 
+            @click="toggleMobileMenu" 
+            :class="['mobile-menu-toggle', { open: isMobileMenuOpen }]" 
+            aria-label="Toggle Navigation Menu"
+          >
+            <span class="hamburger-bar top-bar"></span>
+            <span class="hamburger-bar mid-bar"></span>
+            <span class="hamburger-bar bot-bar"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown / Slide Drawer Menu -->
+      <div 
+        v-if="isMobileMenuOpen" 
+        class="mobile-drawer-backdrop" 
+        @click="closeMobileMenu"
+      >
+        <div class="mobile-drawer-content glass-card animate-fade-in" @click.stop>
+          <nav class="mobile-nav-list">
+            <NuxtLink to="/" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <span>Log Out</span>
-            </button>
-          </template>
-          <template v-else>
-            <NuxtLink to="/login" class="btn-secondary text-sm">Sign In</NuxtLink>
-            <NuxtLink to="/register" class="btn-primary text-sm">Sign Up</NuxtLink>
-          </template>
+              <span>Explore</span>
+            </NuxtLink>
+
+            <NuxtLink to="/watchlist" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
+              <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Watchlist</span>
+            </NuxtLink>
+
+            <NuxtLink to="/community" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
+              <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>Community</span>
+            </NuxtLink>
+
+            <NuxtLink to="/download" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
+              <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+              <span>Mobile App</span>
+              <span class="mobile-apk-badge">APK</span>
+            </NuxtLink>
+
+            <NuxtLink v-if="authStore.isAuth" to="/profile" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
+              <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Profile</span>
+            </NuxtLink>
+          </nav>
+
+          <div class="mobile-drawer-divider"></div>
+
+          <!-- Mobile Auth Section -->
+          <div class="mobile-auth-wrapper">
+            <template v-if="authStore.isAuth">
+              <NuxtLink to="/profile" class="mobile-user-profile-row" @click="closeMobileMenu">
+                <div class="user-avatar-mini">
+                  <img 
+                    v-if="authStore.user?.avatar_url" 
+                    :src="getAvatarUrl(authStore.user.avatar_url)" 
+                    :alt="authStore.user?.username || 'User'"
+                    @error="onAvatarError"
+                  />
+                  <span v-else>{{ userInitials }}</span>
+                </div>
+                <div class="mobile-user-info-text">
+                  <span class="mobile-user-name">{{ authStore.user?.username || `User #${authStore.userId}` }}</span>
+                  <span class="mobile-user-sub">View profile & stats</span>
+                </div>
+              </NuxtLink>
+
+              <button @click="handleLogout(); closeMobileMenu();" class="mobile-btn-logout">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Log Out</span>
+              </button>
+            </template>
+            <template v-else>
+              <div class="mobile-guest-buttons">
+                <NuxtLink to="/login" class="btn-secondary w-full text-center" @click="closeMobileMenu">Sign In</NuxtLink>
+                <NuxtLink to="/register" class="btn-primary w-full text-center" @click="closeMobileMenu">Sign Up</NuxtLink>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
     </header>
@@ -193,12 +300,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 
+const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const api = useApi()
 const { getAvatarUrl, onAvatarError, formatRelativeTime } = useFormatters()
+
+const isMobileMenuOpen = ref(false)
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+}
+
+watch(() => route.path, () => {
+  isMobileMenuOpen.value = false
+  showNotifDropdown.value = false
+})
 
 const userInitials = computed(() => {
   const name = authStore.user?.username || ''
@@ -744,10 +869,227 @@ const handleLogout = () => {
   padding: 8px 16px;
 }
 
+/* Header Right Actions */
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Minimalist Hamburger Button (Mobile Only) */
+.mobile-menu-toggle {
+  display: none;
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px 7px;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hamburger-bar {
+  width: 20px;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.mobile-menu-toggle.open .top-bar {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.mobile-menu-toggle.open .mid-bar {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.mobile-menu-toggle.open .bot-bar {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Mobile Slide-Down Drawer Overlay */
+.mobile-drawer-backdrop {
+  position: fixed;
+  top: 61px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-drawer-content {
+  background: rgba(14, 14, 18, 0.98);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 16px 20px 24px 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+}
+
+.mobile-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.92rem;
+  transition: all 0.18s ease;
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item.active {
+  background: rgba(229, 9, 20, 0.08);
+  color: #ffffff;
+}
+
+.mobile-nav-item.active svg {
+  color: var(--accent-red);
+}
+
+.mobile-apk-badge {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(229, 9, 20, 0.15);
+  border: 1px solid rgba(229, 9, 20, 0.35);
+  color: #ff8585;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.mobile-drawer-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 14px 0;
+}
+
+.mobile-auth-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-user-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-decoration: none;
+}
+
+.mobile-user-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-user-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.mobile-user-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.mobile-btn-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-btn-logout:hover {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.mobile-guest-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .navbar-header {
+    padding: 10px 16px;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+  }
+
+  .main-content {
+    padding: 16px 14px 40px;
+  }
+
+  .footer {
+    padding: 20px 16px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+}
+
 @media (max-width: 640px) {
   .notif-dropdown {
     width: 290px;
-    right: -50px;
+    right: -20px;
   }
 }
 </style>
