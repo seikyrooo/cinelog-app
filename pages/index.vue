@@ -521,35 +521,6 @@
 
             <!-- Quick Action Bar -->
             <div class="quick-add-bar glass-card">
-              <div class="rating-input-row">
-                <label>Your Rating (1 - 10):</label>
-                <div class="star-rating-selector">
-                  <span 
-                    v-for="star in 10" 
-                    :key="star"
-                    @click="form.rating = star; if ((activeItem?.media_type || 'movie') === 'movie' && star > 0) form.status = 'completed';"
-                    :class="['star-icon', { active: star <= form.rating }]"
-                  >★</span>
-                  <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10' : '' }}</span>
-                </div>
-              </div>
-
-              <!-- Review / Commentary Input Area -->
-              <div class="review-input-group">
-                <label for="modal-review-input">Your Review / Commentary (Optional):</label>
-                <textarea 
-                  id="modal-review-input" 
-                  v-model="form.notes" 
-                  rows="3" 
-                  maxlength="500" 
-                  placeholder="Write your review, impression, or favorite scenes..."
-                  class="modal-review-textarea"
-                ></textarea>
-                <div class="review-char-count">
-                  <small>{{ (form.notes || '').length }}/500 chars</small>
-                </div>
-              </div>
-
               <div class="quick-action-icon-row">
                 <button 
                   @click="saveToWatchlist('watching')" 
