@@ -127,6 +127,9 @@
                   <div class="card-series-header">
                     <div class="show-title-tag clickable" @click="openDetailModal(item)">
                       <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                      <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
                     </div>
                   </div>
 
@@ -221,6 +224,9 @@
                 <div class="card-series-header">
                   <div class="show-title-tag clickable" @click="openDetailModal(item)">
                     <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
                   </div>
                 </div>
 
@@ -306,6 +312,9 @@
                 <div class="card-series-header">
                   <div class="show-title-tag clickable" @click="openDetailModal(item)">
                     <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
                   </div>
                 </div>
 
@@ -2489,13 +2498,30 @@ const confirmDeleteItem = async () => {
   border: 1px solid rgba(147, 197, 253, 0.3);
 }
 
+.tvtime-poster {
+  width: 68px;
+  height: 98px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .radar-item-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .radar-item-card:hover {
   transform: translateY(-2px);
   border-color: rgba(229, 9, 20, 0.4);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.6), 0 0 16px -4px rgba(229, 9, 20, 0.15);
 }
 
 .radar-countdown-row {
