@@ -304,7 +304,7 @@
                 />
                 <div class="thumb-gradient-overlay"></div>
                 <span class="thumb-code-badge">
-                  All {{ getTotalEps(item) }} Eps
+                  {{ getEpisodeProgressCode(item) }}
                 </span>
               </div>
 
@@ -319,7 +319,7 @@
                 </div>
 
                 <h4 class="card-episode-name clickable" @click="openDetailModal(item)">
-                  Series Completed ✓
+                  {{ getEpisodeTitle(item) }}
                 </h4>
 
                 <p class="card-episode-desc" v-if="getEpisodeOverview(item)">
@@ -328,9 +328,7 @@
 
                 <div class="card-footer-row">
                   <div class="card-badges-row">
-                    <span class="badge badge-completed">
-                      All {{ getTotalEps(item) }} Episodes Watched
-                    </span>
+                    <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
                   </div>
 
                   <!-- Ultra-Minimalist Rate & Log Action -->
@@ -352,15 +350,6 @@
                       </template>
                     </button>
                   </div>
-                </div>
-              </div>
-
-              <!-- Side Actions (Completed Badge) -->
-              <div class="card-side-actions">
-                <div class="completed-check-icon" title="Series Completed">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
                 </div>
               </div>
             </div>
@@ -510,61 +499,204 @@
         <NuxtLink to="/" class="btn-primary" style="margin-top: 14px;">+ Browse Movies</NuxtLink>
       </div>
 
-      <div v-else class="movies-grid">
-        <div 
-          v-for="item in watchlist" 
-          :key="item.id" 
-          class="glass-card movie-item-card"
-        >
-          <div class="card-poster clickable" @click="openDetailModal(item)">
-            <img 
-              :src="getPosterUrl(item)" 
-              :alt="item.movie?.title || item.title"
-              class="poster-img"
-              @error="onImageError"
-            />
-            <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
-              {{ getStatusLabel(item.status) }}
-            </span>
-            <span v-if="item.favorite" class="favorite-tag">Favorite</span>
+      <div v-else class="movies-sections-stack">
+        <!-- SECTION 1: WATCH NEXT -->
+        <div v-if="moviesWatchNextList.length > 0" class="section-group">
+          <div class="section-pill-header">
+            <span class="pill-badge watch-next-badge">WATCH NEXT</span>
           </div>
 
-          <div class="card-details">
-            <div class="details-top">
-              <span class="movie-year">{{ formatYear(item.movie?.release_date || item.release_date) }}</span>
-              <span class="user-rating-pill" v-if="item.rating > 0">
-                <span class="star-icon">★</span>
-                <span class="rating-val">{{ item.rating }}/10</span>
-              </span>
+          <div class="movies-grid">
+            <div 
+              v-for="item in moviesWatchNextList" 
+              :key="item.id" 
+              class="glass-card movie-item-card"
+            >
+              <div class="card-poster clickable" @click="openDetailModal(item)">
+                <img 
+                  :src="getPosterUrl(item)" 
+                  :alt="item.movie?.title || item.title"
+                  class="poster-img"
+                  @error="onImageError"
+                />
+                <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+                <span v-if="item.favorite" class="favorite-tag">Favorite</span>
+              </div>
+
+              <div class="card-details">
+                <div class="details-top">
+                  <span class="movie-year">{{ formatYear(item.movie?.release_date || item.release_date) }}</span>
+                  <span class="user-rating-pill" v-if="item.rating > 0">
+                    <span class="star-icon">★</span>
+                    <span class="rating-val">{{ item.rating }}/10</span>
+                  </span>
+                </div>
+
+                <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+
+                <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
+
+                <!-- Ultra-Minimalist Rate & Log Action -->
+                <div class="movie-card-bottom-row">
+                  <button 
+                    @click.stop="openEditModal(item)" 
+                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
+                  >
+                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <template v-if="item.rating > 0">
+                      <span class="rate-val">{{ item.rating }}</span>
+                      <span class="rate-max">/10</span>
+                    </template>
+                    <template v-else>
+                      <span>Rate</span>
+                    </template>
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div class="show-title-tag clickable" @click="openDetailModal(item)">
-              <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-              <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
+        <!-- SECTION 2: ON HOLD -->
+        <div v-if="moviesOnHoldList.length > 0" class="section-group">
+          <div class="section-pill-header">
+            <span class="pill-badge on-hold-badge">ON HOLD</span>
+          </div>
+
+          <div class="movies-grid">
+            <div 
+              v-for="item in moviesOnHoldList" 
+              :key="item.id" 
+              class="glass-card movie-item-card"
+            >
+              <div class="card-poster clickable" @click="openDetailModal(item)">
+                <img 
+                  :src="getPosterUrl(item)" 
+                  :alt="item.movie?.title || item.title"
+                  class="poster-img"
+                  @error="onImageError"
+                />
+                <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+                <span v-if="item.favorite" class="favorite-tag">Favorite</span>
+              </div>
+
+              <div class="card-details">
+                <div class="details-top">
+                  <span class="movie-year">{{ formatYear(item.movie?.release_date || item.release_date) }}</span>
+                  <span class="user-rating-pill" v-if="item.rating > 0">
+                    <span class="star-icon">★</span>
+                    <span class="rating-val">{{ item.rating }}/10</span>
+                  </span>
+                </div>
+
+                <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+
+                <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
+
+                <!-- Ultra-Minimalist Rate & Log Action -->
+                <div class="movie-card-bottom-row">
+                  <button 
+                    @click.stop="openEditModal(item)" 
+                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
+                  >
+                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <template v-if="item.rating > 0">
+                      <span class="rate-val">{{ item.rating }}</span>
+                      <span class="rate-max">/10</span>
+                    </template>
+                    <template v-else>
+                      <span>Rate</span>
+                    </template>
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
+        <!-- SECTION 3: COMPLETED -->
+        <div v-if="moviesCompletedList.length > 0" class="section-group">
+          <div class="section-pill-header">
+            <span class="pill-badge completed-history-badge">COMPLETED</span>
+          </div>
 
-            <!-- Ultra-Minimalist Rate & Log Action and Minimal Trash Action -->
-            <div class="movie-card-bottom-row">
-              <button 
-                @click.stop="openEditModal(item)" 
-                :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
-              >
-                <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                <template v-if="item.rating > 0">
-                  <span class="rate-val">{{ item.rating }}</span>
-                  <span class="rate-max">/10</span>
-                </template>
-                <template v-else>
-                  <span>Rate</span>
-                </template>
-              </button>
+          <div class="movies-grid">
+            <div 
+              v-for="item in moviesCompletedList" 
+              :key="item.id" 
+              class="glass-card movie-item-card"
+            >
+              <div class="card-poster clickable" @click="openDetailModal(item)">
+                <img 
+                  :src="getPosterUrl(item)" 
+                  :alt="item.movie?.title || item.title"
+                  class="poster-img"
+                  @error="onImageError"
+                />
+                <span :class="['badge', getStatusBadgeClass(item.status), 'status-badge']">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+                <span v-if="item.favorite" class="favorite-tag">Favorite</span>
+              </div>
+
+              <div class="card-details">
+                <div class="details-top">
+                  <span class="movie-year">{{ formatYear(item.movie?.release_date || item.release_date) }}</span>
+                  <span class="user-rating-pill" v-if="item.rating > 0">
+                    <span class="star-icon">★</span>
+                    <span class="rating-val">{{ item.rating }}/10</span>
+                  </span>
+                </div>
+
+                <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+
+                <p class="director-text" v-if="item.movie?.director">Director: {{ item.movie.director }}</p>
+
+                <!-- Ultra-Minimalist Rate & Log Action -->
+                <div class="movie-card-bottom-row">
+                  <button 
+                    @click.stop="openEditModal(item)" 
+                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
+                  >
+                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <template v-if="item.rating > 0">
+                      <span class="rate-val">{{ item.rating }}</span>
+                      <span class="rate-max">/10</span>
+                    </template>
+                    <template v-else>
+                      <span>Rate</span>
+                    </template>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1110,6 +1242,24 @@ const watchedHistoryList = computed(() => {
     const total = getTotalEps(item)
     const watched = item.episodes_watched || 0
     return total > 0 && watched >= total
+  })
+})
+
+const moviesWatchNextList = computed(() => {
+  return watchlist.value.filter(item => {
+    return item.status === 'plan_to_watch' || item.status === 'watching' || !item.status
+  })
+})
+
+const moviesOnHoldList = computed(() => {
+  return watchlist.value.filter(item => {
+    return item.status === 'on_hold' || item.status === 'dropped'
+  })
+})
+
+const moviesCompletedList = computed(() => {
+  return watchlist.value.filter(item => {
+    return item.status === 'watched' || item.status === 'completed'
   })
 })
 
