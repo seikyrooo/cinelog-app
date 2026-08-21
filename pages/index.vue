@@ -555,7 +555,8 @@
                   @click="saveToWatchlist('watching')" 
                   :class="['icon-action-btn', 'btn-primary-action', { 'in-watchlist': watchlistContext }]"
                   :disabled="isSaving"
-                  :title="watchlistContext ? 'Saved in Watchlist (Click to save edits)' : 'Save to Watchlist'"
+                  :title="watchlistContext ? 'Saved in Watchlist (Click to save edits)' : 'Add to Watchlist'"
+                  :aria-label="watchlistContext ? 'Saved in Watchlist' : 'Add to Watchlist'"
                 >
                   <svg v-if="watchlistContext" class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -564,7 +565,6 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span>{{ isSaving ? 'Saving...' : (watchlistContext ? 'Update Log' : 'Save Log') }}</span>
                 </button>
                 <button 
                   @click="form.favorite = !form.favorite; saveToWatchlist('watching')" 
