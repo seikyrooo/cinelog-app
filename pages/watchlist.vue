@@ -818,10 +818,15 @@
               <label>Your Score (1 - 10)</label>
               <span class="rating-score-display" v-if="editForm.rating > 0">
                 <span class="star-gold">★</span> {{ editForm.rating }} / 10
-                <small class="auto-complete-notice">Completed</small>
+                <button 
+                  type="button" 
+                  class="btn-clear-rating" 
+                  @click="clearRating" 
+                  title="Hapus / Reset Rating"
+                >✕ Hapus Rate</button>
               </span>
               <span class="rating-score-display" v-else>
-                <small class="text-muted">Select rating</small>
+                <small class="text-muted">Unrated (Pilih 1 - 10)</small>
               </span>
             </div>
             
@@ -1498,11 +1503,12 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
 
 const updateItemRating = async (item: any, rating: number) => {
   if (!item || !item.id) return
-  item.rating = rating
+  const newRating = (item.rating === rating) ? 0 : rating
+  item.rating = newRating
 
   const isMovie = (item.movie?.media_type || item.media_type || currentMediaType.value) === 'movie'
   let currentStatus = item.status
-  if (isMovie && rating > 0) {
+  if (isMovie && newRating > 0) {
     currentStatus = 'completed'
   } else {
     const total = getTotalEps(item)
@@ -1512,7 +1518,7 @@ const updateItemRating = async (item: any, rating: number) => {
 
   try {
     const res: any = await api.updateLibraryItem(item.id, {
-      rating: rating,
+      rating: newRating,
       status: currentStatus,
       favorite: item.favorite,
       notes: item.notes || '',
@@ -1526,7 +1532,7 @@ const updateItemRating = async (item: any, rating: number) => {
         activeWatchlistContext.value.rating = res.data.rating
         activeWatchlistContext.value.status = res.data.status
       }
-      showToast(`Rated ${rating}/10`)
+      showToast(newRating > 0 ? `Rated ${newRating}/10` : 'Rating removed')
     }
   } catch (err) {
     console.error('Failed to update rating:', err)
@@ -1625,11 +1631,19 @@ const openEditModal = (item: any) => {
 }
 
 const onSelectRating = (score: number) => {
+  if (editForm.value.rating === score) {
+    clearRating()
+    return
+  }
   editForm.value.rating = score
   const isMovie = (editingItem.value?.movie?.media_type || editingItem.value?.media_type || currentMediaType.value) === 'movie'
   if (score > 0 && (isMovie || editForm.value.status === 'plan_to_watch' || !editForm.value.status)) {
     editForm.value.status = 'completed'
   }
+}
+
+const clearRating = () => {
+  editForm.value.rating = 0
 }
 
 const updateWatchlist = async () => {
@@ -3062,9 +3076,30 @@ const confirmDeleteItem = async () => {
 }
 
 .rating-score-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.85rem;
   font-weight: 800;
   color: #ffaa00;
+}
+
+.btn-clear-rating {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-clear-rating:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: #ef4444;
+  color: #ffffff;
 }
 
 .star-gold {
