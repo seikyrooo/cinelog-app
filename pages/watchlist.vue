@@ -105,61 +105,73 @@
                 @pointerup="onPointerUp($event, item)"
                 @pointercancel="onPointerCancel($event, item)"
               >
-                <img 
-                  :src="getPosterUrl(item)" 
-                  :alt="item.movie?.title || item.title"
-                  class="tvtime-poster clickable"
-                  @click="openDetailModal(item)"
-                  @error="onImageError"
-                />
+                <!-- Episode Thumbnail (16:9 widescreen frame) -->
+                <div class="tvtime-thumb-frame clickable" @click="openDetailModal(item)">
+                  <img 
+                    :src="getEpisodeThumbnail(item)" 
+                    :alt="getEpisodeTitle(item)"
+                    class="tvtime-episode-still"
+                    @error="onImageError"
+                  />
+                  <div class="thumb-gradient-overlay"></div>
+                  <span class="thumb-code-badge">
+                    {{ getEpisodeProgressCode(item) }}
+                  </span>
+                  <span v-if="getRemainingEps(item) > 0" class="thumb-remaining-badge">
+                    +{{ getRemainingEps(item) }} eps left
+                  </span>
+                </div>
 
                 <div class="tvtime-card-body">
-                  <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                    <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
+                  <!-- Row 1: Series Title & Meta Header -->
+                  <div class="card-series-header">
+                    <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                      <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                      <span class="series-year-dot" v-if="item.movie?.release_date || item.movie?.first_air_date">
+                        • {{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }}
+                      </span>
+                    </div>
                   </div>
 
-                  <div class="eps-headline">
-                    <span class="season-eps-code">
-                      {{ getEpisodeProgressCode(item) }}
-                    </span>
-                    <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                      +{{ getRemainingEps(item) }} eps left
-                    </span>
-                  </div>
+                  <!-- Row 2: Episode Title -->
+                  <h4 class="card-episode-name clickable" @click="openDetailModal(item)">
+                    {{ getEpisodeTitle(item) }}
+                  </h4>
 
-                  <p class="eps-title-text clickable" @click="openDetailModal(item)">
-                    <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
+                  <!-- Row 3: Episode Description / Synopsis -->
+                  <p class="card-episode-desc" v-if="getEpisodeOverview(item)">
+                    {{ truncateText(getEpisodeOverview(item), 130) }}
                   </p>
 
-                  <div class="card-badges-row">
-                    <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
-                    <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
-                    <span class="badge-total-info" v-if="getTotalEps(item) > 0">
-                      {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
-                    </span>
-                  </div>
+                  <!-- Row 4: Badges & Minimalist Rate Action Row -->
+                  <div class="card-footer-row">
+                    <div class="card-badges-row">
+                      <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
+                      <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
+                      <span class="badge-total-info" v-if="getTotalEps(item) > 0">
+                        {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
+                      </span>
+                    </div>
 
-                  <!-- Ultra-Minimalist Rate & Log Action -->
-                  <div class="card-log-action-row" @click.stop>
-                    <button 
-                      @click="openEditModal(item)" 
-                      :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
-                    >
-                      <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                      </svg>
-                      <template v-if="item.rating > 0">
-                        <span class="rate-val">{{ item.rating }}</span>
-                        <span class="rate-max">/10</span>
-                      </template>
-                      <template v-else>
-                        <span>Rate</span>
-                      </template>
-                    </button>
+                    <!-- Minimal Rate Button -->
+                    <div class="card-log-action-row" @click.stop>
+                      <button 
+                        @click="openEditModal(item)" 
+                        :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                        :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
+                      >
+                        <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <template v-if="item.rating > 0">
+                          <span class="rate-val">{{ item.rating }}</span>
+                          <span class="rate-max">/10</span>
+                        </template>
+                        <template v-else>
+                          <span>Rate</span>
+                        </template>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -185,7 +197,7 @@
                   >
                     <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                   </button>
                 </div>
@@ -206,53 +218,68 @@
               :key="item.id" 
               class="tvtime-card glass-card on-hold-card"
             >
-              <img 
-                :src="getPosterUrl(item)" 
-                :alt="item.movie?.title || item.title"
-                class="tvtime-poster clickable"
-                @click="openDetailModal(item)"
-                @error="onImageError"
-              />
+              <!-- Episode Thumbnail (16:9 widescreen frame) -->
+              <div class="tvtime-thumb-frame clickable" @click="openDetailModal(item)">
+                <img 
+                  :src="getEpisodeThumbnail(item)" 
+                  :alt="getEpisodeTitle(item)"
+                  class="tvtime-episode-still"
+                  @error="onImageError"
+                />
+                <div class="thumb-gradient-overlay"></div>
+                <span class="thumb-code-badge">
+                  {{ getEpisodeProgressCode(item) }}
+                </span>
+                <span v-if="getRemainingEps(item) > 0" class="thumb-remaining-badge">
+                  +{{ getRemainingEps(item) }} eps left
+                </span>
+              </div>
 
               <div class="tvtime-card-body">
-                <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
+                <div class="card-series-header">
+                  <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                    <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                    <span class="series-year-dot" v-if="item.movie?.release_date || item.movie?.first_air_date">
+                      • {{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }}
+                    </span>
+                  </div>
                 </div>
 
-                <div class="eps-headline">
-                  <span class="season-eps-code">
-                    {{ getEpisodeProgressCode(item) }}
-                  </span>
-                  <span class="remaining-count-pill" v-if="getRemainingEps(item) > 0">
-                    +{{ getRemainingEps(item) }} eps left
-                  </span>
-                </div>
+                <h4 class="card-episode-name clickable" @click="openDetailModal(item)">
+                  {{ getEpisodeTitle(item) }}
+                </h4>
 
-                <p class="eps-title-text clickable" @click="openDetailModal(item)">
-                  <span class="eps-label">Next:</span> <strong>{{ getNextEpsName(item) }}</strong>
+                <p class="card-episode-desc" v-if="getEpisodeOverview(item)">
+                  {{ truncateText(getEpisodeOverview(item), 130) }}
                 </p>
 
-                <!-- Ultra-Minimalist Rate & Log Action -->
-                <div class="card-log-action-row" @click.stop>
-                  <button 
-                    @click="openEditModal(item)" 
-                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
-                  >
-                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                    </svg>
-                    <template v-if="item.rating > 0">
-                      <span class="rate-val">{{ item.rating }}</span>
-                      <span class="rate-max">/10</span>
-                    </template>
-                    <template v-else>
-                      <span>Rate</span>
-                    </template>
-                  </button>
+                <div class="card-footer-row">
+                  <div class="card-badges-row">
+                    <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
+                    <span class="badge-total-info" v-if="getTotalEps(item) > 0">
+                      {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
+                    </span>
+                  </div>
+
+                  <!-- Ultra-Minimalist Rate & Log Action -->
+                  <div class="card-log-action-row" @click.stop>
+                    <button 
+                      @click="openEditModal(item)" 
+                      :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
+                    >
+                      <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                      <template v-if="item.rating > 0">
+                        <span class="rate-val">{{ item.rating }}</span>
+                        <span class="rate-max">/10</span>
+                      </template>
+                      <template v-else>
+                        <span>Rate</span>
+                      </template>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -297,46 +324,64 @@
               :key="item.id" 
               class="tvtime-card glass-card history-card"
             >
-              <img 
-                :src="getPosterUrl(item)" 
-                :alt="item.movie?.title || item.title"
-                class="tvtime-poster clickable"
-                @click="openDetailModal(item)"
-                @error="onImageError"
-              />
+              <!-- Episode Thumbnail (16:9 widescreen frame) -->
+              <div class="tvtime-thumb-frame clickable" @click="openDetailModal(item)">
+                <img 
+                  :src="getEpisodeThumbnail(item)" 
+                  :alt="getEpisodeTitle(item)"
+                  class="tvtime-episode-still"
+                  @error="onImageError"
+                />
+                <div class="thumb-gradient-overlay"></div>
+                <span class="thumb-code-badge">
+                  All {{ getTotalEps(item) }} Eps
+                </span>
+              </div>
 
               <div class="tvtime-card-body">
-                <div class="show-title-tag clickable" @click="openDetailModal(item)">
-                  <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
+                <div class="card-series-header">
+                  <div class="show-title-tag clickable" @click="openDetailModal(item)">
+                    <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
+                    <span class="series-year-dot" v-if="item.movie?.release_date || item.movie?.first_air_date">
+                      • {{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }}
+                    </span>
+                  </div>
                 </div>
 
-                <div class="eps-headline">
-                  <span class="badge badge-completed">
-                    All {{ getTotalEps(item) }} Episodes Watched
-                  </span>
-                </div>
+                <h4 class="card-episode-name clickable" @click="openDetailModal(item)">
+                  Series Completed ✓
+                </h4>
 
-                <!-- Ultra-Minimalist Rate & Log Action -->
-                <div class="card-log-action-row" @click.stop>
-                  <button 
-                    @click="openEditModal(item)" 
-                    :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
-                  >
-                    <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                    </svg>
-                    <template v-if="item.rating > 0">
-                      <span class="rate-val">{{ item.rating }}</span>
-                      <span class="rate-max">/10</span>
-                    </template>
-                    <template v-else>
-                      <span>Rate</span>
-                    </template>
-                  </button>
+                <p class="card-episode-desc" v-if="getEpisodeOverview(item)">
+                  {{ truncateText(getEpisodeOverview(item), 130) }}
+                </p>
+
+                <div class="card-footer-row">
+                  <div class="card-badges-row">
+                    <span class="badge badge-completed">
+                      All {{ getTotalEps(item) }} Episodes Watched
+                    </span>
+                  </div>
+
+                  <!-- Ultra-Minimalist Rate & Log Action -->
+                  <div class="card-log-action-row" @click.stop>
+                    <button 
+                      @click="openEditModal(item)" 
+                      :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
+                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
+                    >
+                      <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                      <template v-if="item.rating > 0">
+                        <span class="rate-val">{{ item.rating }}</span>
+                        <span class="rate-max">/10</span>
+                      </template>
+                      <template v-else>
+                        <span>Rate</span>
+                      </template>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1225,11 +1270,120 @@ const fetchWatchlist = async () => {
     
     // Auto-enrich any items that might have missing posters in the database
     enrichMissingMetadata()
+    fetchEpisodesForList(watchlist.value)
   } catch (err) {
     console.error(err)
   } finally {
     isLoading.value = false
   }
+}
+
+const tvEpisodeDetails = ref<Record<string, { name: string; overview: string; still_path: string; air_date: string }>>({})
+
+const getEpisodeSeasonAndNumber = (item: any) => {
+  const totalWatched = item.episodes_watched || 0
+  const totalEps = getTotalEps(item)
+  const isFinished = totalEps > 0 && totalWatched >= totalEps
+  const nextWatched = isFinished ? totalWatched : (totalWatched + 1)
+
+  const seasons = item.movie?.seasons || item.seasons || []
+  if (seasons && seasons.length > 0) {
+    let accumulated = 0
+    for (const s of seasons) {
+      if (s.season_number === 0) continue
+      const count = s.episode_count || 0
+      if (nextWatched <= accumulated + count || (isFinished && nextWatched <= accumulated + count)) {
+        const episodeInSeason = Math.max(1, nextWatched - accumulated)
+        return { season: s.season_number || 1, episode: episodeInSeason, isFinished }
+      }
+      accumulated += count
+    }
+  }
+
+  const totalSeasons = item.movie?.total_seasons || 1
+  if (totalSeasons > 1 && totalEps > 0) {
+    const avgPerSeason = Math.ceil(totalEps / totalSeasons)
+    const currentSeason = Math.min(totalSeasons, Math.floor((Math.max(1, nextWatched) - 1) / avgPerSeason) + 1)
+    const currentEpsInSeason = ((Math.max(1, nextWatched) - 1) % avgPerSeason) + 1
+    return { season: currentSeason, episode: currentEpsInSeason, isFinished }
+  }
+
+  return { season: item.season_watched || 1, episode: Math.max(1, nextWatched), isFinished }
+}
+
+const fetchEpisodesForList = async (items: any[]) => {
+  if (!items || items.length === 0) return
+  const tvItems = items.filter(it => (it.movie?.media_type || it.media_type || mediaTypeTab.value) === 'tv')
+  const seasonFetchMap = new Map<string, { tmdbId: number; season: number }>()
+
+  for (const item of tvItems) {
+    const tmdbId = item.movie?.tmdb_id || item.movie?.id || item.tmdb_id
+    if (!tmdbId) continue
+    const { season } = getEpisodeSeasonAndNumber(item)
+    const seasonKey = `${tmdbId}_S${season}`
+    if (!seasonFetchMap.has(seasonKey)) {
+      seasonFetchMap.set(seasonKey, { tmdbId, season })
+    }
+  }
+
+  const promises = Array.from(seasonFetchMap.values()).map(async ({ tmdbId, season }) => {
+    try {
+      const res: any = await $fetch(useApiUrl('/api/tv/season'), {
+        params: { id: tmdbId, season }
+      })
+      if (res?.data && Array.isArray(res.data)) {
+        for (const ep of res.data) {
+          const epKey = `${tmdbId}_S${season}_E${ep.episode_number}`
+          tvEpisodeDetails.value[epKey] = {
+            name: ep.name || `Episode ${ep.episode_number}`,
+            overview: ep.overview || '',
+            still_path: ep.still_path || '',
+            air_date: ep.air_date || ''
+          }
+        }
+      }
+    } catch {
+      // silent
+    }
+  })
+
+  await Promise.allSettled(promises)
+}
+
+const getEpisodeThumbnail = (item: any) => {
+  const tmdbId = item.movie?.tmdb_id || item.movie?.id || item.tmdb_id
+  const { season, episode } = getEpisodeSeasonAndNumber(item)
+  const epKey = `${tmdbId}_S${season}_E${episode}`
+  const ep = tvEpisodeDetails.value[epKey]
+  if (ep?.still_path) {
+    return getEpisodeStillUrl(ep.still_path)
+  }
+  const backdrop = item.movie?.backdrop_path || item.backdrop_path
+  if (backdrop) {
+    return getEpisodeStillUrl(backdrop)
+  }
+  return getPosterUrl(item)
+}
+
+const getEpisodeTitle = (item: any) => {
+  const tmdbId = item.movie?.tmdb_id || item.movie?.id || item.tmdb_id
+  const { season, episode, isFinished } = getEpisodeSeasonAndNumber(item)
+  if (isFinished) return 'All Episodes Completed'
+  const epKey = `${tmdbId}_S${season}_E${episode}`
+  const ep = tvEpisodeDetails.value[epKey]
+  if (ep?.name) return ep.name
+  if (item.movie?.next_episode_name) return item.movie.next_episode_name
+  return `Episode ${episode}`
+}
+
+const getEpisodeOverview = (item: any) => {
+  const tmdbId = item.movie?.tmdb_id || item.movie?.id || item.tmdb_id
+  const { season, episode, isFinished } = getEpisodeSeasonAndNumber(item)
+  if (isFinished) return 'You have completed watching all episodes for this show.'
+  const epKey = `${tmdbId}_S${season}_E${episode}`
+  const ep = tvEpisodeDetails.value[epKey]
+  if (ep?.overview) return ep.overview
+  return item.movie?.overview || ''
 }
 
 const enrichMissingMetadata = async () => {
@@ -2070,144 +2224,160 @@ const confirmDeleteItem = async () => {
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 16px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   user-select: none;
   touch-action: pan-y;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tvtime-card:hover {
-  border-color: var(--border-red);
+  border-color: rgba(229, 9, 20, 0.35);
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.7), 0 0 20px -5px rgba(229, 9, 20, 0.15);
+  transform: translateY(-2px);
 }
 
-.tvtime-poster {
-  width: 80px;
-  height: 115px;
-  object-fit: cover;
-  border-radius: 6px;
+.tvtime-thumb-frame {
+  position: relative;
+  width: 175px;
+  min-height: 105px;
+  border-radius: 8px;
+  overflow: hidden;
   flex-shrink: 0;
+  background: #141418;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tvtime-episode-still {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.tvtime-thumb-frame:hover .tvtime-episode-still {
+  transform: scale(1.06);
+}
+
+.thumb-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+}
+
+.thumb-code-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(10, 10, 12, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.thumb-remaining-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(229, 9, 20, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 2;
 }
 
 .tvtime-card-body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.card-series-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .show-title-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  width: fit-content;
-  margin-bottom: 6px;
   cursor: pointer;
 }
 
 .show-card-title {
-  font-size: 0.96rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.01em;
-  line-height: 1.25;
+  line-height: 1.2;
   transition: color 0.15s ease;
   margin: 0;
+}
+
+.series-year-dot {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .show-title-tag:hover .show-card-title {
   color: var(--accent-red);
 }
 
-.chevron-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--text-muted);
-  transition: transform 0.2s ease, color 0.2s ease;
-  flex-shrink: 0;
+.card-episode-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.25;
+  margin: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.show-title-tag:hover .chevron-icon {
-  color: var(--accent-red);
-  transform: translateX(3px);
-}
-
-.eps-headline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.season-eps-code {
-  font-size: 1.1rem;
-  font-weight: 800;
+.card-episode-name:hover {
   color: #ffffff;
 }
 
-.remaining-count-pill {
-  font-size: 0.74rem;
-  color: #ff8585;
-  background: var(--accent-red-subtle);
-  border: 1px solid var(--border-red);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-
-.eps-title-text {
-  font-size: 0.85rem;
+.card-episode-desc {
+  font-size: 0.78rem;
   color: var(--text-secondary);
-  margin-bottom: 8px;
-  font-weight: 500;
+  line-height: 1.4;
+  margin: 0 0 6px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.eps-label {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.card-badges-row {
+.card-footer-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.badge-premiere {
-  background: var(--accent-red);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.badge-fav {
-  background: rgba(251, 191, 36, 0.15);
-  color: var(--accent-star);
-  border: 1px solid rgba(251, 191, 36, 0.35);
-  font-weight: 700;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.badge-completed-tag {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.badge-total-info {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
 }
 
 .circle-check-btn {
