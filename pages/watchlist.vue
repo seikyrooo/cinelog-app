@@ -118,18 +118,15 @@
                     {{ getEpisodeProgressCode(item) }}
                   </span>
                   <span v-if="getRemainingEps(item) > 0" class="thumb-remaining-badge">
-                    +{{ getRemainingEps(item) }} eps left
+                    {{ getRemainingEps(item) }} eps left
                   </span>
                 </div>
 
                 <div class="tvtime-card-body">
-                  <!-- Row 1: Series Title & Meta Header -->
+                  <!-- Row 1: Series Title -->
                   <div class="card-series-header">
                     <div class="show-title-tag clickable" @click="openDetailModal(item)">
                       <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                      <span class="series-year-dot" v-if="item.movie?.release_date || item.movie?.first_air_date">
-                        • {{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }}
-                      </span>
                     </div>
                   </div>
 
@@ -148,9 +145,6 @@
                     <div class="card-badges-row">
                       <span v-if="(item.episodes_watched || 0) + 1 === 1" class="badge-premiere">PREMIERE</span>
                       <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
-                      <span class="badge-total-info" v-if="getTotalEps(item) > 0">
-                        {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
-                      </span>
                     </div>
 
                     <!-- Minimal Rate Button -->
@@ -175,7 +169,7 @@
                   </div>
                 </div>
 
-                <!-- Side Actions (Increment Episode + Remove) -->
+                <!-- Side Action (Increment Episode) -->
                 <div class="card-side-actions">
                   <button 
                     @click="incrementEpisode(item)" 
@@ -186,18 +180,6 @@
                   >
                     <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                       <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  </button>
-
-                  <button 
-                    @click.stop="promptDeleteItem(item)" 
-                    class="circle-trash-btn"
-                    title="Remove from Watchlist"
-                    aria-label="Remove from Watchlist"
-                  >
-                    <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                   </button>
                 </div>
@@ -231,7 +213,7 @@
                   {{ getEpisodeProgressCode(item) }}
                 </span>
                 <span v-if="getRemainingEps(item) > 0" class="thumb-remaining-badge">
-                  +{{ getRemainingEps(item) }} eps left
+                  {{ getRemainingEps(item) }} eps left
                 </span>
               </div>
 
@@ -239,9 +221,6 @@
                 <div class="card-series-header">
                   <div class="show-title-tag clickable" @click="openDetailModal(item)">
                     <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                    <span class="series-year-dot" v-if="item.movie?.release_date || item.movie?.first_air_date">
-                      • {{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }}
-                    </span>
                   </div>
                 </div>
 
@@ -256,9 +235,6 @@
                 <div class="card-footer-row">
                   <div class="card-badges-row">
                     <span v-if="item.favorite" class="badge-fav">FAVORITE</span>
-                    <span class="badge-total-info" v-if="getTotalEps(item) > 0">
-                      {{ getRemainingEps(item) }} remaining of {{ getTotalEps(item) }} eps
-                    </span>
                   </div>
 
                   <!-- Ultra-Minimalist Rate & Log Action -->
@@ -283,7 +259,7 @@
                 </div>
               </div>
 
-              <!-- Side Actions (Increment Episode + Remove) -->
+              <!-- Side Action (Increment Episode) -->
               <div class="card-side-actions">
                 <button 
                   @click="incrementEpisode(item)" 
@@ -293,18 +269,6 @@
                 >
                   <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                     <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </button>
-
-                <button 
-                  @click.stop="promptDeleteItem(item)" 
-                  class="circle-trash-btn"
-                  title="Remove from Watchlist"
-                  aria-label="Remove from Watchlist"
-                >
-                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                   </svg>
                 </button>
               </div>
@@ -342,9 +306,6 @@
                 <div class="card-series-header">
                   <div class="show-title-tag clickable" @click="openDetailModal(item)">
                     <h3 class="show-card-title">{{ item.movie?.title || item.title }}</h3>
-                    <span class="series-year-dot" v-if="item.movie?.release_date || item.movie?.first_air_date">
-                      • {{ formatYear(item.movie?.release_date || item.movie?.first_air_date) }}
-                    </span>
                   </div>
                 </div>
 
@@ -385,25 +346,13 @@
                 </div>
               </div>
 
-              <!-- Side Actions (Completed Badge + Remove) -->
+              <!-- Side Actions (Completed Badge) -->
               <div class="card-side-actions">
                 <div class="completed-check-icon" title="Series Completed">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
-
-                <button 
-                  @click.stop="promptDeleteItem(item)" 
-                  class="circle-trash-btn"
-                  title="Remove from Watchlist"
-                  aria-label="Remove from Watchlist"
-                >
-                  <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
@@ -631,18 +580,6 @@
                 <template v-else>
                   <span>Rate</span>
                 </template>
-              </button>
-
-              <button 
-                @click.stop="promptDeleteItem(item)" 
-                class="circle-trash-btn"
-                title="Remove from Watchlist"
-                aria-label="Remove from Watchlist"
-              >
-                <svg class="trash-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
               </button>
             </div>
           </div>
@@ -2322,6 +2259,8 @@ const confirmDeleteItem = async () => {
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .show-card-title {
@@ -2334,14 +2273,23 @@ const confirmDeleteItem = async () => {
   margin: 0;
 }
 
-.series-year-dot {
-  font-size: 0.78rem;
+.chevron-icon {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
   color: var(--text-muted);
-  font-weight: 600;
+  transition: transform 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .show-title-tag:hover .show-card-title {
   color: var(--accent-red);
+}
+
+.show-title-tag:hover .chevron-icon {
+  color: var(--accent-red);
+  transform: translateX(2px);
 }
 
 .card-episode-name {
@@ -3005,34 +2953,43 @@ const confirmDeleteItem = async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 380px;
+  max-height: 420px;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
 }
 
 .episode-item {
   display: flex;
-  gap: 14px;
-  padding: 12px;
   align-items: center;
-  transition: all 0.2s;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  gap: 12px;
+  padding: 10px 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--border-subtle);
+  min-width: 0;
+}
+
+.episode-item:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .episode-item.watched {
   border-color: rgba(34, 197, 94, 0.35);
-  background: rgba(34, 197, 94, 0.05);
+  background: rgba(34, 197, 94, 0.06);
 }
 
 .eps-banner-wrapper {
   position: relative;
-  width: 110px;
-  height: 62px;
+  width: 100px;
+  height: 58px;
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
   background: #18181e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .eps-still-img {
@@ -3055,36 +3012,51 @@ const confirmDeleteItem = async () => {
 
 .eps-info {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .eps-header {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .eps-name {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
 }
 
 .eps-date {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .eps-overview {
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .eps-check-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 1.5px solid var(--border-subtle);
   background: rgba(255, 255, 255, 0.04);
@@ -3608,34 +3580,47 @@ const confirmDeleteItem = async () => {
   }
 
   .episode-item {
-    display: grid;
-    grid-template-columns: 90px 1fr;
-    grid-template-rows: auto auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     gap: 10px;
-    padding: 10px;
-    align-items: flex-start;
+    padding: 8px 10px;
+    min-width: 0;
   }
 
   .eps-banner-wrapper {
-    width: 90px;
-    height: 52px;
-    grid-row: 1 / span 2;
+    width: 80px;
+    height: 48px;
+    flex-shrink: 0;
   }
 
   .eps-info {
-    grid-column: 2;
+    flex: 1;
+    min-width: 0;
   }
 
   .eps-header {
     flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 1px;
   }
 
-  .eps-toggle-btn {
-    grid-column: 2;
-    align-self: flex-start;
-    padding: 5px 10px;
-    font-size: 0.74rem;
+  .eps-name {
+    font-size: 0.8rem;
+  }
+
+  .eps-date {
+    font-size: 0.68rem;
+  }
+
+  .eps-overview {
+    display: none;
+  }
+
+  .eps-check-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
   }
 }
 </style>
