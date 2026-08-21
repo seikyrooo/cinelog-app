@@ -527,7 +527,7 @@
                   <span 
                     v-for="star in 10" 
                     :key="star"
-                    @click="form.rating = star"
+                    @click="form.rating = star; if ((activeItem?.media_type || 'movie') === 'movie' && star > 0) form.status = 'completed';"
                     :class="['star-icon', { active: star <= form.rating }]"
                   >★</span>
                   <span class="rating-number">{{ form.rating > 0 ? form.rating + ' / 10' : '' }}</span>
@@ -1293,7 +1293,7 @@ const saveToWatchlist = async (statusOverride?: string, epsOverride?: number) =>
       next_air_date: detailedInfo.value?.next_air_date || '',
       next_episode_name: detailedInfo.value?.next_episode_name || '',
       media_status: detailedInfo.value?.media_status || '',
-      status: statusOverride || form.value.status,
+      status: ((activeItem.value.media_type || 'movie') === 'movie' && form.value.rating > 0) ? 'completed' : (statusOverride || form.value.status),
       rating: Math.min(10, Math.max(0, form.value.rating)),
       favorite: form.value.favorite,
       notes: form.value.notes,

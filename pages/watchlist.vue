@@ -1500,10 +1500,15 @@ const updateItemRating = async (item: any, rating: number) => {
   if (!item || !item.id) return
   item.rating = rating
 
-  // Rating is independent of completion - rating a show never forces it to completed/ended
-  const total = getTotalEps(item)
-  const isFinished = total > 0 && (item.episodes_watched || 0) >= total
-  const currentStatus = isFinished ? 'completed' : (item.status === 'completed' ? 'watching' : (item.status || 'watching'))
+  const isMovie = (item.movie?.media_type || item.media_type || currentMediaType.value) === 'movie'
+  let currentStatus = item.status
+  if (isMovie && rating > 0) {
+    currentStatus = 'completed'
+  } else {
+    const total = getTotalEps(item)
+    const isFinished = total > 0 && (item.episodes_watched || 0) >= total
+    currentStatus = isFinished ? 'completed' : (item.status === 'completed' ? 'watching' : (item.status || 'watching'))
+  }
 
   try {
     const res: any = await api.updateLibraryItem(item.id, {
@@ -1604,8 +1609,9 @@ const incrementEpisode = async (item: any) => {
 const openEditModal = (item: any) => {
   editingItem.value = item
   const initialRating = item.rating || 0
+  const isMovie = (item.movie?.media_type || item.media_type || currentMediaType.value) === 'movie'
   editForm.value = {
-    status: item.status || (initialRating > 0 ? 'completed' : 'plan_to_watch'),
+    status: (isMovie && initialRating > 0) ? 'completed' : (item.status || (initialRating > 0 ? 'completed' : 'plan_to_watch')),
     rating: initialRating,
     favorite: item.favorite || false,
     notes: item.notes || item.review || '',
@@ -1620,7 +1626,8 @@ const openEditModal = (item: any) => {
 
 const onSelectRating = (score: number) => {
   editForm.value.rating = score
-  if (score > 0 && (editForm.value.status === 'plan_to_watch' || !editForm.value.status)) {
+  const isMovie = (editingItem.value?.movie?.media_type || editingItem.value?.media_type || currentMediaType.value) === 'movie'
+  if (score > 0 && (isMovie || editForm.value.status === 'plan_to_watch' || !editForm.value.status)) {
     editForm.value.status = 'completed'
   }
 }
