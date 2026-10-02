@@ -561,6 +561,16 @@
                   </svg>
                 </button>
               </div>
+
+              <!-- Star Rating Slider when in Watchlist -->
+              <div class="rating-input-row" v-if="watchlistContext" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <StarRatingSlider 
+                  v-model="form.rating"
+                  size="sm"
+                  @change="saveToWatchlist()"
+                  aria-label="Rate this title"
+                />
+              </div>
             </div>
 
             <!-- Metadata Box -->

@@ -155,18 +155,13 @@
                       <button 
                         @click="openEditModal(item)" 
                         :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                        :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
+                        :title="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate show'"
+                        :aria-label="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate show'"
                       >
                         <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
-                        <template v-if="item.rating > 0">
-                          <span class="rate-val">{{ item.rating }}</span>
-                          <span class="rate-max">/10</span>
-                        </template>
-                        <template v-else>
-                          <span>Rate</span>
-                        </template>
+                        <span v-if="item.rating > 0" class="rate-val">{{ item.rating }}</span>
                       </button>
                     </div>
                   </div>
@@ -248,18 +243,13 @@
                     <button 
                       @click="openEditModal(item)" 
                       :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
+                      :title="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate show'"
+                      :aria-label="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate show'"
                     >
                       <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                       </svg>
-                      <template v-if="item.rating > 0">
-                        <span class="rate-val">{{ item.rating }}</span>
-                        <span class="rate-max">/10</span>
-                      </template>
-                      <template v-else>
-                        <span>Rate</span>
-                      </template>
+                      <span v-if="item.rating > 0" class="rate-val">{{ item.rating }}</span>
                     </button>
                   </div>
                 </div>
@@ -336,18 +326,13 @@
                     <button 
                       @click="openEditModal(item)" 
                       :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                      :title="item.rating > 0 ? 'Edit score & review' : 'Rate show'"
+                      :title="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate show'"
+                      :aria-label="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate show'"
                     >
                       <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                       </svg>
-                      <template v-if="item.rating > 0">
-                        <span class="rate-val">{{ item.rating }}</span>
-                        <span class="rate-max">/10</span>
-                      </template>
-                      <template v-else>
-                        <span>Rate</span>
-                      </template>
+                      <span v-if="item.rating > 0" class="rate-val">{{ item.rating }}</span>
                     </button>
                   </div>
                 </div>
@@ -548,18 +533,13 @@
                   <button 
                     @click.stop="openEditModal(item)" 
                     :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
+                    :title="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate movie'"
+                    :aria-label="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate movie'"
                   >
                     <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
-                    <template v-if="item.rating > 0">
-                      <span class="rate-val">{{ item.rating }}</span>
-                      <span class="rate-max">/10</span>
-                    </template>
-                    <template v-else>
-                      <span>Rate</span>
-                    </template>
+                    <span v-if="item.rating > 0" class="rate-val">{{ item.rating }}</span>
                   </button>
                 </div>
               </div>
@@ -615,18 +595,13 @@
                   <button 
                     @click.stop="openEditModal(item)" 
                     :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
+                    :title="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate movie'"
+                    :aria-label="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate movie'"
                   >
                     <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
-                    <template v-if="item.rating > 0">
-                      <span class="rate-val">{{ item.rating }}</span>
-                      <span class="rate-max">/10</span>
-                    </template>
-                    <template v-else>
-                      <span>Rate</span>
-                    </template>
+                    <span v-if="item.rating > 0" class="rate-val">{{ item.rating }}</span>
                   </button>
                 </div>
               </div>
@@ -682,18 +657,13 @@
                   <button 
                     @click.stop="openEditModal(item)" 
                     :class="['btn-minimal-rate', { rated: item.rating > 0 }]"
-                    :title="item.rating > 0 ? 'Edit score & review' : 'Rate movie'"
+                    :title="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate movie'"
+                    :aria-label="item.rating > 0 ? `Rating: ${item.rating}/10` : 'Rate movie'"
                   >
                     <svg class="rate-star-icon" viewBox="0 0 24 24" :fill="item.rating > 0 ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
-                    <template v-if="item.rating > 0">
-                      <span class="rate-val">{{ item.rating }}</span>
-                      <span class="rate-max">/10</span>
-                    </template>
-                    <template v-else>
-                      <span>Rate</span>
-                    </template>
+                    <span v-if="item.rating > 0" class="rate-val">{{ item.rating }}</span>
                   </button>
                 </div>
               </div>
@@ -721,6 +691,9 @@
                 <span v-if="activeDetailMedia?.vote_average" class="hero-rating-badge">
                   ★ {{ activeDetailMedia.vote_average.toFixed(1) }} / 10.0 TMDB Rating
                 </span>
+                <span v-if="activeWatchlistContext?.rating > 0" class="hero-rating-badge user-rating-hero-badge">
+                  ★ {{ activeWatchlistContext.rating }} / 10 Your Score
+                </span>
               </div>
               <h2 class="hero-media-title">{{ activeDetailMedia?.title || activeWatchlistContext?.movie?.title }}</h2>
               <p class="hero-media-subtitle">
@@ -743,29 +716,8 @@
               @error="onImageError"
             />
 
-            <!-- Quick Rating & Favorite Action Bar -->
+            <!-- Quick Action Bar -->
             <div class="quick-add-bar glass-card" v-if="activeWatchlistContext">
-              <div class="rating-input-row">
-                <div class="rating-header-flex">
-                  <label class="rating-prompt-label">Your Rating:</label>
-                  <span class="rating-score-highlight" v-if="activeWatchlistContext.rating > 0">
-                    ★ {{ activeWatchlistContext.rating }} / 10
-                  </span>
-                  <span class="rating-score-highlight muted" v-else>
-                    Click star to rate
-                  </span>
-                </div>
-                <div class="star-rating-selector">
-                  <span 
-                    v-for="star in 10" 
-                    :key="star"
-                    @click="updateItemRating(activeWatchlistContext, star)"
-                    :class="['star-icon', { active: star <= (activeWatchlistContext.rating || 0) }]"
-                    :title="'Rate ' + star + ' / 10'"
-                  >★</span>
-                </div>
-              </div>
-
               <div class="quick-action-icon-row">
                 <button 
                   @click="toggleFavoriteStatus(activeWatchlistContext)"
@@ -910,29 +862,15 @@
         </div>
 
         <form @submit.prevent="updateWatchlist" class="modal-form">
-          <!-- Score Selector with Auto-Completed badge -->
+          <!-- Rating Slider -->
           <div class="form-group">
-            <div class="rating-header-row">
-              <label>Your Score (1 - 10)</label>
-              <span class="rating-score-display" v-if="editForm.rating > 0">
-                <span class="star-gold">★</span> {{ editForm.rating }} / 10
-              </span>
-              <span class="rating-score-display" v-else>
-                <small class="text-muted">Unrated (Select 1 - 10)</small>
-              </span>
-            </div>
-            
-            <div class="score-chips-grid">
-              <button 
-                type="button" 
-                v-for="score in 10" 
-                :key="score"
-                @click="onSelectRating(score)"
-                :class="['score-chip-btn', { active: editForm.rating === score, highlighted: score <= editForm.rating }]"
-              >
-                {{ score }}
-              </button>
-            </div>
+            <label class="form-label mb-2">Your Score</label>
+            <StarRatingSlider 
+              v-model="editForm.rating" 
+              size="lg"
+              @change="onSelectRating"
+              aria-label="Your Score"
+            />
           </div>
 
           <!-- Review / Commentary Input -->
@@ -952,19 +890,51 @@
 
           <!-- Modal Toggles: Publish to Activity Feed & Favorites -->
           <div class="modal-toggles-box">
-            <label class="toggle-row-label">
-              <input type="checkbox" v-model="editForm.is_public_feed" class="custom-toggle-checkbox" />
-              <div class="toggle-text-col">
-                <strong>Publish to Community Feed</strong>
-                <span>Allow friends to see this rating and review in the community activity stream.</span>
+            <label class="cinema-toggle-card" :class="{ 'is-checked': editForm.is_public_feed }">
+              <input 
+                type="checkbox" 
+                v-model="editForm.is_public_feed" 
+                class="sr-only" 
+                aria-label="Publish to Community Feed" 
+              />
+              <div class="toggle-lead">
+                <div class="toggle-icon-wrap community-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </div>
+                <div class="toggle-text-col">
+                  <span class="toggle-title">Publish to Community</span>
+                  <span class="toggle-desc">Share review & score in friend activity stream</span>
+                </div>
+              </div>
+              <div class="cinema-switch" aria-hidden="true">
+                <span class="switch-thumb"></span>
               </div>
             </label>
 
-            <label class="toggle-row-label">
-              <input type="checkbox" v-model="editForm.favorite" class="custom-toggle-checkbox" />
-              <div class="toggle-text-col">
-                <strong>Add to Favorites</strong>
-                <span>Highlight on your public profile page.</span>
+            <label class="cinema-toggle-card" :class="{ 'is-checked': editForm.favorite }">
+              <input 
+                type="checkbox" 
+                v-model="editForm.favorite" 
+                class="sr-only" 
+                aria-label="Add to Favorites" 
+              />
+              <div class="toggle-lead">
+                <div class="toggle-icon-wrap favorite-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" :fill="editForm.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </div>
+                <div class="toggle-text-col">
+                  <span class="toggle-title">Add to Favorites</span>
+                  <span class="toggle-desc">Highlight on your public profile showcase</span>
+                </div>
+              </div>
+              <div class="cinema-switch switch-fav" aria-hidden="true">
+                <span class="switch-thumb"></span>
               </div>
             </label>
           </div>
@@ -1737,7 +1707,7 @@ const toggleEpisodeWatched = async (epsNumber: number) => {
 
 const updateItemRating = async (item: any, rating: number) => {
   if (!item || !item.id) return
-  const newRating = (item.rating === rating) ? 0 : rating
+  const newRating = Number(rating || 0)
   item.rating = newRating
 
   const isMovie = (item.movie?.media_type || item.media_type || currentMediaType.value) === 'movie'
@@ -1865,10 +1835,6 @@ const openEditModal = (item: any) => {
 }
 
 const onSelectRating = (score: number) => {
-  if (editForm.value.rating === score) {
-    clearRating()
-    return
-  }
   editForm.value.rating = score
   const isMovie = (editingItem.value?.movie?.media_type || editingItem.value?.media_type || currentMediaType.value) === 'movie'
   if (score > 0 && (isMovie || editForm.value.status === 'plan_to_watch' || !editForm.value.status)) {
@@ -3251,45 +3217,81 @@ const confirmDeleteItem = async () => {
   align-items: center;
   gap: 5px;
   background: transparent;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #a1a1aa;
   font-size: 0.74rem;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  height: 26px;
+  min-width: 26px;
+  padding: 0 7px;
+  border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.02em;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: -0.01em;
+}
+
+.btn-minimal-rate:not(.rated) {
+  width: 26px;
+  height: 26px;
+  padding: 0;
 }
 
 .btn-minimal-rate:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 170, 0, 0.4);
+  color: #fbbf24;
   transform: translateY(-1px);
 }
 
 .rate-star-icon {
   width: 12px;
   height: 12px;
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.btn-minimal-rate:hover .rate-star-icon {
+  transform: scale(1.1);
 }
 
 .btn-minimal-rate.rated {
   background: rgba(255, 170, 0, 0.08);
   border-color: rgba(255, 170, 0, 0.3);
   color: #ffaa00;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
 }
 
 .btn-minimal-rate.rated:hover {
   background: rgba(255, 170, 0, 0.15);
   border-color: #ffaa00;
   color: #ffc107;
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #fbbf24;
+  color: #fde047;
 }
 
 .rate-val {
   font-weight: 800;
   color: #ffaa00;
+  font-weight: 700;
+  color: #fbbf24;
+  line-height: 1;
 }
 
 .rate-max {
@@ -3432,53 +3434,6 @@ const confirmDeleteItem = async () => {
   margin-left: 6px;
 }
 
-.score-chips-grid {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 5px;
-}
-
-@media (max-width: 480px) {
-  .score-chips-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-.score-chip-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 8px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit;
-}
-
-.score-chip-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.score-chip-btn.highlighted {
-  background: rgba(229, 9, 20, 0.12);
-  border-color: rgba(229, 9, 20, 0.3);
-  color: #ff858d;
-}
-
-.score-chip-btn.active {
-  background: var(--accent-red) !important;
-  border-color: var(--accent-red) !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.45);
-  transform: scale(1.05);
-}
-
 .char-count-text {
   font-size: 0.7rem;
   color: var(--text-muted);
@@ -3498,46 +3453,158 @@ const confirmDeleteItem = async () => {
   resize: vertical;
 }
 
+/* ACCESSIBILITY HELPER */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* CUSTOM BESPOKE MODAL TOGGLES */
 .modal-toggles-box {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  gap: 8px;
 }
 
-.toggle-row-label {
+.cinema-toggle-card {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
+  user-select: none;
+  transition: background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.1s ease;
 }
 
-.custom-toggle-checkbox {
-  margin-top: 3px;
-  accent-color: var(--accent-red);
-  width: 16px;
-  height: 16px;
+.cinema-toggle-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.cinema-toggle-card:active {
+  transform: scale(0.992);
+}
+
+.cinema-toggle-card:has(input:focus-visible) {
+  outline: 2px solid var(--accent-red, #e50914);
+  outline-offset: 2px;
+}
+
+.cinema-toggle-card.is-checked {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.toggle-lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.toggle-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #71717a;
   flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cinema-toggle-card.is-checked .community-icon {
+  background: rgba(229, 9, 20, 0.12);
+  color: #ff6b6b;
+}
+
+.cinema-toggle-card.is-checked .favorite-icon {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
 }
 
 .toggle-text-col {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  min-width: 0;
 }
 
-.toggle-text-col strong {
+.toggle-title {
   font-size: 0.82rem;
+  font-weight: 700;
+  color: #d4d4d8;
+  letter-spacing: -0.01em;
+  transition: color 0.18s ease;
+}
+
+.cinema-toggle-card.is-checked .toggle-title {
   color: #ffffff;
 }
 
-.toggle-text-col span {
+.toggle-desc {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: #71717a;
   line-height: 1.3;
+}
+
+/* Bespoke Tactile Switch */
+.cinema-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  padding: 2px;
+  box-sizing: border-box;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s ease;
+}
+
+.switch-thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #a1a1aa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cinema-toggle-card.is-checked .cinema-switch {
+  background: var(--accent-red, #e50914);
+  border-color: var(--accent-red, #e50914);
+  box-shadow: 0 0 12px rgba(229, 9, 20, 0.35);
+}
+
+.cinema-toggle-card.is-checked .cinema-switch.switch-fav {
+  background: #f43f5e;
+  border-color: #f43f5e;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+}
+
+.cinema-toggle-card.is-checked .switch-thumb {
+  transform: translateX(16px);
+  background: #ffffff;
 }
 
 .modal-actions {
